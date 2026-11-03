@@ -32,12 +32,18 @@ def clean_exact(s):
     except Exception:
         pass
     
-    # SOLUCIÓN CRÍTICA: Reemplazar espacios no rompibles (\xa0), saltos de línea y espacios invisibles
+    # Reemplazar espacios invisibles y saltos de línea
     s = s.replace('\xa0', ' ').replace('\u200b', ' ').replace('\r', ' ').replace('\n', ' ')
     
-    # Normalización estricta de caracteres y eliminación de tildes compatible con Linux/Streamlit
+    # Normalización de acentos y caracteres especiales
     s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8", errors='ignore')
     s = s.upper().strip()
+    
+    # BLINDAJE: Eliminar espacios alrededor de guiones y símbolos (ej: "SANGUINEO- CDS" -> "SANGUINEO-CDS")
+    s = re.sub(r'\s*-\s*', '-', s)
+    s = re.sub(r'\s*#\s*', '#', s)
+    
+    # Estandarizar espacios múltiples
     s = re.sub(r'\s+', ' ', s)
     return s
 
