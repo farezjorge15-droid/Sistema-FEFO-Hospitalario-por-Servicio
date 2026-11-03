@@ -23,21 +23,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS avanzados para eliminar por completo la franja blanca superior y fundir las pestañas
+# Estilos CSS avanzados para eliminar la franja blanca y fusionar el fondo detrás de las pestañas
 st.markdown("""
     <style>
-    /* Ocultar barra lateral y elementos superiores de Streamlit */
+    /* Ocultar barra lateral y cabeceras de Streamlit */
     [data-testid="stSidebar"] {
         display: none;
     }
     header {
         visibility: hidden !important;
-        height: 0px !important;
+        display: none !important;
     }
     .stApp > header {
-        display: none;
+        display: none !important;
     }
-    /* Eliminar cualquier margen superior de la página */
+    /* Eliminar cualquier margen o padding superior de la aplicación */
     .block-container {
         padding-top: 0rem !important;
         padding-bottom: 0rem !important;
@@ -45,36 +45,40 @@ st.markdown("""
         padding-right: 0rem !important;
         max-width: 100% !important;
     }
-    /* Posicionar las pestañas directamente en la parte superior sin fondo blanco */
+    div.block-container {
+        padding-top: 0rem !important;
+    }
+    /* Forzar que las pestañas floten transparentes exactamente arriba */
     .stTabs {
         position: absolute;
         top: 15px;
         left: 20px;
-        z-index: 999;
+        z-index: 9999;
         width: calc(100% - 40px);
+        background: transparent !important;
     }
     .stTabs [data-baseweb="tab-list"] {
         gap: 10px;
         background-color: transparent !important;
         border-bottom: none !important;
     }
-    /* Estilo de los botones de las pestañas flotantes */
+    /* Estilo de los botones de las pestañas */
     .stTabs [data-baseweb="tab"] {
         height: 38px;
-        background-color: rgba(255, 255, 255, 0.75);
+        background-color: rgba(255, 255, 255, 0.8);
         border-radius: 8px;
         padding: 0px 18px;
         font-weight: 600;
         color: #1F4E78;
         border: 1px solid rgba(208, 225, 253, 0.9);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         backdrop-filter: blur(5px);
     }
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    /* Contenedor principal de inicio abarcando el 100% desde arriba */
+    /* Contenedor principal de inicio elevado para cubrir todo el fondo superior */
     .hero-fullscreen {
         position: relative;
         width: 100vw;
@@ -84,8 +88,9 @@ st.markdown("""
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
-        margin: 0;
-        padding-top: 50px;
+        margin-top: -6rem; /* Eleva el fondo para que cubra detrás de los botones */
+        padding-top: 80px;
+        z-index: 1;
     }
     .hero-left-content {
         width: 50%;
