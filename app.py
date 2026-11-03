@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS inyectados para el fondo fijo y scroll vertical obligatorio
+# Estilos CSS estrictos según tus indicaciones
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -36,23 +36,21 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* Configuración de la página principal para permitir scroll vertical nativo */
-    html, body, [data-testid="stAppViewContainer"], .main {
+    /* 1. Imagen de fondo original fija cubriendo toda la pantalla y 3. Scroll vertical en body y .stApp */
+    html, body, .stApp {
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%) !important;
+        background-size: cover !important;
         background-attachment: fixed !important;
+        background-repeat: no-repeat !important;
         overflow-y: auto !important;
-        height: auto !important;
-        min-height: 100vh !important;
     }
 
+    /* 2. Mantener la alineación y contenedor normal de Streamlit */
     .main .block-container {
-        padding-top: 0rem !important;
+        padding-top: 3rem !important;
         padding-bottom: 5rem !important;
-        padding-left: 0rem !important;
-        padding-right: 0rem !important;
-        max-width: 100% !important;
+        max-width: 85rem !important;
         background-color: transparent !important;
-        overflow-y: auto !important;
     }
     
     /* Posicionamiento fijo de la barra de navegación superior */
@@ -114,22 +112,21 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Banner visual superior integrado al flujo normal */
+    /* Banner original de bienvenida */
     .hero-fullscreen {
         position: relative;
         width: 100%;
-        min-height: 85vh;
+        min-height: 80vh;
         background: transparent;
         display: flex;
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
         margin: 0 !important;
-        z-index: 1;
     }
     .hero-left-content {
         width: 50%;
-        padding-left: 6%;
+        padding-left: 2%;
         padding-right: 4%;
         z-index: 2;
         display: flex;
@@ -166,21 +163,17 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor principal de contenido con ancho completo y scroll vertical activo */
+    /* Contenedor translúcido ordenado para las pestañas de contenido */
     .content-container {
         position: relative;
-        margin-top: 10px;
-        margin-left: 20px;
-        margin-right: 20px;
-        margin-bottom: 40px;
+        margin-top: 20px;
         padding: 30px 40px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.88);
         backdrop-filter: blur(10px);
         border-radius: 14px;
         border: 1px solid rgba(255, 255, 255, 0.95);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-        overflow-y: auto !important;
     }
     
     .stButton>button {
