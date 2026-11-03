@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Barra de pestañas más compacta y pequeña, manteniendo el fondo intacto
+# Estilos CSS: Barra de pestañas ultra pequeña y compacta
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -44,37 +44,37 @@ st.markdown("""
         max-width: 100% !important;
         background-color: transparent !important;
     }
-    /* Contenedor absoluto de las pestañas flotando sobre el banner */
+    /* Posicionamiento de las pestañas */
     .stTabs {
         position: absolute !important;
-        top: 10px !important;
+        top: 8px !important;
         left: 15px !important;
         z-index: 99999 !important;
         width: auto !important;
         background: transparent !important;
     }
-    /* Contenedor de la lista de pestañas más compacto */
+    /* Barra contenedora ultra delgada y compacta */
     .stTabs [data-baseweb="tab-list"],
     div[data-baseweb="tab-list"] {
-        background: rgba(255, 255, 255, 0.4) !important;
-        background-color: rgba(255, 255, 255, 0.4) !important;
-        border-radius: 10px !important;
-        padding: 4px 6px !important;
+        background: rgba(255, 255, 255, 0.35) !important;
+        background-color: rgba(255, 255, 255, 0.35) !important;
+        border-radius: 6px !important;
+        padding: 2px 4px !important;
         border-bottom: none !important;
-        gap: 6px !important;
-        backdrop-filter: blur(8px) !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+        gap: 4px !important;
+        backdrop-filter: blur(6px) !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
     }
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
-    /* Botones de las pestañas más pequeños y sutiles */
+    /* Botones de las pestañas más pequeños y ajustados */
     .stTabs [data-baseweb="tab"] {
-        height: 32px !important;
+        height: 28px !important;
         background-color: transparent !important;
-        border-radius: 6px !important;
-        padding: 0px 12px !important;
-        font-size: 0.85rem !important;
+        border-radius: 4px !important;
+        padding: 0px 10px !important;
+        font-size: 0.8rem !important;
         font-weight: 600 !important;
         color: #1F4E78 !important;
         border: none !important;
@@ -83,7 +83,6 @@ st.markdown("""
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
     }
     /* Banner full screen: Fondo azul y la imagen del hospital */
     .hero-fullscreen {
@@ -96,7 +95,7 @@ st.markdown("""
         justify-content: space-between;
         overflow: hidden;
         margin: 0 !important;
-        padding-top: 60px;
+        padding-top: 50px;
         z-index: 1;
     }
     .hero-left-content {
@@ -639,7 +638,7 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 ])
 
 # ------------------------------------------
-# PESTAÑA 0: INICIO (FONDO AZUL E IMAGEN RECUPERADOS)
+# PESTAÑA 0: INICIO
 # ------------------------------------------
 with tab_inicio:
     st.markdown("""
