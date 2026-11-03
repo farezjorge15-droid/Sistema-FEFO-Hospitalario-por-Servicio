@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS avanzados para flotar las pestañas, eliminar líneas divisorias y lograr el fondo a pantalla completa
+# Estilos CSS avanzados para fundir las pestañas y expandir el banner a toda la pantalla
 st.markdown("""
     <style>
     /* Ocultar barra lateral totalmente */
@@ -32,48 +32,56 @@ st.markdown("""
     }
     /* Eliminar márgenes por defecto de Streamlit */
     .block-container {
-        padding-top: 0rem;
-        padding-bottom: 0rem;
-        padding-left: 0rem;
-        padding-right: 0rem;
+        padding-top: 0rem !important;
+        padding-bottom: 0rem !important;
+        padding-left: 0rem !important;
+        padding-right: 0rem !important;
         max-width: 100% !important;
     }
-    /* Eliminar la línea divisoria gris por defecto de las pestañas de Streamlit */
+    header {
+        visibility: hidden;
+    }
+    /* Superponer las pestañas de forma flotante sobre el banner */
+    .stTabs {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 99;
+        width: calc(100% - 40px);
+    }
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 10px;
         background-color: transparent;
         border-bottom: none !important;
-        padding-left: 20px;
-        padding-top: 10px;
     }
-    /* Estilo compacto y moderno para los botones de las pestañas */
+    /* Estilo translúcido y moderno para los botones de las pestañas */
     .stTabs [data-baseweb="tab"] {
         height: 38px;
-        background-color: rgba(255, 255, 255, 0.75);
+        background-color: rgba(255, 255, 255, 0.85);
         border-radius: 8px;
-        padding: 0px 16px;
+        padding: 0px 18px;
         font-weight: 600;
         color: #1F4E78;
-        border: 1px solid #d0e1fd;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        border: 1px solid rgba(208, 225, 253, 0.8);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        backdrop-filter: blur(5px);
     }
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    /* Contenedor principal de inicio a pantalla completa */
+    /* Contenedor principal de inicio a pantalla completa sin cortes */
     .hero-fullscreen {
         position: relative;
         width: 100vw;
-        height: 75vh;
+        height: 100vh;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
-        margin-left: calc(-50vw + 50%);
-        margin-right: calc(-50vw + 50%);
-        margin-top: -10px;
+        margin: 0;
+        padding-top: 60px;
     }
     .hero-left-content {
         width: 50%;
@@ -106,8 +114,8 @@ st.markdown("""
         background-image: url('https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752');
         background-size: cover;
         background-position: center;
-        -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 30%, rgba(0,0,0,1) 100%);
-        mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 30%, rgba(0,0,0,1) 100%);
+        -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,1) 100%);
+        mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,1) 100%);
         z-index: 1;
     }
     .stButton>button {
@@ -604,14 +612,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# CABECERA INSTITUCIONAL SUPERIOR CON LOGO MSP
-# ==========================================
-st.markdown('<div style="padding: 10px 20px; background-color: #f0f7ff;">', unsafe_allow_html=True)
-st.image("http://www.acess.gob.ec/wp-content/uploads/2017/08/MSP-LOGO-WEB1.jpg", width=220)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ==========================================
-# PESTAÑAS PRINCIPALES SUPERIORES FLOTANTES
+# PESTAÑAS PRINCIPALES SUPERIORES (FLOTANTES SOBRE EL BANNER)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
     "🏠 Inicio",
@@ -622,7 +623,7 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 ])
 
 # ------------------------------------------
-# PESTAÑA 0: INICIO (BANNER A PANTALLA COMPLETA CON DIFUMINADO)
+# PESTAÑA 0: INICIO (BANNER A PANTALLA COMPLETA)
 # ------------------------------------------
 with tab_inicio:
     st.markdown("""
@@ -639,7 +640,7 @@ with tab_inicio:
 # PESTAÑA 1: CRUCE DE LOTE (CARGA Y RESULTADOS)
 # ------------------------------------------
 with tab_cruce:
-    st.markdown('<div style="padding: 30px;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding: 40px 30px;">', unsafe_allow_html=True)
     st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
     st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
 
@@ -731,7 +732,7 @@ with tab_cruce:
 # PESTAÑA 2: LOTES & BODEGA
 # ------------------------------------------
 with tab_bodega:
-    st.markdown('<div style="padding: 30px;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding: 40px 30px;">', unsafe_allow_html=True)
     st.subheader("📦 Control de Lotes y Existencias en Bodega")
     st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -740,7 +741,7 @@ with tab_bodega:
 # PESTAÑA 3: ACTAS OFICIALES
 # ------------------------------------------
 with tab_actas:
-    st.markdown('<div style="padding: 30px;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding: 40px 30px;">', unsafe_allow_html=True)
     st.subheader("📄 Actas Oficiales de Dispensación")
     st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -749,7 +750,7 @@ with tab_actas:
 # PESTAÑA 4: NORMATIVA FEFO
 # ------------------------------------------
 with tab_normativa:
-    st.markdown('<div style="padding: 30px;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding: 40px 30px;">', unsafe_allow_html=True)
     st.subheader("⚖️ Normativa de Gestión FEFO")
     st.markdown("""
     **Principios del Sistema FEFO (*First Expired, First Out* - Primero en Caducar, Primero en Salir):**
