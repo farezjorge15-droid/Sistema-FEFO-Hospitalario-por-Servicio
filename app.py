@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Logo del MSP en la primera pestaña y diseño optimizado
+# Estilos CSS: Barra azul cielo (#e3f2fd) y logo MSP grande como botón de inicio
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -47,57 +47,66 @@ st.markdown("""
     /* Posicionamiento de las pestañas */
     .stTabs {
         position: absolute !important;
-        top: 8px !important;
+        top: 10px !important;
         left: 15px !important;
         z-index: 99999 !important;
         width: auto !important;
         background: transparent !important;
     }
-    /* Barra contenedora ultra delgada y compacta */
+    /* Barra contenedora con el color azul cielo del fondo (#e3f2fd) */
     .stTabs [data-baseweb="tab-list"],
     div[data-baseweb="tab-list"] {
-        background: rgba(255, 255, 255, 0.35) !important;
-        background-color: rgba(255, 255, 255, 0.35) !important;
-        border-radius: 6px !important;
-        padding: 2px 4px !important;
+        background: #e3f2fd !important;
+        background-color: #e3f2fd !important;
+        border-radius: 8px !important;
+        padding: 3px 6px !important;
         border-bottom: none !important;
-        gap: 4px !important;
-        backdrop-filter: blur(6px) !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        gap: 6px !important;
+        backdrop-filter: blur(8px) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
     }
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
     /* Estilos generales de las pestañas */
     .stTabs [data-baseweb="tab"] {
-        height: 28px !important;
+        height: 32px !important;
         background-color: transparent !important;
-        border-radius: 4px !important;
-        padding: 0px 10px !important;
+        border-radius: 6px !important;
+        padding: 0px 12px !important;
         font-size: 0.8rem !important;
         font-weight: 600 !important;
         color: #1F4E78 !important;
         border: none !important;
         box-shadow: none !important;
     }
-    /* Convertir la primera pestaña (Inicio) en el botón con el Logo MSP */
-    .stTabs [data-baseweb="tab"]:first-child {
-        width: 34px !important;
-        min-width: 34px !important;
+    
+    /* Primera pestaña convertida en el Logo del MSP (2x más grande, sin texto) */
+    .stTabs [data-baseweb="tab"]:nth-child(1) {
+        width: 60px !important;
+        min-width: 60px !important;
         background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
-        background-size: contain !important;
+        background-size: 85% 85% !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
         color: transparent !important;
         font-size: 0px !important;
+        padding: 0 !important;
     }
+    
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    .stTabs [aria-selected="true"]:first-child {
-        background-color: rgba(31, 78, 120, 0.2) !important;
+    
+    .stTabs [aria-selected="true"]:nth-child(1) {
+        background-color: rgba(31, 78, 120, 0.15) !important;
+        background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
+        background-size: 85% 85% !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
     }
+
     /* Banner full screen: Centrado vertical exacto para el texto */
     .hero-fullscreen {
         position: relative;
@@ -645,11 +654,10 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# PESTAÑAS PRINCIPALES DE NAVEGACIÓN
-# (La primera pestaña mantiene el espacio para transformarse en el logo MSP)
+# PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "MSP Ministerio de Salud Publica",
+    "MSP Ministerio de Salud Publica", 
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
