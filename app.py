@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Fondo fijo inamovible + Contenedor con scroll vertical fluido por encima
+# Estilos CSS: Scroll vertical unificado y fluido para toda la página
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -36,23 +36,25 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* Permitir scroll vertical en el contenedor principal de la vista */
-    [data-testid="stAppViewContainer"] {
-        background: transparent !important;
+    /* Habilitar scroll global natural en el navegador y Streamlit */
+    html, body, [data-testid="stAppViewContainer"], .main {
+        background: #f0f7ff !important;
         overflow-y: auto !important;
-        height: 100vh !important;
+        height: auto !important;
+        min-height: 100vh !important;
     }
 
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 8rem !important;
+        padding-bottom: 6rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
+        overflow: visible !important;
     }
     
-    /* Posicionamiento de la barra de navegación superior */
+    /* Posicionamiento fijo de la barra de navegación superior */
     .stTabs {
         position: fixed !important;
         top: 10px !important;
@@ -111,21 +113,21 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* FONDO FIJO INAMOVIBLE (Se queda estático como wallpaper al fondo) */
+    /* FONDO ESTÁTICO PROTEGIDO */
     .hero-fullscreen {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 480px;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
         margin: 0 !important;
-        z-index: 0 !important;
-        pointer-events: none !important;
+        z-index: 0;
+        pointer-events: none;
     }
     .hero-left-content {
         width: 50%;
@@ -135,7 +137,6 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         justify-content: center;
-        transform: translateY(-20px);
     }
     .welcome-text {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -144,14 +145,14 @@ st.markdown("""
         color: #0d47a1;
         font-weight: 700;
         text-transform: uppercase;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
     }
     .hero-title {
-        font-size: 2.8rem;
+        font-size: 2.4rem;
         font-weight: 800;
         color: #1F4E78;
         line-height: 1.15;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
     }
     .hero-right-image {
         width: 55%;
@@ -167,16 +168,16 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* CONTENEDOR DE CONTENIDO (Se desplaza fluidamente POR ENCIMA del fondo fijo) */
+    /* CONTENEDOR DE CONTENIDO (Se desplaza fluidamente con todos los botones y tablas) */
     .content-overlay {
         position: relative;
-        margin-top: 70px;
+        margin-top: 360px;
         margin-left: 20px;
         margin-right: 20px;
-        margin-bottom: 100px;
+        margin-bottom: 60px;
         padding: 25px 35px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.92);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.9);
@@ -704,7 +705,7 @@ if 'pdf_bytes_cache' not in st.session_state:
     st.session_state.pdf_bytes_cache = None
 
 # ==========================================
-# FONDO DE PANTALLA CONSTANTE (PROTEGIDO Y FIJO)
+# FONDO DE PANTALLA CONSTANTE (PROTEGIDO)
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
