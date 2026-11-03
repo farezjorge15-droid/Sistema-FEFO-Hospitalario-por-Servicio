@@ -42,22 +42,20 @@ def clean_exact(s):
 
 def buscar_producto_inteligente(p_name_limpio, df_unificado, df_lotes_grouped):
     """
-    Busca el producto de forma inteligente (emulando a Google AI Studio):
-    1. Intenta coincidencia exacta limpia.
-    2. Si no la encuentra, busca por palabras clave principales (ej: CATETER y el número).
+    Busca el producto de forma inteligente diferenciando calibres (ej: 14, 18, 20, 22).
     """
-    # 1. Coincidencia exacta
+    # 1. Coincidencia exacta limpia
     match = df_unificado[df_unificado['clean_name'] == p_name_limpio]
     if not match.empty:
         return match, p_name_limpio
 
-    # 2. Búsqueda inteligente por palabras clave (Fuzzy / Keyword Matching)
-    palabras = [w for w in p_name_limpio.split() if len(w) > 2 and w not in ['CON', 'DEL', 'LAS', 'LOS', 'POR']]
+    # 2. Búsqueda por palabras clave exactas (asegurando que si pide '18' o '20', coincida con el número exacto)
+    palabras = [w for w in p_name_limpio.split() if len(w) > 1 and w not in ['CON', 'DEL', 'LAS', 'LOS', 'POR']]
     if palabras:
         for _, row in df_unificado.iterrows():
             c_name = row['clean_name']
-            # Si contiene las palabras clave principales (ej. 'CATETER' y '14')
-            if all(pal in c_name for pal in palabras if pal.isalpha() or pal.isdigit()):
+            # Verificamos que todas las palabras clave principales coincidan
+            if all(pal in c_name for pal in palabras):
                 matched_df = df_unificado[df_unificado['clean_name'] == c_name]
                 return matched_df, c_name
 
@@ -173,8 +171,8 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     p_name_raw = pdf_row['clean_name']
                     cant_pendiente = pdf_row['Cantidades Aprobadas']
                     
-                    # Búsqueda inteligente
-                    match_unif, matched_key = buscar_producto_inteligente(p_name_raw, df_unificado, df_lotes_grouped)
+                    # 1. Búsqueda en Stock Unificado
+                    match_unif, matched_key_unif = buscar_producto_inteligente(p_name_raw, df_unificado, df_lotes_grouped)
 
                     if not match_unif.empty:
                         codigo = match_unif.iloc[0].get('Código', match_unif.iloc[0].get('Codigo', 'SIN-CODIGO'))
@@ -188,9 +186,10 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                         codigo = 'SIN-CODIGO'
                         sku = 'SIN-SKU'
                         stock_bodega = 0.0
-                        matched_key = p_name_raw
 
-                    lotes_prod = df_lotes_grouped[df_lotes_grouped['clean_name'] == matched_key]
+                    # 2. Búsqueda específica en Lotes usando también búsqueda inteligente para asegurar el calibre exacto
+                    _, matched_key_lotes = buscar_producto_inteligente(p_name_raw, df_lotes_grouped.drop_duplicates(subset=['clean_name']), df_lotes_grouped)
+                    lotes_prod = df_lotes_grouped[df_lotes_grouped['clean_name'] == matched_key_lotes]
 
                     if lotes_prod.empty or float(stock_bodega) <= 0:
                         item_data = {
@@ -213,7 +212,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                         for _, l_row in lotes_prod.iterrows():
                             if cant_pendiente <= 0:
                                 break
-                            key = (matched_key, l_row['Lote'], l_row['F. Cad'])
+                            key = (matched_key_lotes, l_row['Lote'], l_row['F. Cad'])
                             disp_lote = stock_disponible_dict.get(key, 0.0)
                             if disp_lote <= 0:
                                 continue
