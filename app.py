@@ -419,11 +419,35 @@ with st.sidebar.expander("Modificar Firmantes de Actas"):
     custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO")
 
 if st.sidebar.button("🚀 Procesar Lote FEFO"):
+ # =========================================================================
+# INTERFAZ DE STREAMLIT
+# =========================================================================
+st.title("Sistema FEFO - Hospital Vicente Corral Moscoso")
+
+st.sidebar.header("📂 Carga de Archivos")
+uploaded_lotes = st.sidebar.file_uploader("Excel de Lotes", type=["xlsx", "xls"])
+uploaded_unificado = st.sidebar.file_uploader("Excel de Stock / Unificado", type=["xlsx", "xls"])
+uploaded_pdfs = st.sidebar.file_uploader("Pedidos en PDF (Múltiples)", type=["pdf"], accept_multiple_files=True)
+
+st.sidebar.header("✍️ Personalización de Firmantes")
+with st.sidebar.expander("Modificar Firmantes de Actas"):
+    custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO")
+    custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR")
+    custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO")
+
+if st.sidebar.button("🚀 Procesar Lote FEFO"):
     if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
         with st.spinner("Procesando lotes y aplicando FEFO acumulativo..."):
-            lista_pdfs = [(pdf.name, pdf.read()) for pdf in uploaded_pdfs]
-            lotes_bytes = uploaded_lotes.read()
-            unificado_bytes = uploaded_unificado.read()
+            
+            # LECTURA SEGURA DE BYTES PARA STREAMLIT CLOUD (Evita que el puntero falle)
+            lotes_bytes = uploaded_lotes.getvalue()
+            unificado_bytes = uploaded_unificado.getvalue()
+            
+            lista_pdfs = []
+            for pdf in uploaded_pdfs:
+                # Asegurar lectura completa de cada PDF en bytes independientes
+                pdf_bytes = pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()
+                lista_pdfs.append((pdf.name, pdf_bytes))
 
             firmantes_config = {
                 'elaborado_por': custom_elab,
@@ -440,6 +464,6 @@ if st.sidebar.button("🚀 Procesar Lote FEFO"):
                 st.download_button("📥 Descargar Excel Consolidado", excel_res, "Consolidado_Lote_FEFO.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 st.download_button("📥 Descargar Actas en PDF", pdf_res, "Actas_Oficiales_Consolidas.pdf", "application/pdf")
             else:
-                st.error("No se pudieron generar resultados. Verifique los datos de entrada.")
+                st.error("No se pudieron generar resultados. Verifique que los nombres de los productos en los Excel coincidan con los PDFs.")
     else:
         st.warning("⚠️ Por favor, cargue todos los archivos necesarios (Lotes, Stock y al menos un PDF).")
