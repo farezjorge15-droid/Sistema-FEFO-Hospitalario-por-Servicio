@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS personalizados
+# Estilos CSS personalizados (Incluyendo la tipografía elegante para el BIENVENIDO)
 st.markdown("""
     <style>
     /* Ocultar barra lateral totalmente */
@@ -39,18 +39,21 @@ st.markdown("""
         box-shadow: 0px 8px 25px rgba(31, 78, 120, 0.08);
         border: 1px solid #d0e1fd;
     }
+    .welcome-text {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 1.1rem;
+        letter-spacing: 3px;
+        color: #0d47a1;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
     .hero-title {
         font-size: 2.2rem;
         font-weight: 800;
         color: #1F4E78;
         line-height: 1.2;
         margin-bottom: 15px;
-    }
-    .hero-subtitle {
-        font-size: 1.05rem;
-        color: #455a64;
-        font-weight: 500;
-        line-height: 1.5;
     }
     .stButton>button {
         width: 100%;
@@ -569,8 +572,8 @@ with tab_inicio:
         <div class="hero-container">
             <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;">
                 <div style="flex: 1; min-width: 300px; padding-right: 20px;">
+                    <div class="welcome-text">✨ BIENVENIDO</div>
                     <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
-                    <div class="hero-subtitle">Sistema Institucional Automatizado de Dispensación Farmacéutica, Control de Lotes y Cruce de Stock por Servicio (Método FEFO).<br><br><b>Bienvenido al sistema.</b> Haga clic en la pestaña superior <b>"📊 Cruce de Lote"</b> para comenzar a cargar sus archivos de inventario y solicitudes en PDF.</div>
                 </div>
                 <div style="flex: 1; min-width: 300px; text-align: center; margin-top: 15px;">
                     <img src="https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752" style="width: 100%; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
