@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Fondo fijo cubriendo toda la pantalla y barra superior estilizada
+# Estilos CSS: Barra azul cielo unificada y diseño profesional
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -107,7 +107,7 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo de pantalla fijo cubriendo toda la pantalla en todas las vistas */
+    /* Fondo de pantalla fijo cubriendo toda la pantalla */
     .hero-fullscreen {
         position: fixed;
         top: 0;
@@ -162,19 +162,20 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor flotante para el contenido de las pestañas sin bloquear el fondo */
+    /* Contenedor flotante traslúcido para el contenido de las demás pestañas */
     .content-overlay {
         position: relative;
-        margin-top: 70px;
+        margin-top: 65px;
         margin-left: 20px;
         margin-right: 20px;
+        margin-bottom: 20px;
         padding: 30px 40px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(8px);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(10px);
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
     }
     
     .stButton>button {
@@ -671,20 +672,16 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# FONDO DE PANTALLA CONSTANTE (FIJO EN TODAS LAS VISTAS)
+# FONDO DE PANTALLA FIJO (SÓLO IMAGEN, SIN TEXTO DE BIENVENIDA GLOBAL)
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
-        <div class="hero-left-content">
-            <div class="welcome-text">✨ BIENVENIDO</div>
-            <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
-        </div>
         <div class="hero-right-image"></div>
     </div>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
+# PESTAÑAS PRINCIPALES DE NAVEGACIÓN
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
     "MSP", 
@@ -695,13 +692,21 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 ])
 
 # ------------------------------------------
-# PESTAÑA 0: INICIO
+# PESTAÑA 0: INICIO (Aquí SÍ aparece el texto de Bienvenida)
 # ------------------------------------------
 with tab_inicio:
-    pass
+    st.markdown("""
+        <div class="hero-fullscreen" style="z-index: 5;">
+            <div class="hero-left-content">
+                <div class="welcome-text">✨ BIENVENIDO</div>
+                <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
+            </div>
+            <div class="hero-right-image"></div>
+        </div>
+    """, unsafe_allow_html=True)
 
 # ------------------------------------------
-# PESTAÑA 1: CRUCE DE LOTE
+# PESTAÑA 1: CRUCE DE LOTE (Solo fondo de pantalla y panel de carga)
 # ------------------------------------------
 with tab_cruce:
     st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
