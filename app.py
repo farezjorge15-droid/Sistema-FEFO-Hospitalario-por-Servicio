@@ -36,20 +36,21 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* Habilitar scroll vertical nativo y fluido en toda la página */
-    html, body, [data-testid="stAppViewContainer"], .main {
+    /* DESBLOQUEO TOTAL DEL SCROLL VERTICAL EN EL NAVEGADOR */
+    html, body, [data-testid="stAppViewContainer"], .stMain, .main, div[data-testid="stVerticalBlock"] {
         overflow-y: auto !important;
-        overflow-x: hidden !important;
-        height: 100% !important;
+        height: auto !important;
+        min-height: 100% !important;
     }
 
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 4rem !important;
+        padding-bottom: 5rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
+        overflow: visible !important;
     }
     
     /* Posicionamiento fijo de la barra de navegación superior */
@@ -167,16 +168,16 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor de contenido adaptable con flujo libre hacia abajo */
+    /* Contenedor de contenido con flujo natural y expansión vertical */
     .content-overlay {
         position: relative;
         margin-top: 65px;
         margin-left: 20px;
         margin-right: 20px;
-        margin-bottom: 50px;
+        margin-bottom: 60px;
         padding: 25px 35px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.88);
+        background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.9);
@@ -720,7 +721,7 @@ st.markdown("""
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "", 
+    "MSP", 
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
