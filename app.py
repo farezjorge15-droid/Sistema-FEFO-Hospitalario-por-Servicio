@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS con scroll vertical obligatorio y alturas desbloqueadas
+# Estilos CSS con fondo fijo y contenedor con scroll vertical interno
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -36,22 +36,20 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* FORZAR SCROLL LATERAL OBLIGATORIO Y DESBLOQUEAR ALTURAS */
     html, body, [data-testid="stAppViewContainer"], .main {
         background-color: #f0f7ff !important;
-        overflow-y: scroll !important;
-        height: auto !important;
-        min-height: 100vh !important;
+        overflow: hidden !important;
+        height: 100vh !important;
     }
 
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 6rem !important;
+        padding-bottom: 0rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
-        overflow: visible !important;
+        overflow: hidden !important;
     }
     
     /* Posicionamiento fijo de la barra de navegación superior */
@@ -113,10 +111,12 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo estático de pantalla */
+    /* Fondo estático fijo (wallpaper que no se mueve) */
     .hero-fullscreen {
-        position: relative;
-        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
         height: 100vh;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
@@ -125,6 +125,7 @@ st.markdown("""
         overflow: hidden;
         margin: 0 !important;
         z-index: 0;
+        pointer-events: none;
     }
     .hero-left-content {
         width: 50%;
@@ -166,13 +167,15 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor de contenido desplazable */
+    /* Contenedor con altura fija/máxima y scroll vertical interno */
     .content-overlay {
         position: relative;
-        margin-top: 20px;
+        margin-top: 65px;
         margin-left: 20px;
         margin-right: 20px;
-        margin-bottom: 80px;
+        height: calc(100vh - 85px) !important;
+        max-height: calc(100vh - 85px) !important;
+        overflow-y: auto !important;
         padding: 25px 35px;
         z-index: 10;
         background: rgba(255, 255, 255, 0.92);
@@ -677,7 +680,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# FONDO DE PANTALLA ESTÁTICO (FLUJO NATURAL)
+# FONDO DE PANTALLA ESTÁTICO FIJO (WALLPAPER)
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
