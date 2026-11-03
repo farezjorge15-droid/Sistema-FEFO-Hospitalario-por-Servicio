@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS profesionales de ancho completo (full-width) y diseño moderno
+# Estilos CSS inyectados para el fondo fijo y scroll vertical obligatorio
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -36,11 +36,13 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* Configuración general de la página para ocupar toda la pantalla con scroll fluido */
+    /* Configuración de la página principal para permitir scroll vertical nativo */
     html, body, [data-testid="stAppViewContainer"], .main {
-        background-color: #f0f7ff !important;
+        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%) !important;
+        background-attachment: fixed !important;
         overflow-y: auto !important;
-        height: 100vh !important;
+        height: auto !important;
+        min-height: 100vh !important;
     }
 
     .main .block-container {
@@ -50,6 +52,7 @@ st.markdown("""
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
+        overflow-y: auto !important;
     }
     
     /* Posicionamiento fijo de la barra de navegación superior */
@@ -111,31 +114,27 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo estático fluido */
+    /* Banner visual superior integrado al flujo normal */
     .hero-fullscreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
+        position: relative;
+        width: 100%;
+        min-height: 85vh;
+        background: transparent;
         display: flex;
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
         margin: 0 !important;
-        z-index: 0;
-        pointer-events: none;
+        z-index: 1;
     }
     .hero-left-content {
         width: 50%;
         padding-left: 6%;
         padding-right: 4%;
-        z-index: 1;
+        z-index: 2;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        transform: translateY(-20px);
     }
     .welcome-text {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -167,19 +166,21 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor profesional de ancho completo distribuido */
+    /* Contenedor principal de contenido con ancho completo y scroll vertical activo */
     .content-container {
         position: relative;
-        margin-top: 65px;
+        margin-top: 10px;
         margin-left: 20px;
         margin-right: 20px;
+        margin-bottom: 40px;
         padding: 30px 40px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.88);
-        backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
         border-radius: 14px;
         border: 1px solid rgba(255, 255, 255, 0.95);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        overflow-y: auto !important;
     }
     
     .stButton>button {
@@ -676,19 +677,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# FONDO DE PANTALLA ESTÁTICO FIJO (WALLPAPER)
-# ==========================================
-st.markdown("""
-    <div class="hero-fullscreen">
-        <div class="hero-left-content">
-            <div class="welcome-text">✨ BIENVENIDO</div>
-            <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
-        </div>
-        <div class="hero-right-image"></div>
-    </div>
-""", unsafe_allow_html=True)
-
-# ==========================================
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
@@ -703,7 +691,15 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 # PESTAÑA 0: INICIO
 # ------------------------------------------
 with tab_inicio:
-    pass
+    st.markdown("""
+        <div class="hero-fullscreen">
+            <div class="hero-left-content">
+                <div class="welcome-text">✨ BIENVENIDO</div>
+                <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
+            </div>
+            <div class="hero-right-image"></div>
+        </div>
+    """, unsafe_allow_html=True)
 
 # ------------------------------------------
 # PESTAÑA 1: CRUCE DE LOTE
