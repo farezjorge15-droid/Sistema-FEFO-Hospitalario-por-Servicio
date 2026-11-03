@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Logo del MSP en la primera pestaña y diseño optimizado
+# Estilos CSS: Inyección limpia del logo MSP en la primera pestaña
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -56,8 +56,8 @@ st.markdown("""
     /* Barra contenedora ultra delgada y compacta */
     .stTabs [data-baseweb="tab-list"],
     div[data-baseweb="tab-list"] {
-        background: rgba(255, 255, 255, 0.35) !important;
-        background-color: rgba(255, 255, 255, 0.35) !important;
+        background: rgba(255, 255, 255, 0.4) !important;
+        background-color: rgba(255, 255, 255, 0.4) !important;
         border-radius: 6px !important;
         padding: 2px 4px !important;
         border-bottom: none !important;
@@ -80,24 +80,36 @@ st.markdown("""
         border: none !important;
         box-shadow: none !important;
     }
-    /* Convertir la primera pestaña (Inicio) en el botón con el Logo MSP */
-    .stTabs [data-baseweb="tab"]:first-child {
-        width: 34px !important;
-        min-width: 34px !important;
+    
+    /* Transformar la primera pestaña en el Logo del MSP de forma precisa */
+    .stTabs [data-baseweb="tab"]:nth-child(1) {
+        width: 38px !important;
+        min-width: 38px !important;
+        padding: 0px !important;
         background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
-        background-size: contain !important;
+        background-size: 80% 80% !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
+    }
+    /* Ocultar el texto interno "Inicio" de la primera pestaña para que solo se vea el logo */
+    .stTabs [data-baseweb="tab"]:nth-child(1) p,
+    .stTabs [data-baseweb="tab"]:nth-child(1) div {
         color: transparent !important;
         font-size: 0px !important;
     }
+
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    .stTabs [aria-selected="true"]:first-child {
-        background-color: rgba(31, 78, 120, 0.2) !important;
+    .stTabs [aria-selected="true"]:nth-child(1) {
+        background-color: rgba(31, 78, 120, 0.25) !important;
+        background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
+        background-size: 80% 80% !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
     }
+
     /* Banner full screen: Centrado vertical exacto para el texto */
     .hero-fullscreen {
         position: relative;
@@ -646,7 +658,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 # ==========================================
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN
-# (La primera pestaña mantiene el espacio para transformarse en el logo MSP)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
     "Inicio",
