@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Barra de pestañas ultra pequeña y compacta
+# Estilos CSS: Barra de pestañas ultra pequeña y texto centrado verticalmente
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -84,7 +84,7 @@ st.markdown("""
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    /* Banner full screen: Fondo azul y la imagen del hospital */
+    /* Banner full screen: Centrado vertical exacto para el texto */
     .hero-fullscreen {
         position: relative;
         width: 100vw;
@@ -95,7 +95,7 @@ st.markdown("""
         justify-content: space-between;
         overflow: hidden;
         margin: 0 !important;
-        padding-top: 50px;
+        padding-top: 0px !important;
         z-index: 1;
     }
     .hero-left-content {
@@ -103,6 +103,10 @@ st.markdown("""
         padding-left: 6%;
         padding-right: 4%;
         z-index: 2;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        transform: translateY(-20px); /* Sube ligeramente el bloque para un centrado óptimo */
     }
     .welcome-text {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
