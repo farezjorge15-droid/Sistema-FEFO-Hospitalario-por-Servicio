@@ -36,21 +36,21 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* DESBLOQUEO TOTAL DEL SCROLL VERTICAL EN EL NAVEGADOR */
-    html, body, [data-testid="stAppViewContainer"], .stMain, .main, div[data-testid="stVerticalBlock"] {
-        overflow-y: auto !important;
+    /* FORZAR SCROLL VERTICAL NATIVO EN EL NAVEGADOR */
+    html, body, [data-testid="stAppViewContainer"], .main, .block-container {
+        overflow: auto !important;
+        overflow-y: scroll !important;
         height: auto !important;
-        min-height: 100% !important;
+        max-height: none !important;
     }
 
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 5rem !important;
+        padding-bottom: 6rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
-        overflow: visible !important;
     }
     
     /* Posicionamiento fijo de la barra de navegación superior */
@@ -168,13 +168,13 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor de contenido con flujo natural y expansión vertical */
+    /* Contenedor principal con flujo vertical natural */
     .content-overlay {
         position: relative;
         margin-top: 65px;
         margin-left: 20px;
         margin-right: 20px;
-        margin-bottom: 60px;
+        margin-bottom: 80px;
         padding: 25px 35px;
         z-index: 10;
         background: rgba(255, 255, 255, 0.9);
