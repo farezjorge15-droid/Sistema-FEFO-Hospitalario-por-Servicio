@@ -13,6 +13,49 @@ import io
 import datetime
 import streamlit as st
 
+# ==========================================
+# CONFIGURACIÓN DE LA PÁGINA (ESTILO VISUAL)
+# ==========================================
+st.set_page_config(
+    page_title="Sistema FEFO - Hospital Vicente Corral Moscoso",
+    page_icon="🏥",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Estilos CSS personalizados para embellecer la interfaz
+st.markdown("""
+    <style>
+    .main-header {
+        font-size: 2.2rem;
+        color: #1F4E78;
+        font-weight: 700;
+        margin-bottom: 0px;
+    }
+    .sub-header {
+        font-size: 1.1rem;
+        color: #555555;
+        margin-bottom: 20px;
+    }
+    .stButton>button {
+        width: 100%;
+        background-color: #1F4E78;
+        color: white;
+        font-weight: bold;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+    }
+    .stButton>button:hover {
+        background-color: #153450;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ==========================================
+# MOTOR FEFO Y PROCESAMIENTO (INTACTO)
+# ==========================================
+
 def cargar_excel_seguro(file_bytes):
     try:
         return pd.read_excel(io.BytesIO(file_bytes), engine='openpyxl')
@@ -103,7 +146,9 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             key = (row['clean_name'], row['Lote'], row['F. Cad'])
             stock_disponible_dict[key] = float(row['Existen']) if pd.notna(row['Existen']) else 0.0
 
-        # PASO 1: Pre-detectar los nombres base de servicio para cada PDF y asegurar nombres únicos limpios
+        todos_los_resultados = []
+        metadata_actas = [] 
+
         nombres_servicios_raw = []
         for idx_pdf, (nombre_pdf, pdf_bytes) in enumerate(lista_pdfs):
             pdf_text = ""
@@ -127,7 +172,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     base_servicio = raw_serv.upper().strip()
             nombres_servicios_raw.append((idx_pdf, nombre_pdf, pdf_bytes, base_servicio, pdf_text))
 
-        # Asignar sufijos numéricos (1, 2, 3...) si se repite el nombre del servicio
         conteo_servicios = {}
         asignaciones_servicios = []
         for idx_pdf, nombre_pdf, pdf_bytes, base_serv, pdf_text in nombres_servicios_raw:
@@ -138,9 +182,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             else:
                 serv_final = f"{base_serv} ({freq})"
             asignaciones_servicios.append((idx_pdf, nombre_pdf, pdf_bytes, serv_final, pdf_text))
-
-        todos_los_resultados = []
-        metadata_actas = [] 
 
         for idx_pdf, nombre_pdf, pdf_bytes, servicio_nombre, pdf_text in asignaciones_servicios:
             firmantes_encontrados = []
@@ -491,22 +532,40 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         st.error(f"Error interno en el procesamiento: {e}")
         return None, None
 
-st.title("Sistema FEFO - Hospital Vicente Corral Moscoso")
+# ==========================================
+# INTERFAZ DE USUARIO INTERACTIVA Y MODERNA
+# ==========================================
 
-st.sidebar.header("📂 Carga de Archivos")
-uploaded_lotes = st.sidebar.file_uploader("Excel de Lotes", type=["xlsx", "xls"], key="unique_lotes_key")
-uploaded_unificado = st.sidebar.file_uploader("Excel de Stock / Unificado", type=["xlsx", "xls"], key="unique_unificado_key")
-uploaded_pdfs = st.sidebar.file_uploader("Pedidos en PDF (Múltiples)", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
+# Cabecera principal estilizada
+st.markdown('<p class="main-header">🏥 Sistema FEFO - Hospital Vicente Corral Moscoso</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Módulo automatizado de dispensación, control de lotes y cruce de stock por servicio.</p>', unsafe_allow_html=True)
 
-st.sidebar.header("✍️ Personalización de Firmantes")
-with st.sidebar.expander("Modificar Firmantes de Actas"):
-    custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
-    custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
-    custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
+# Barra lateral (Sidebar) interactiva
+with st.sidebar:
+    st.image("https://img.icons8.com/color/96/hospital-3.png", width=70)
+    st.header("📂 Gestión de Archivos")
+    
+    with st.expander("1. Cargar Inventarios", expanded=True):
+        uploaded_lotes = st.file_uploader("Excel de Lotes (FEFO)", type=["xlsx", "xls"], key="unique_lotes_key")
+        uploaded_unificado = st.file_uploader("Excel de Stock Unificado", type=["xlsx", "xls"], key="unique_unificado_key")
+    
+    with st.expander("2. Cargar Pedidos", expanded=True):
+        uploaded_pdfs = st.file_uploader("Pedidos en PDF (Múltiples)", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
 
-if st.sidebar.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key"):
+    st.markdown("---")
+    st.header("✍️ Firmantes de Actas")
+    with st.expander("Personalizar Nombres"):
+        custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
+        custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
+        custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
+
+    st.markdown("---")
+    procesar_btn = st.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key")
+
+# Área Principal de Trabajo (Dashboard interactivo)
+if procesar_btn:
     if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
-        with st.spinner("Procesando lotes y aplicando FEFO acumulativo..."):
+        with st.spinner("🔄 Procesando lotes, aplicando FEFO acumulativo y generando actas..."):
             
             lotes_bytes = uploaded_lotes.getvalue()
             unificado_bytes = uploaded_unificado.getvalue()
@@ -528,9 +587,50 @@ if st.sidebar.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key"):
 
             if excel_res and pdf_res:
                 st.success("¡Procesamiento completado con éxito!")
-                st.download_button("📥 Descargar Excel Consolidado", excel_res, "Consolidado_Pedidos_Matriz_FEFO.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key="unique_dl_excel_key")
-                st.download_button("📥 Descargar Actas en PDF", pdf_res, "Actas_Oficiales_Consolidas.pdf", "application/pdf", key="unique_dl_pdf_key")
+                
+                # Métricas rápidas informativas
+                col1, col2, col3 = st.columns(3)
+                col1.metric("📁 PDFs Procesados", len(uploaded_pdfs))
+                col2.metric("📊 Archivo Excel", "Generado y Validado")
+                col3.metric("📑 Actas PDF", "Consolidadas")
+
+                st.markdown("---")
+                st.subheader("📥 Zona de Descargas Oficiales")
+                
+                # Pestañas o columnas para botones de descarga limpios
+                dcol1, dcol2 = st.columns(2)
+                with dcol1:
+                    st.download_button(
+                        label="📥 Descargar Excel Consolidado (Matriz)",
+                        data=excel_res,
+                        file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key="unique_dl_excel_key"
+                    )
+                with dcol2:
+                    st.download_button(
+                        label="📥 Descargar Actas Oficiales en PDF",
+                        data=pdf_res,
+                        file_name="Actas_Oficiales_Consolidadas.pdf",
+                        mime="application/pdf",
+                        key="unique_dl_pdf_key"
+                    )
             else:
-                st.error("No se pudieron generar resultados. Verifique que los archivos sean correctos.")
+                st.error("⚠️ No se pudieron generar resultados. Verifique que la estructura de los archivos sea correcta.")
     else:
-        st.warning("⚠️ Por favor, cargue todos los archivos necesarios (Lotes, Stock y al menos un PDF).")
+        st.warning("⚠️ Por favor, cargue todos los archivos obligatorios en la barra lateral (Excel de Lotes, Stock Unificado y al menos un archivo PDF).")
+else:
+    # Estado inicial / Pantalla de bienvenida interactiva
+    st.info("👈 Por favor, cargue los archivos requeridos en la **barra lateral izquierda** y haga clic en **'Procesar Lote FEFO'** para iniciar el sistema.")
+    
+    # Tarjetas informativas de guía para el usuario
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        st.markdown("### 📂 1. Inventarios")
+        st.write("Cargue sus archivos de Excel con el control de lotes y el stock unificado de bodega.")
+    with col_b:
+        st.markdown("### 📄 2. Pedidos PDF")
+        st.write("Seleccione múltiples solicitudes en PDF de los diferentes servicios del hospital.")
+    with col_c:
+        st.markdown("### 📊 3. Resultados")
+        st.write("Obtenga de forma inmediata su matriz consolidada alfabética y las actas oficiales firmadas.")
