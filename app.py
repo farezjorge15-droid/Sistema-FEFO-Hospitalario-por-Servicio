@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Fondo fijo cubriendo toda la pantalla y barra superior estilizada
+# Estilos CSS con scroll vertical obligatorio y alturas desbloqueadas
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -35,16 +35,26 @@ st.markdown("""
         visibility: hidden !important;
         height: 0px !important;
     }
-    /* Eliminar paddings y márgenes superiores de la página principal */
+    
+    /* FORZAR SCROLL LATERAL OBLIGATORIO Y DESBLOQUEAR ALTURAS */
+    html, body, [data-testid="stAppViewContainer"], .main {
+        background-color: #f0f7ff !important;
+        overflow-y: scroll !important;
+        height: auto !important;
+        min-height: 100vh !important;
+    }
+
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
+        padding-bottom: 6rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
+        overflow: visible !important;
     }
-    /* Posicionamiento de las pestañas */
+    
+    /* Posicionamiento fijo de la barra de navegación superior */
     .stTabs {
         position: fixed !important;
         top: 10px !important;
@@ -53,7 +63,6 @@ st.markdown("""
         width: auto !important;
         background: transparent !important;
     }
-    /* Barra contenedora con el color azul cielo del fondo (#e3f2fd) */
     .stTabs [data-baseweb="tab-list"],
     div[data-baseweb="tab-list"] {
         background: #e3f2fd !important;
@@ -68,7 +77,6 @@ st.markdown("""
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
-    /* Estilos generales de las pestañas */
     .stTabs [data-baseweb="tab"] {
         height: 32px !important;
         background-color: transparent !important;
@@ -81,7 +89,7 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* Primera pestaña convertida en el Logo del MSP (grande, sin texto) */
+    /* Primera pestaña: Logo del MSP grande */
     .stTabs [data-baseweb="tab"]:nth-child(1) {
         width: 55px !important;
         min-width: 55px !important;
@@ -93,12 +101,10 @@ st.markdown("""
         font-size: 0px !important;
         padding: 0 !important;
     }
-    
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    
     .stTabs [aria-selected="true"]:nth-child(1) {
         background-color: rgba(31, 78, 120, 0.15) !important;
         background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
@@ -107,12 +113,10 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo de pantalla fijo cubriendo toda la pantalla en todas las vistas */
+    /* Fondo estático de pantalla */
     .hero-fullscreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
+        position: relative;
+        width: 100%;
         height: 100vh;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
@@ -162,19 +166,21 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor flotante para el contenido de las pestañas sin bloquear el fondo */
+    /* Contenedor de contenido desplazable */
     .content-overlay {
         position: relative;
-        margin-top: 70px;
+        margin-top: 20px;
         margin-left: 20px;
         margin-right: 20px;
-        padding: 30px 40px;
+        margin-bottom: 80px;
+        padding: 25px 35px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(8px);
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px);
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.9);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        box-sizing: border-box;
     }
     
     .stButton>button {
@@ -671,7 +677,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# FONDO DE PANTALLA CONSTANTE (FIJO EN TODAS LAS VISTAS)
+# FONDO DE PANTALLA ESTÁTICO (FLUJO NATURAL)
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
