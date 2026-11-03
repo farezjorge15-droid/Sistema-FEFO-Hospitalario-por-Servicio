@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Fondo transparente/cristal en todas las vistas para que se vea el fondo de pantalla
+# Estilos CSS: Fondo fijo cubriendo toda la pantalla y barra superior estilizada
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -46,7 +46,7 @@ st.markdown("""
     }
     /* Posicionamiento de las pestañas */
     .stTabs {
-        position: absolute !important;
+        position: fixed !important;
         top: 10px !important;
         left: 15px !important;
         z-index: 99999 !important;
@@ -83,10 +83,10 @@ st.markdown("""
     
     /* Primera pestaña convertida en el Logo del MSP (grande, sin texto) */
     .stTabs [data-baseweb="tab"]:nth-child(1) {
-        width: 60px !important;
-        min-width: 60px !important;
+        width: 55px !important;
+        min-width: 55px !important;
         background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
-        background-size: 85% 85% !important;
+        background-size: contain !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
         color: transparent !important;
@@ -102,14 +102,16 @@ st.markdown("""
     .stTabs [aria-selected="true"]:nth-child(1) {
         background-color: rgba(31, 78, 120, 0.15) !important;
         background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
-        background-size: 85% 85% !important;
+        background-size: contain !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
     }
 
-    /* Banner de fondo constante para todas las vistas */
+    /* Fondo de pantalla fijo cubriendo toda la pantalla en todas las vistas */
     .hero-fullscreen {
         position: fixed;
+        top: 0;
+        left: 0;
         width: 100vw;
         height: 100vh;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
@@ -118,14 +120,13 @@ st.markdown("""
         justify-content: space-between;
         overflow: hidden;
         margin: 0 !important;
-        padding-top: 0px !important;
-        z-index: 1;
+        z-index: 0;
     }
     .hero-left-content {
         width: 50%;
         padding-left: 6%;
         padding-right: 4%;
-        z-index: 2;
+        z-index: 1;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -160,22 +161,22 @@ st.markdown("""
         mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,1) 100%);
         z-index: 1;
     }
-    /* Contenedor flotante traslúcido para que se vea el fondo de pantalla detrás */
+    
+    /* Contenedor flotante para el contenido de las pestañas sin bloquear el fondo */
     .content-overlay {
-        position: absolute;
-        top: 65px;
-        left: 20px;
-        right: 20px;
-        bottom: 20px;
-        overflow-y: auto;
+        position: relative;
+        margin-top: 70px;
+        margin-left: 20px;
+        margin-right: 20px;
         padding: 30px 40px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.45);
-        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(8px);
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.8);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
     }
+    
     .stButton>button {
         width: 100%;
         background-color: #1F4E78;
@@ -686,7 +687,7 @@ st.markdown("""
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "MSP", 
+    "", 
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
