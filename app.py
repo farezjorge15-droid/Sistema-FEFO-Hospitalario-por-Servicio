@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Scroll vertical unificado y fluido para toda la página
+# Estilos CSS: Scroll vertical obligatorio en el navegador y fondo ordenado
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -36,12 +36,12 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* Habilitar scroll global natural en el navegador y Streamlit */
+    /* FORZAR LA BARRA DE DESPLAZAMIENTO LATERAL OBLIGATORIA */
     html, body, [data-testid="stAppViewContainer"], .main {
         background: #f0f7ff !important;
-        overflow-y: auto !important;
+        overflow-y: scroll !important;
         height: auto !important;
-        min-height: 100vh !important;
+        max-height: none !important;
     }
 
     .main .block-container {
@@ -54,7 +54,7 @@ st.markdown("""
         overflow: visible !important;
     }
     
-    /* Posicionamiento fijo de la barra de navegación superior */
+    /* Posicionamiento de la barra de navegación superior */
     .stTabs {
         position: fixed !important;
         top: 10px !important;
@@ -113,13 +113,11 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* FONDO ESTÁTICO PROTEGIDO */
+    /* SECCIÓN DE BIENVENIDA / FONDO ESTÁTICO ORDENADO */
     .hero-fullscreen {
-        position: absolute;
-        top: 0;
-        left: 0;
+        position: relative;
         width: 100%;
-        height: 480px;
+        height: 380px;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
         align-items: center;
@@ -127,7 +125,6 @@ st.markdown("""
         overflow: hidden;
         margin: 0 !important;
         z-index: 0;
-        pointer-events: none;
     }
     .hero-left-content {
         width: 50%;
@@ -140,7 +137,7 @@ st.markdown("""
     }
     .welcome-text {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        font-size: 1.1rem;
+        font-size: 1rem;
         letter-spacing: 3px;
         color: #0d47a1;
         font-weight: 700;
@@ -148,7 +145,7 @@ st.markdown("""
         margin-bottom: 8px;
     }
     .hero-title {
-        font-size: 2.4rem;
+        font-size: 2.2rem;
         font-weight: 800;
         color: #1F4E78;
         line-height: 1.15;
@@ -168,16 +165,16 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* CONTENEDOR DE CONTENIDO (Se desplaza fluidamente con todos los botones y tablas) */
+    /* CONTENEDOR DE CONTENIDO PRINCIPAL */
     .content-overlay {
         position: relative;
-        margin-top: 360px;
+        margin-top: -40px;
         margin-left: 20px;
         margin-right: 20px;
         margin-bottom: 60px;
         padding: 25px 35px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 0.96);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.9);
@@ -705,7 +702,7 @@ if 'pdf_bytes_cache' not in st.session_state:
     st.session_state.pdf_bytes_cache = None
 
 # ==========================================
-# FONDO DE PANTALLA CONSTANTE (PROTEGIDO)
+# SECCIÓN SUPERIOR DE BIENVENIDA (ESTÁTICA Y ORDENADA)
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
@@ -721,7 +718,7 @@ st.markdown("""
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "MSP", 
+    "msp", 
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
