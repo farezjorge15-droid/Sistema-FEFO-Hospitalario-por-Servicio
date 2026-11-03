@@ -14,7 +14,7 @@ import datetime
 import streamlit as st
 
 # ==========================================
-# CONFIGURACIÓN DE PÁGINA (OCULTAR SIDEBAR)
+# CONFIGURACIÓN DE PÁGINA
 # ==========================================
 st.set_page_config(
     page_title="Sistema FEFO - Hospital Vicente Corral Moscoso",
@@ -23,62 +23,57 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS avanzados para eliminar la franja blanca y fusionar el fondo detrás de las pestañas
+# Estilos CSS corregidos: Fondo continuo total + Pestañas flotantes visibles
 st.markdown("""
     <style>
-    /* Ocultar barra lateral y cabeceras de Streamlit */
+    /* Ocultar sidebar y header nativo de Streamlit */
     [data-testid="stSidebar"] {
-        display: none;
+        display: none !important;
     }
-    header {
+    header, .stApp > header {
+        display: none !important;
         visibility: hidden !important;
-        display: none !important;
+        height: 0px !important;
     }
-    .stApp > header {
-        display: none !important;
-    }
-    /* Eliminar cualquier margen o padding superior de la aplicación */
-    .block-container {
+    /* Eliminar paddings superiores de la página */
+    .main .block-container {
         padding-top: 0rem !important;
         padding-bottom: 0rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
     }
-    div.block-container {
-        padding-top: 0rem !important;
-    }
-    /* Forzar que las pestañas floten transparentes exactamente arriba */
+    /* Posicionamiento flotante de las pestañas por encima del fondo */
     .stTabs {
-        position: absolute;
-        top: 15px;
-        left: 20px;
-        z-index: 9999;
-        width: calc(100% - 40px);
+        position: absolute !important;
+        top: 20px !important;
+        left: 20px !important;
+        z-index: 99999 !important;
+        width: auto !important;
         background: transparent !important;
     }
     .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
+        gap: 10px !important;
         background-color: transparent !important;
         border-bottom: none !important;
     }
-    /* Estilo de los botones de las pestañas */
+    /* Botones de navegación estilizados */
     .stTabs [data-baseweb="tab"] {
-        height: 38px;
-        background-color: rgba(255, 255, 255, 0.8);
-        border-radius: 8px;
-        padding: 0px 18px;
-        font-weight: 600;
-        color: #1F4E78;
-        border: 1px solid rgba(208, 225, 253, 0.9);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        backdrop-filter: blur(5px);
+        height: 40px !important;
+        background-color: rgba(255, 255, 255, 0.85) !important;
+        border-radius: 8px !important;
+        padding: 0px 18px !important;
+        font-weight: 600 !important;
+        color: #1F4E78 !important;
+        border: 1px solid rgba(31, 78, 120, 0.2) !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08) !important;
+        backdrop-filter: blur(5px) !important;
     }
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    /* Contenedor principal de inicio elevado para cubrir todo el fondo superior */
+    /* Banner full screen que cubre desde la cima sin franja blanca */
     .hero-fullscreen {
         position: relative;
         width: 100vw;
@@ -88,8 +83,8 @@ st.markdown("""
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
-        margin-top: -6rem; /* Eleva el fondo para que cubra detrás de los botones */
-        padding-top: 80px;
+        margin-top: 0rem;
+        padding-top: 80px; /* Evita que las pestañas tapen el texto */
         z-index: 1;
     }
     .hero-left-content {
@@ -143,7 +138,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# MOTOR LÓGICO FEFO (INTACTO Y PROTEGIDO)
+# MOTOR LÓGICO FEFO (INTACTO)
 # ==========================================
 
 def cargar_excel_seguro(file_bytes):
@@ -621,7 +616,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# PESTAÑAS PRINCIPALES SUPERIORES (FLOTANTES SOBRE EL BANNER)
+# PESTAÑAS PRINCIPALES DE NAVEGACIÓN
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
     "🏠 Inicio",
@@ -632,7 +627,7 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 ])
 
 # ------------------------------------------
-# PESTAÑA 0: INICIO (BANNER A PANTALLA COMPLETA)
+# PESTAÑA 0: INICIO
 # ------------------------------------------
 with tab_inicio:
     st.markdown("""
@@ -646,10 +641,10 @@ with tab_inicio:
     """, unsafe_allow_html=True)
 
 # ------------------------------------------
-# PESTAÑA 1: CRUCE DE LOTE (CARGA Y RESULTADOS)
+# PESTAÑA 1: CRUCE DE LOTE
 # ------------------------------------------
 with tab_cruce:
-    st.markdown('<div style="padding: 40px 30px;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
     st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
     st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
 
@@ -741,7 +736,7 @@ with tab_cruce:
 # PESTAÑA 2: LOTES & BODEGA
 # ------------------------------------------
 with tab_bodega:
-    st.markdown('<div style="padding: 40px 30px;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
     st.subheader("📦 Control de Lotes y Existencias en Bodega")
     st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -750,7 +745,7 @@ with tab_bodega:
 # PESTAÑA 3: ACTAS OFICIALES
 # ------------------------------------------
 with tab_actas:
-    st.markdown('<div style="padding: 40px 30px;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
     st.subheader("📄 Actas Oficiales de Dispensación")
     st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -759,7 +754,7 @@ with tab_actas:
 # PESTAÑA 4: NORMATIVA FEFO
 # ------------------------------------------
 with tab_normativa:
-    st.markdown('<div style="padding: 40px 30px;">', unsafe_allow_html=True)
+    st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
     st.subheader("⚖️ Normativa de Gestión FEFO")
     st.markdown("""
     **Principios del Sistema FEFO (*First Expired, First Out* - Primero en Caducar, Primero en Salir):**
