@@ -13,152 +13,6 @@ import io
 import datetime
 import streamlit as st
 
-# ==========================================
-# CONFIGURACIÓN DE PÁGINA
-# ==========================================
-st.set_page_config(
-    page_title="Sistema FEFO - Hospital Vicente Corral Moscoso",
-    page_icon="🏥",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
-# ==========================================
-# ESTILOS CSS CORREGIDOS (Fondo Fijo + Scroll y Diseño Original)
-# ==========================================
-st.markdown("""
-    <style>
-    /* Ocultar barra lateral y header nativo de Streamlit */
-    [data-testid="stSidebar"] {
-        display: none !important;
-    }
-    header, .stApp > header {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0px !important;
-    }
-    
-    /* Habilitar scroll vertical nativo en la página */
-    html, body, [data-testid="stAppViewContainer"], .stApp {
-        overflow-y: auto !important;
-        background-color: transparent !important;
-    }
-
-    /* Fondo corporativo fijo (Degradado a la izquierda + Imagen del hospital a la derecha) */
-    .stApp::before {
-        content: "";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, rgba(240,247,255,0) 50%),
-                    url('https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        z-index: -1;
-    }
-
-    /* Contenedor principal alineado y ordenado */
-    .main .block-container {
-        padding-top: 5rem !important;
-        padding-bottom: 3rem !important;
-        padding-left: 3rem !important;
-        padding-right: 3rem !important;
-        max-width: 100% !important;
-        background-color: rgba(255, 255, 255, 0.88);
-        backdrop-filter: blur(8px);
-        border-radius: 12px;
-        margin: 20px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-    }
-
-    /* Posicionamiento fijo de las pestañas de navegación */
-    .stTabs {
-        position: fixed !important;
-        top: 15px !important;
-        left: 20px !important;
-        z-index: 99999 !important;
-        width: auto !important;
-        background: transparent !important;
-    }
-    
-    /* Barra contenedora con el color azul cielo del fondo (#e3f2fd) */
-    .stTabs [data-baseweb="tab-list"],
-    div[data-baseweb="tab-list"] {
-        background: #e3f2fd !important;
-        background-color: #e3f2fd !important;
-        border-radius: 8px !important;
-        padding: 3px 6px !important;
-        border-bottom: none !important;
-        gap: 6px !important;
-        backdrop-filter: blur(8px) !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
-    }
-    div[data-baseweb="tab-highlight"] {
-        background-color: transparent !important;
-    }
-    
-    /* Estilos generales de las pestañas */
-    .stTabs [data-baseweb="tab"] {
-        height: 32px !important;
-        background-color: transparent !important;
-        border-radius: 6px !important;
-        padding: 0px 12px !important;
-        font-size: 0.8rem !important;
-        font-weight: 600 !important;
-        color: #1F4E78 !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-    
-    /* Primera pestaña convertida en el Logo del MSP (grande, sin texto) */
-    .stTabs [data-baseweb="tab"]:nth-child(1) {
-        width: 55px !important;
-        min-width: 55px !important;
-        background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
-        background-size: contain !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-        color: transparent !important;
-        font-size: 0px !important;
-        padding: 0 !important;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background-color: #1F4E78 !important;
-        color: white !important;
-    }
-    
-    .stTabs [aria-selected="true"]:nth-child(1) {
-        background-color: rgba(31, 78, 120, 0.15) !important;
-        background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
-        background-size: contain !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-    }
-
-    /* Estilos de botones generales */
-    .stButton>button {
-        width: 100%;
-        background-color: #1F4E78;
-        color: white;
-        font-weight: bold;
-        border-radius: 8px;
-        padding: 0.6rem 1rem;
-    }
-    .stButton>button:hover {
-        background-color: #153450;
-        color: white;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# ==========================================
-# MOTOR LÓGICO FEFO (INTACTO Y PROTEGIDO)
-# ==========================================
-
 def cargar_excel_seguro(file_bytes):
     try:
         return pd.read_excel(io.BytesIO(file_bytes), engine='openpyxl')
@@ -249,6 +103,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             key = (row['clean_name'], row['Lote'], row['F. Cad'])
             stock_disponible_dict[key] = float(row['Existen']) if pd.notna(row['Existen']) else 0.0
 
+        # PASO 1: Pre-detectar los nombres base de servicio para cada PDF y asegurar nombres únicos limpios
         nombres_servicios_raw = []
         for idx_pdf, (nombre_pdf, pdf_bytes) in enumerate(lista_pdfs):
             pdf_text = ""
@@ -272,6 +127,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     base_servicio = raw_serv.upper().strip()
             nombres_servicios_raw.append((idx_pdf, nombre_pdf, pdf_bytes, base_servicio, pdf_text))
 
+        # Asignar sufijos numéricos (1, 2, 3...) si se repite el nombre del servicio
         conteo_servicios = {}
         asignaciones_servicios = []
         for idx_pdf, nombre_pdf, pdf_bytes, base_serv, pdf_text in nombres_servicios_raw:
@@ -472,6 +328,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         if df_final.empty:
             return None, None
 
+        # --- CONSOLIDADO EN FORMATO MATRIZ ---
         output_excel = io.BytesIO()
         wb = Workbook()
         ws = wb.active
@@ -544,6 +401,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         wb.save(output_excel)
         output_excel.seek(0)
 
+        # --- PDF DE ACTAS OFICIALES ---
         output_pdf = io.BytesIO()
         doc = SimpleDocTemplate(output_pdf, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
         elements = []
@@ -633,140 +491,46 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         st.error(f"Error interno en el procesamiento: {e}")
         return None, None
 
-# ==========================================
-# PESTAÑAS PRINCIPALES DE NAVEGACIÓN
-# ==========================================
-tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "MSP", 
-    "📊 Cruce de Lote", 
-    "📦 Lotes & Bodega", 
-    "📄 Actas Oficiales", 
-    "⚖️ Normativa FEFO"
-])
+st.title("Sistema FEFO - Hospital Vicente Corral Moscoso")
 
-# ------------------------------------------
-# PESTAÑA 0: INICIO
-# ------------------------------------------
-with tab_inicio:
-    st.markdown("""
-        <div style="padding: 40px 20px;">
-            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 1.1rem; letter-spacing: 3px; color: #0d47a1; font-weight: 700; text-transform: uppercase; margin-bottom: 12px;">✨ BIENVENIDO</div>
-            <div style="font-size: 2.8rem; font-weight: 800; color: #1F4E78; line-height: 1.15; margin-bottom: 15px;">Hospital Provincial General Docente Vicente Corral Moscoso</div>
-        </div>
-    """, unsafe_allow_html=True)
+st.sidebar.header("📂 Carga de Archivos")
+uploaded_lotes = st.sidebar.file_uploader("Excel de Lotes", type=["xlsx", "xls"], key="unique_lotes_key")
+uploaded_unificado = st.sidebar.file_uploader("Excel de Stock / Unificado", type=["xlsx", "xls"], key="unique_unificado_key")
+uploaded_pdfs = st.sidebar.file_uploader("Pedidos en PDF (Múltiples)", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
 
-# ------------------------------------------
-# PESTAÑA 1: CRUCE DE LOTE
-# ------------------------------------------
-with tab_cruce:
-    st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
-    st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
+st.sidebar.header("✍️ Personalización de Firmantes")
+with st.sidebar.expander("Modificar Firmantes de Actas"):
+    custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
+    custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
+    custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
 
-    col_up1, col_up2, col_up3 = st.columns(3)
-    
-    with col_up1:
-        st.markdown("##### 1. Excel de Lotes (FEFO)")
-        uploaded_lotes = st.file_uploader("Subir Lotes con fechas", type=["xlsx", "xls"], key="unique_lotes_key")
+if st.sidebar.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key"):
+    if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
+        with st.spinner("Procesando lotes y aplicando FEFO acumulativo..."):
+            
+            lotes_bytes = uploaded_lotes.getvalue()
+            unificado_bytes = uploaded_unificado.getvalue()
+            
+            lista_pdfs = []
+            for pdf in uploaded_pdfs:
+                pdf_bytes = pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()
+                lista_pdfs.append((pdf.name, pdf_bytes))
 
-    with col_up2:
-        st.markdown("##### 2. Excel Stock Unificado")
-        uploaded_unificado = st.file_uploader("Subir Stock de Bodega", type=["xlsx", "xls"], key="unique_unificado_key")
+            firmantes_config = {
+                'elaborado_por': custom_elab,
+                'entregado_por': custom_entre,
+                'validado_por': custom_vali
+            }
 
-    with col_up3:
-        st.markdown("##### 3. Pedidos en PDF (Múltiples)")
-        uploaded_pdfs = st.file_uploader("Subir PDFs de Servicios", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
+            excel_res, pdf_res = procesar_cruce_hospitalario_lote(
+                lista_pdfs, lotes_bytes, unificado_bytes, firmantes_custom=firmantes_config
+            )
 
-    st.markdown("---")
-    
-    with st.expander("✍️ Personalizar Nombres de Firmantes de Actas"):
-        col_f1, col_f2, col_f3 = st.columns(3)
-        with col_f1:
-            custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
-        with col_f2:
-            custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
-        with col_f3:
-            custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    procesar_btn = st.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key")
-
-    if procesar_btn:
-        if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
-            with st.spinner("🔄 Procesando lotes y aplicando algoritmo FEFO..."):
-                
-                lotes_bytes = uploaded_lotes.getvalue()
-                unificado_bytes = uploaded_unificado.getvalue()
-                
-                lista_pdfs = []
-                for pdf in uploaded_pdfs:
-                    pdf_bytes = pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()
-                    lista_pdfs.append((pdf.name, pdf_bytes))
-
-                firmantes_config = {
-                    'elaborado_por': custom_elab,
-                    'entregado_por': custom_entre,
-                    'validado_por': custom_vali
-                }
-
-                excel_res, pdf_res = procesar_cruce_hospitalario_lote(
-                    lista_pdfs, lotes_bytes, unificado_bytes, firmantes_custom=firmantes_config
-                )
-
-                if excel_res and pdf_res:
-                    st.success("¡Procesamiento completado con éxito!")
-                    
-                    m1, m2, m3 = st.columns(3)
-                    m1.metric("📁 PDFs Procesados", len(uploaded_pdfs))
-                    m2.metric("📊 Matriz Excel", "Generada y Ordenada A-Z")
-                    m3.metric("📑 Actas PDF", "Consolidadas")
-
-                    st.markdown("---")
-                    st.subheader("📥 Zona de Descargas Oficiales")
-                    
-                    dcol1, dcol2 = st.columns(2)
-                    with dcol1:
-                        st.download_button(
-                            label="📥 Descargar Excel Consolidado (Matriz)",
-                            data=excel_res,
-                            file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            key="unique_dl_excel_key"
-                        )
-                    with dcol2:
-                        st.download_button(
-                            label="📥 Descargar Actas Oficiales en PDF",
-                            data=pdf_res,
-                            file_name="Actas_Oficiales_Consolidas.pdf",
-                            mime="application/pdf",
-                            key="unique_dl_pdf_key"
-                        )
-                else:
-                    st.error("⚠️ No se pudieron generar resultados. Verifique la estructura de los archivos.")
-        else:
-            st.warning("⚠️ Por favor, cargue los tres tipos de archivos requeridos (Lotes, Stock Unificado y los PDFs) para iniciar el cruce.")
-
-# ------------------------------------------
-# PESTAÑA 2: LOTES & BODEGA
-# ------------------------------------------
-with tab_bodega:
-    st.subheader("📦 Control de Lotes y Existencias en Bodega")
-    st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
-
-# ------------------------------------------
-# PESTAÑA 3: ACTAS OFICIALES
-# ------------------------------------------
-with tab_actas:
-    st.subheader("📄 Actas Oficiales de Dispensación")
-    st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
-
-# ------------------------------------------
-# PESTAÑA 4: NORMATIVA FEFO
-# ------------------------------------------
-with tab_normativa:
-    st.subheader("⚖️ Normativa de Gestión FEFO")
-    st.markdown("""
-    **Principios del Sistema FEFO (*First Expired, First Out* - Primero en Caducar, Primero en Salir):**
-    * **Prioridad de despacho:** Asignar primero los dispositivos e insumos médicos con fecha de vencimiento más próxima.
-    * **Optimización de recursos:** Evitar pérdidas por caducidad en bodega y farmacia.
-    * **Trazabilidad total:** Mantener registro exacto del número de lote asignado a cada servicio institucional.
-    """)
+            if excel_res and pdf_res:
+                st.success("¡Procesamiento completado con éxito!")
+                st.download_button("📥 Descargar Excel Consolidado", excel_res, "Consolidado_Pedidos_Matriz_FEFO.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key="unique_dl_excel_key")
+                st.download_button("📥 Descargar Actas en PDF", pdf_res, "Actas_Oficiales_Consolidas.pdf", "application/pdf", key="unique_dl_pdf_key")
+            else:
+                st.error("No se pudieron generar resultados. Verifique que los archivos sean correctos.")
+    else:
+        st.warning("⚠️ Por favor, cargue todos los archivos necesarios (Lotes, Stock y al menos un PDF).")
