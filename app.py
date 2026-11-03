@@ -23,14 +23,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS avanzados para fundir las pestañas y expandir el banner a toda la pantalla
+# Estilos CSS avanzados para eliminar por completo la franja blanca superior y fundir las pestañas
 st.markdown("""
     <style>
-    /* Ocultar barra lateral totalmente */
+    /* Ocultar barra lateral y elementos superiores de Streamlit */
     [data-testid="stSidebar"] {
         display: none;
     }
-    /* Eliminar márgenes por defecto de Streamlit */
+    header {
+        visibility: hidden !important;
+        height: 0px !important;
+    }
+    .stApp > header {
+        display: none;
+    }
+    /* Eliminar cualquier margen superior de la página */
     .block-container {
         padding-top: 0rem !important;
         padding-bottom: 0rem !important;
@@ -38,31 +45,28 @@ st.markdown("""
         padding-right: 0rem !important;
         max-width: 100% !important;
     }
-    header {
-        visibility: hidden;
-    }
-    /* Superponer las pestañas de forma flotante sobre el banner */
+    /* Posicionar las pestañas directamente en la parte superior sin fondo blanco */
     .stTabs {
         position: absolute;
-        top: 20px;
+        top: 15px;
         left: 20px;
-        z-index: 99;
+        z-index: 999;
         width: calc(100% - 40px);
     }
     .stTabs [data-baseweb="tab-list"] {
         gap: 10px;
-        background-color: transparent;
+        background-color: transparent !important;
         border-bottom: none !important;
     }
-    /* Estilo translúcido y moderno para los botones de las pestañas */
+    /* Estilo de los botones de las pestañas flotantes */
     .stTabs [data-baseweb="tab"] {
         height: 38px;
-        background-color: rgba(255, 255, 255, 0.85);
+        background-color: rgba(255, 255, 255, 0.75);
         border-radius: 8px;
         padding: 0px 18px;
         font-weight: 600;
         color: #1F4E78;
-        border: 1px solid rgba(208, 225, 253, 0.8);
+        border: 1px solid rgba(208, 225, 253, 0.9);
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         backdrop-filter: blur(5px);
     }
@@ -70,7 +74,7 @@ st.markdown("""
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    /* Contenedor principal de inicio a pantalla completa sin cortes */
+    /* Contenedor principal de inicio abarcando el 100% desde arriba */
     .hero-fullscreen {
         position: relative;
         width: 100vw;
@@ -81,7 +85,7 @@ st.markdown("""
         justify-content: space-between;
         overflow: hidden;
         margin: 0;
-        padding-top: 60px;
+        padding-top: 50px;
     }
     .hero-left-content {
         width: 50%;
