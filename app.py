@@ -32,19 +32,21 @@ def clean_exact(s):
     except Exception:
         pass
     
-    # 1. Reemplazar saltos de línea internos (\r, \n) y espacios invisibles por un espacio común
+    # 1. Reemplazar saltos de línea internos y espacios invisibles
     s = s.replace('\r', ' ').replace('\n', ' ').replace('\xa0', ' ').replace('\u200b', ' ')
     
-    # 2. Normalización de acentos y caracteres especiales (elimina tildes)
+    # 2. Normalización de acentos y caracteres especiales
     s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8", errors='ignore')
     s = s.upper().strip()
     
-    # 3. Blindaje contra espacios en guiones y símbolos
+    # 3. UNIFICAR ABREVIATURAS Y PUNTUACIÓN (Evita desacoples entre "P.V." y "PV")
+    s = s.replace('P.V.', 'PV').replace('N°', 'N').replace('°', '').replace('.', '')
+    
+    # 4. Blindaje contra espacios en guiones y símbolos
     s = re.sub(r'\s*-\s*', '-', s)
     s = re.sub(r'\s*#\s*', '#', s)
     
-    # 4. Homologar palabras clave comunes que puedan diferir (ej: "CATETER" y "CATÉTER" ya quedan iguales por la tilde)
-    # Colapsar múltiples espacios en uno solo de forma definitiva
+    # 5. Estandarizar espacios múltiples
     s = re.sub(r'\s+', ' ', s)
     return s
 
