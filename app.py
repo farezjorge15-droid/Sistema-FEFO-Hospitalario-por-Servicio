@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Scroll vertical fluido habilitado, diseño responsivo y fondo fijo protegido
+# Estilos CSS: Fondo fijo protegido + Scroll interactivo fluido
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -36,11 +36,10 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* FORZAR SCROLL INTERACTIVO REAL EN STREAMLIT */
-    html, body, [data-testid="stAppViewContainer"], .main {
-        background-color: #f0f7ff !important;
+    /* Habilitar scroll fluido en el contenedor principal de la aplicación */
+    [data-testid="stAppViewContainer"] {
+        background: transparent !important;
         overflow-y: auto !important;
-        height: 100vh !important;
     }
 
     .main .block-container {
@@ -50,10 +49,9 @@ st.markdown("""
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
-        overflow: visible !important;
     }
     
-    /* Posicionamiento fijo de la barra de navegación superior */
+    /* Posicionamiento de la barra de navegación superior */
     .stTabs {
         position: fixed !important;
         top: 10px !important;
@@ -112,21 +110,21 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo estático fluido (permite scroll y mantiene la estética) */
+    /* FONDO FIJO PROTEGIDO (Inamovible al fondo y transparente a clics) */
     .hero-fullscreen {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100vh;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
         margin: 0 !important;
-        z-index: 0;
-        pointer-events: none;
+        z-index: 0 !important;
+        pointer-events: none !important;
     }
     .hero-left-content {
         width: 50%;
@@ -168,10 +166,10 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor principal con interacción de scroll total */
+    /* Contenedor flotante con flujo libre para el scroll */
     .content-overlay {
         position: relative;
-        margin-top: 65px;
+        margin-top: 70px;
         margin-left: 20px;
         margin-right: 20px;
         margin-bottom: 80px;
@@ -215,6 +213,7 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
 # ==========================================
 # MOTOR LÓGICO FEFO (INTACTO Y PROTEGIDO)
 # ==========================================
@@ -734,12 +733,12 @@ with tab_inicio:
     pass
 
 # ------------------------------------------
-# PESTAÑA 1: CRUCE DE LOTE (100% IDÉNTICO AL PROTOTIPO Y CON SCROLL NATURAL)
+# PESTAÑA 1: CRUCE DE LOTE (100% IDÉNTICO AL PROTOTIPO Y CON SCROLL FLUIDO)
 # ------------------------------------------
 with tab_cruce:
     st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     
-    # 1. Panel Superior de Firmantes (Idéntico a la posición superior de la imagen de Google AI Studio)
+    # 1. Panel Superior de Firmantes
     with st.expander("✍️ Personalizar Firmantes de Actas (Activo para todo el lote)", expanded=False):
         cf1, cf2, cf3 = st.columns(3)
         with cf1:
@@ -859,7 +858,7 @@ with tab_cruce:
         else:
             st.warning("⚠️ Por favor, cargue los tres archivos requeridos para iniciar el cruce.")
 
-    # 5. Barra de Búsqueda, Filtros y Botones de Descarga (Idénticos al prototipo)
+    # 5. Barra de Búsqueda, Filtros y Botones de Descarga
     f_col1, f_col2, f_col3, f_col4 = st.columns([2.2, 1.2, 1.3, 1.3])
     with f_col1:
         busqueda_texto = st.text_input("Buscar", placeholder="🔍 Buscar por dispositivo, código, lote o PDF...", label_visibility="collapsed")
@@ -900,7 +899,6 @@ with tab_cruce:
         </div>
     """, unsafe_allow_html=True)
 
-    # Tabla interactiva con cabecera oscura y diseño profesional idéntico al prototipo
     st.markdown("""
         <div style="background: #1F4E78; color: white; padding: 10px 15px; border-radius: 8px 8px 0 0; font-weight: bold; font-size: 0.85rem; display: grid; grid-template-columns: 50px 130px 140px 90px 90px 1fr 70px 70px 150px;">
             <div>NRO.</div>
