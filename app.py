@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Scroll vertical obligatorio en el navegador y fondo ordenado
+# Estilos CSS: Fondo fijo cubriendo toda la pantalla y barra superior estilizada
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -35,26 +35,16 @@ st.markdown("""
         visibility: hidden !important;
         height: 0px !important;
     }
-    
-    /* FORZAR LA BARRA DE DESPLAZAMIENTO LATERAL OBLIGATORIA */
-    html, body, [data-testid="stAppViewContainer"], .main {
-        background: #f0f7ff !important;
-        overflow-y: scroll !important;
-        height: auto !important;
-        max-height: none !important;
-    }
-
+    /* Eliminar paddings y márgenes superiores de la página principal */
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 6rem !important;
+        padding-bottom: 0rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
-        overflow: visible !important;
     }
-    
-    /* Posicionamiento de la barra de navegación superior */
+    /* Posicionamiento de las pestañas */
     .stTabs {
         position: fixed !important;
         top: 10px !important;
@@ -63,6 +53,7 @@ st.markdown("""
         width: auto !important;
         background: transparent !important;
     }
+    /* Barra contenedora con el color azul cielo del fondo (#e3f2fd) */
     .stTabs [data-baseweb="tab-list"],
     div[data-baseweb="tab-list"] {
         background: #e3f2fd !important;
@@ -77,6 +68,7 @@ st.markdown("""
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
+    /* Estilos generales de las pestañas */
     .stTabs [data-baseweb="tab"] {
         height: 32px !important;
         background-color: transparent !important;
@@ -89,7 +81,7 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* Primera pestaña: Logo del MSP grande */
+    /* Primera pestaña convertida en el Logo del MSP (grande, sin texto) */
     .stTabs [data-baseweb="tab"]:nth-child(1) {
         width: 55px !important;
         min-width: 55px !important;
@@ -101,10 +93,12 @@ st.markdown("""
         font-size: 0px !important;
         padding: 0 !important;
     }
+    
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
+    
     .stTabs [aria-selected="true"]:nth-child(1) {
         background-color: rgba(31, 78, 120, 0.15) !important;
         background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
@@ -113,11 +107,13 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* SECCIÓN DE BIENVENIDA / FONDO ESTÁTICO ORDENADO */
+    /* Fondo de pantalla fijo cubriendo toda la pantalla en todas las vistas */
     .hero-fullscreen {
-        position: relative;
-        width: 100%;
-        height: 380px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
         align-items: center;
@@ -134,22 +130,23 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         justify-content: center;
+        transform: translateY(-20px);
     }
     .welcome-text {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        font-size: 1rem;
+        font-size: 1.1rem;
         letter-spacing: 3px;
         color: #0d47a1;
         font-weight: 700;
         text-transform: uppercase;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
     }
     .hero-title {
-        font-size: 2.2rem;
+        font-size: 2.8rem;
         font-weight: 800;
         color: #1F4E78;
         line-height: 1.15;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
     }
     .hero-right-image {
         width: 55%;
@@ -165,39 +162,21 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* CONTENEDOR DE CONTENIDO PRINCIPAL */
+    /* Contenedor flotante para el contenido de las pestañas sin bloquear el fondo */
     .content-overlay {
         position: relative;
-        margin-top: -40px;
+        margin-top: 70px;
         margin-left: 20px;
         margin-right: 20px;
-        margin-bottom: 60px;
-        padding: 25px 35px;
+        padding: 30px 40px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.96);
-        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(8px);
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.8);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-        box-sizing: border-box;
     }
     
-    .ai-card {
-        background: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 16px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-        height: 100%;
-    }
-    .metric-card {
-        background: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 14px 18px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-
     .stButton>button {
         width: 100%;
         background-color: #1F4E78;
@@ -214,7 +193,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# MOTOR LÓGICO FEFO (PROTEGIDO E ÍNTEGRO)
+# MOTOR LÓGICO FEFO (INTACTO Y PROTEGIDO)
 # ==========================================
 
 def cargar_excel_seguro(file_bytes):
@@ -692,17 +671,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# GESTIÓN DE ESTADO PARA RESULTADOS
-# ==========================================
-if 'df_resultado_cache' not in st.session_state:
-    st.session_state.df_resultado_cache = None
-if 'excel_bytes_cache' not in st.session_state:
-    st.session_state.excel_bytes_cache = None
-if 'pdf_bytes_cache' not in st.session_state:
-    st.session_state.pdf_bytes_cache = None
-
-# ==========================================
-# SECCIÓN SUPERIOR DE BIENVENIDA (ESTÁTICA Y ORDENADA)
+# FONDO DE PANTALLA CONSTANTE (FIJO EN TODAS LAS VISTAS)
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
@@ -715,10 +684,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# PESTAÑAS PRINCIPALES DE NAVEGACIÓN
+# PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "msp", 
+    "MSP", 
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
@@ -736,100 +705,41 @@ with tab_inicio:
 # ------------------------------------------
 with tab_cruce:
     st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
+    st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
+    st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
+
+    col_up1, col_up2, col_up3 = st.columns(3)
     
-    # 1. Panel Superior de Firmantes
-    with st.expander("✍️ Personalizar Firmantes de Actas (Activo para todo el lote)", expanded=False):
-        cf1, cf2, cf3 = st.columns(3)
-        with cf1:
+    with col_up1:
+        st.markdown("##### 1. Excel de Lotes (FEFO)")
+        uploaded_lotes = st.file_uploader("Subir Lotes con fechas", type=["xlsx", "xls"], key="unique_lotes_key")
+
+    with col_up2:
+        st.markdown("##### 2. Excel Stock Unificado")
+        uploaded_unificado = st.file_uploader("Subir Stock de Bodega", type=["xlsx", "xls"], key="unique_unificado_key")
+
+    with col_up3:
+        st.markdown("##### 3. Pedidos en PDF (Múltiples)")
+        uploaded_pdfs = st.file_uploader("Subir PDFs de Servicios", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
+
+    st.markdown("---")
+    
+    with st.expander("✍️ Personalizar Nombres de Firmantes de Actas"):
+        col_f1, col_f2, col_f3 = st.columns(3)
+        with col_f1:
             custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
-        with cf2:
+        with col_f2:
             custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
-        with cf3:
+        with col_f3:
             custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # 2. Las 3 Tarjetas Superiores de Carga de Archivos
-    col_c1, col_c2, col_c3 = st.columns(3)
-    
-    with col_c1:
-        st.markdown("""
-            <div class="ai-card">
-                <div style="font-weight: 700; color: #1F4E78; font-size: 0.95rem; margin-bottom: 4px;">📄 1. Pedidos en PDF (Hasta 30+)</div>
-                <div style="font-size: 0.75rem; color: #555; margin-bottom: 10px;">Solicitudes de despacho con servicios (Emergencia, UCI, etc.) y firmas electrónicas.</div>
-            </div>
-        """, unsafe_allow_html=True)
-        uploaded_pdfs = st.file_uploader("Subir PDFs de Servicios", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key", label_visibility="collapsed")
-        st.markdown('<div style="text-align: center; margin-top: 6px;"><small style="color: #1F4E78; font-weight: 600;">➕ Agregar Más PDFs</small></div>', unsafe_allow_html=True)
-
-    with col_c2:
-        st.markdown("""
-            <div class="ai-card">
-                <div style="font-weight: 700; color: #1F4E78; font-size: 0.95rem; margin-bottom: 4px;">📊 2. Excel de Lotes (FEFO)</div>
-                <div style="font-size: 0.75rem; color: #555; margin-bottom: 10px;">Columnas requeridas: <code>Producto, Lote, F. Cad, Existen.</code></div>
-            </div>
-        """, unsafe_allow_html=True)
-        uploaded_lotes = st.file_uploader("Subir Lotes con fechas", type=["xlsx", "xls"], key="unique_lotes_key", label_visibility="collapsed")
-        st.markdown('<div style="text-align: center; margin-top: 6px;"><small style="color: #1F4E78; font-weight: 600;">🔄 Cambiar Excel de Lotes</small></div>', unsafe_allow_html=True)
-
-    with col_c3:
-        st.markdown("""
-            <div class="ai-card">
-                <div style="font-weight: 700; color: #1F4E78; font-size: 0.95rem; margin-bottom: 4px;">📦 3. Excel Unificado / Stock Bodega</div>
-                <div style="font-size: 0.75rem; color: #555; margin-bottom: 10px;">Columnas requeridas: <code>Producto, Código, SKU, Stock Bodega.</code></div>
-            </div>
-        """, unsafe_allow_html=True)
-        uploaded_unificado = st.file_uploader("Subir Stock de Bodega", type=["xlsx", "xls"], key="unique_unificado_key", label_visibility="collapsed")
-        st.markdown('<div style="text-align: center; margin-top: 6px;"><small style="color: #1F4E78; font-weight: 600;">🔄 Cambiar Stock Bodega</small></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
+    procesar_btn = st.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key")
 
-    # 3. Barra intermedia con Checkbox y Botón de Ejecución Principal a la derecha
-    exec_col1, exec_col2 = st.columns([1.3, 0.7])
-    with exec_col1:
-        st.checkbox("Descuento acumulativo secuencial de lotes entre pedidos", value=True, key="unique_checkbox_secuencial")
-    with exec_col2:
-        procesar_btn = st.button("🚀 Ejecutar Cruce Hospitalario en Lote", key="unique_process_btn_key")
-
-    st.markdown("<hr style='margin: 20px 0; border: none; border-top: 1px solid rgba(0,0,0,0.1);'>", unsafe_allow_html=True)
-
-    # 4. Las 4 Tarjetas de Métricas Estadísticas Ejecutivas
-    m_col1, m_col2, m_col3, m_col4 = st.columns(4)
-    with m_col1:
-        st.markdown("""
-            <div class="metric-card">
-                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Pedidos en Lote</div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: #1F4E78;">3 <span style="font-size: 0.75rem; color: #555; font-weight: normal;">en 3 servicios</span></div>
-            </div>
-        """, unsafe_allow_html=True)
-    with m_col2:
-        st.markdown("""
-            <div class="metric-card">
-                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Líneas de Pedido</div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: #1F4E78;">16 <span style="font-size: 0.75rem; color: #555; font-weight: normal;">items cruzados</span></div>
-            </div>
-        """, unsafe_allow_html=True)
-    with m_col3:
-        st.markdown("""
-            <div class="metric-card">
-                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Lotes 100% Asignados</div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: #2e7d32;">12 <span style="font-size: 0.75rem; color: #555; font-weight: normal;">(75%)</span></div>
-            </div>
-        """, unsafe_allow_html=True)
-    with m_col4:
-        st.markdown("""
-            <div class="metric-card">
-                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Quiebres / Sin Stock</div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: #c62828;">4 <span style="font-size: 0.75rem; color: #555; font-weight: normal;">requieren gestión</span></div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Lógica de Ejecución al pulsar el botón principal
     if procesar_btn:
         if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
             with st.spinner("🔄 Procesando lotes y aplicando algoritmo FEFO..."):
+                
                 lotes_bytes = uploaded_lotes.getvalue()
                 unificado_bytes = uploaded_unificado.getvalue()
                 
@@ -850,103 +760,36 @@ with tab_cruce:
 
                 if excel_res and pdf_res:
                     st.success("¡Procesamiento completado con éxito!")
-                    st.session_state.excel_bytes_cache = excel_res
-                    st.session_state.pdf_bytes_cache = pdf_res
+                    
+                    m1, m2, m3 = st.columns(3)
+                    m1.metric("📁 PDFs Procesados", len(uploaded_pdfs))
+                    m2.metric("📊 Matriz Excel", "Generada y Ordenada A-Z")
+                    m3.metric("📑 Actas PDF", "Consolidadas")
+
+                    st.markdown("---")
+                    st.subheader("📥 Zona de Descargas Oficiales")
+                    
+                    dcol1, dcol2 = st.columns(2)
+                    with dcol1:
+                        st.download_button(
+                            label="📥 Descargar Excel Consolidado (Matriz)",
+                            data=excel_res,
+                            file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            key="unique_dl_excel_key"
+                        )
+                    with dcol2:
+                        st.download_button(
+                            label="📥 Descargar Actas Oficiales en PDF",
+                            data=pdf_res,
+                            file_name="Actas_Oficiales_Consolidas.pdf",
+                            mime="application/pdf",
+                            key="unique_dl_pdf_key"
+                        )
                 else:
                     st.error("⚠️ No se pudieron generar resultados. Verifique la estructura de los archivos.")
         else:
-            st.warning("⚠️ Por favor, cargue los tres archivos requeridos para iniciar el cruce.")
-
-    # 5. Barra de Búsqueda, Filtros y Botones de Descarga
-    f_col1, f_col2, f_col3, f_col4 = st.columns([2.2, 1.2, 1.3, 1.3])
-    with f_col1:
-        busqueda_texto = st.text_input("Buscar", placeholder="🔍 Buscar por dispositivo, código, lote o PDF...", label_visibility="collapsed")
-    with f_col2:
-        filtro_faltantes = st.checkbox("Solo Faltantes / Alertas", value=False)
-    with f_col3:
-        if st.session_state.excel_bytes_cache:
-            st.download_button(
-                label="📥 Descargar Excel (.xlsx)",
-                data=st.session_state.excel_bytes_cache,
-                file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="btn_dl_excel_top"
-            )
-        else:
-            st.button("📥 Descargar Excel (.xlsx)", disabled=True, key="btn_dl_excel_disabled")
-    with f_col4:
-        if st.session_state.pdf_bytes_cache:
-            st.download_button(
-                label="📥 Descargar Actas PDF",
-                data=st.session_state.pdf_bytes_cache,
-                file_name="Actas_Oficiales_Consolidas.pdf",
-                mime="application/pdf",
-                key="btn_dl_pdf_top"
-            )
-        else:
-            st.button("📥 Descargar Actas PDF", disabled=True, key="btn_dl_pdf_disabled")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # 6. Pestañas de Servicio y Tabla de Resultados Estilizada
-    st.markdown("""
-        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-            <div style="background: #1F4E78; color: white; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem;">TODOS (16)</div>
-            <div style="background: #e0e0e0; color: #333; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">EMERGENCIA ADULTOS - AREA CRITICA (6)</div>
-            <div style="background: #e0e0e0; color: #333; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">UNIDAD DE CUIDADOS INTENSIVOS (UCI) (5)</div>
-            <div style="background: #e0e0e0; color: #333; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">CENTRO QUIRURGICO - QUIROFANO 3 (5)</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-        <div style="background: #1F4E78; color: white; padding: 10px 15px; border-radius: 8px 8px 0 0; font-weight: bold; font-size: 0.85rem; display: grid; grid-template-columns: 50px 130px 140px 90px 90px 1fr 70px 70px 150px;">
-            <div>NRO.</div>
-            <div>PDF ORIGEN</div>
-            <div>SERVICIO</div>
-            <div>CÓDIGO</div>
-            <div>SKU</div>
-            <div>DISPOSITIVO MÉDICO</div>
-            <div>CANT. SOL.</div>
-            <div>CANT. AP.</div>
-            <div>LOTES & CANTIDADES A DESPACHAR</div>
-        </div>
-        <div style="background: #ffffff; border: 1px solid #dcdcdc; border-top: none; border-radius: 0 0 8px 8px; padding: 15px; font-size: 0.85rem; color: #333;">
-            <div style="display: grid; grid-template-columns: 50px 130px 140px 90px 90px 1fr 70px 70px 150px; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee;">
-                <div style="font-weight: bold;">3</div>
-                <div style="color: #555; font-size: 0.75rem;">PEDIDO_EMERGENCIA_D...</div>
-                <div style="font-size: 0.75rem;">EMERGENCIA ADULTOS...</div>
-                <div style="font-family: monospace; font-size: 0.75rem;">MED-LLV-003</div>
-                <div style="font-family: monospace; font-size: 0.75rem;">SKU-88304</div>
-                <div style="font-weight: 600;">LLAVE DE TRES VIAS CON EXTENSION</div>
-                <div>50</div>
-                <div>50</div>
-                <div><span style="background: #e3f2fd; color: #0d47a1; padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; display: block; margin-bottom: 2px;">LLV-401 (30 unids)</span><span style="background: #e3f2fd; color: #0d47a1; padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; display: block;">LLV-508 (20 unids)</span></div>
-            </div>
-            <div style="display: grid; grid-template-columns: 50px 130px 140px 90px 90px 1fr 70px 70px 150px; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee;">
-                <div style="font-weight: bold;">4</div>
-                <div style="color: #555; font-size: 0.75rem;">PEDIDO_EMERGENCIA_D...</div>
-                <div style="font-size: 0.75rem;">EMERGENCIA ADULTOS...</div>
-                <div style="font-family: monospace; font-size: 0.75rem;">MED-JER-010</div>
-                <div style="font-family: monospace; font-size: 0.75rem;">SKU-88410</div>
-                <div style="font-weight: 600;">JERINGA DESCARTABLE 10 ML CON AGUJA</div>
-                <div>100</div>
-                <div>100</div>
-                <div><span style="background: #e3f2fd; color: #0d47a1; padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; display: block; margin-bottom: 2px;">JER-10-A (80 unids)</span><span style="background: #e3f2fd; color: #0d47a1; padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; display: block;">JER-10-B (20 unids)</span></div>
-            </div>
-            <div style="display: grid; grid-template-columns: 50px 130px 140px 90px 90px 1fr 70px 70px 150px; align-items: center; padding: 8px 0;">
-                <div style="font-weight: bold;">5</div>
-                <div style="color: #555; font-size: 0.75rem;">PEDIDO_EMERGENCIA_D...</div>
-                <div style="font-size: 0.75rem;">EMERGENCIA ADULTOS...</div>
-                <div style="font-family: monospace; font-size: 0.75rem;">MED-TET-025</div>
-                <div style="font-family: monospace; font-size: 0.75rem;">SKU-88575</div>
-                <div style="font-weight: 600;">TUBO ENDOTRAQUEAL CON BALON NRO 7.5</div>
-                <div>25</div>
-                <div>20</div>
-                <div><span style="background: #e3f2fd; color: #0d47a1; padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; display: block; margin-bottom: 2px;">TET-75-01 (15 unids)</span><span style="background: #e3f2fd; color: #0d47a1; padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; display: block;">TET-75-02 (5 unids)</span></div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
+            st.warning("⚠️ Por favor, cargue los tres tipos de archivos requeridos (Lotes, Stock Unificado y los PDFs) para iniciar el cruce.")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
