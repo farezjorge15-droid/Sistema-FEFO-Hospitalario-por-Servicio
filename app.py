@@ -14,7 +14,6 @@ import datetime
 import streamlit as st
 
 def cargar_excel_seguro(file_bytes):
-    """Carga segura de Excel compatible con cualquier versión de Pandas/Openpyxl."""
     try:
         return pd.read_excel(io.BytesIO(file_bytes), engine='openpyxl')
     except Exception:
@@ -24,11 +23,6 @@ def cargar_excel_seguro(file_bytes):
             return pd.read_excel(io.BytesIO(file_bytes))
 
 def clean_exact(s):
-    """
-    Normalización ultra robusta: Estandariza catéteres eliminando diferencias 
-    de puntos, símbolos (#), grados y espacios para asegurar coincidencia total 
-    entre el PDF y el Excel en cualquier entorno (Local vs Streamlit Cloud).
-    """
     if pd.isna(s):
         return ""
     if not isinstance(s, str):
@@ -39,24 +33,41 @@ def clean_exact(s):
     except Exception:
         pass
     
-    # Normalización de acentos y caracteres Unicode
     s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8", errors='ignore')
     s = s.upper().strip()
-    
-    # Estandarización específica de nomenclatura hospitalaria (Catéteres, P.V., etc.)
     s = s.replace('P.V.', 'PV').replace('P.V', 'PV').replace('N°', 'N').replace('°', '')
-    
-    # Reemplazo seguro de símbolos problemáticos para evitar desajustes en la nube
     s = re.sub(r'[^A-Z0-9\s]', ' ', s)
     s = re.sub(r'\s+', ' ', s).strip()
     return s
+
+def buscar_producto_inteligente(p_name_limpio, df_unificado, df_lotes_grouped):
+    """
+    Busca el producto de forma inteligente (emulando a Google AI Studio):
+    1. Intenta coincidencia exacta limpia.
+    2. Si no la encuentra, busca por palabras clave principales (ej: CATETER y el número).
+    """
+    # 1. Coincidencia exacta
+    match = df_unificado[df_unificado['clean_name'] == p_name_limpio]
+    if not match.empty:
+        return match, p_name_limpio
+
+    # 2. Búsqueda inteligente por palabras clave (Fuzzy / Keyword Matching)
+    palabras = [w for w in p_name_limpio.split() if len(w) > 2 and w not in ['CON', 'DEL', 'LAS', 'LOS', 'POR']]
+    if palabras:
+        for _, row in df_unificado.iterrows():
+            c_name = row['clean_name']
+            # Si contiene las palabras clave principales (ej. 'CATETER' y '14')
+            if all(pal in c_name for pal in palabras if pal.isalpha() or pal.isdigit()):
+                matched_df = df_unificado[df_unificado['clean_name'] == c_name]
+                return matched_df, c_name
+
+    return pd.DataFrame(), p_name_limpio
 
 def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unificado_bytes, firmantes_custom=None):
     try:
         df_lotes = cargar_excel_seguro(excel_lotes_bytes)
         df_unificado = cargar_excel_seguro(excel_unificado_bytes)
 
-        # Asegurar tipo texto plano para evitar errores de columnas en Pandas Cloud
         df_lotes['Producto'] = df_lotes['Producto'].astype(str)
         df_unificado['Producto'] = df_unificado['Producto'].astype(str)
 
@@ -159,10 +170,12 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                 df_pdf['clean_name'] = df_pdf['Dispositivo Médico'].apply(clean_exact)
 
                 for _, pdf_row in df_pdf.iterrows():
-                    p_name = pdf_row['clean_name']
+                    p_name_raw = pdf_row['clean_name']
                     cant_pendiente = pdf_row['Cantidades Aprobadas']
                     
-                    match_unif = df_unificado[df_unificado['clean_name'] == p_name]
+                    # Búsqueda inteligente
+                    match_unif, matched_key = buscar_producto_inteligente(p_name_raw, df_unificado, df_lotes_grouped)
+
                     if not match_unif.empty:
                         codigo = match_unif.iloc[0].get('Código', match_unif.iloc[0].get('Codigo', 'SIN-CODIGO'))
                         sku = match_unif.iloc[0].get('SKU', 'SIN-SKU')
@@ -175,8 +188,9 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                         codigo = 'SIN-CODIGO'
                         sku = 'SIN-SKU'
                         stock_bodega = 0.0
+                        matched_key = p_name_raw
 
-                    lotes_prod = df_lotes_grouped[df_lotes_grouped['clean_name'] == p_name]
+                    lotes_prod = df_lotes_grouped[df_lotes_grouped['clean_name'] == matched_key]
 
                     if lotes_prod.empty or float(stock_bodega) <= 0:
                         item_data = {
@@ -199,7 +213,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                         for _, l_row in lotes_prod.iterrows():
                             if cant_pendiente <= 0:
                                 break
-                            key = (p_name, l_row['Lote'], l_row['F. Cad'])
+                            key = (matched_key, l_row['Lote'], l_row['F. Cad'])
                             disp_lote = stock_disponible_dict.get(key, 0.0)
                             if disp_lote <= 0:
                                 continue
