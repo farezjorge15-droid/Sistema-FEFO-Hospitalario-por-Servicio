@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Barra azul cielo (#e3f2fd) y logo MSP grande como botón de inicio
+# Estilos CSS: Barra azul cielo unificada, fondo persistente y logo MSP grande
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -107,7 +107,7 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Banner full screen: Centrado vertical exacto para el texto */
+    /* Banner de fondo constante para todas las vistas */
     .hero-fullscreen {
         position: relative;
         width: 100vw;
@@ -159,6 +159,18 @@ st.markdown("""
         -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,1) 100%);
         mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,1) 100%);
         z-index: 1;
+    }
+    .content-overlay {
+        position: absolute;
+        top: 70px;
+        left: 0;
+        width: 100vw;
+        height: calc(100vh - 70px);
+        overflow-y: auto;
+        padding: 30px 50px;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px);
     }
     .stButton>button {
         width: 100%;
@@ -654,10 +666,23 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
+# FONDO DE PANTALLA CONSTANTE (VISIBLE EN TODO MOMENTO)
+# ==========================================
+st.markdown("""
+    <div class="hero-fullscreen">
+        <div class="hero-left-content">
+            <div class="welcome-text">✨ BIENVENIDO</div>
+            <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
+        </div>
+        <div class="hero-right-image"></div>
+    </div>
+""", unsafe_allow_html=True)
+
+# ==========================================
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "MSP Ministerio de Salud Publica", 
+    "inicio", 
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
@@ -668,21 +693,14 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 # PESTAÑA 0: INICIO
 # ------------------------------------------
 with tab_inicio:
-    st.markdown("""
-        <div class="hero-fullscreen">
-            <div class="hero-left-content">
-                <div class="welcome-text">✨ BIENVENIDO</div>
-                <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
-            </div>
-            <div class="hero-right-image"></div>
-        </div>
-    """, unsafe_allow_html=True)
+    # El fondo ya está fijo en pantalla, no requiere contenido extra aquí
+    pass
 
 # ------------------------------------------
 # PESTAÑA 1: CRUCE DE LOTE
 # ------------------------------------------
 with tab_cruce:
-    st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
+    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
     st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
 
@@ -774,7 +792,7 @@ with tab_cruce:
 # PESTAÑA 2: LOTES & BODEGA
 # ------------------------------------------
 with tab_bodega:
-    st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
+    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("📦 Control de Lotes y Existencias en Bodega")
     st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -783,7 +801,7 @@ with tab_bodega:
 # PESTAÑA 3: ACTAS OFICIALES
 # ------------------------------------------
 with tab_actas:
-    st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
+    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("📄 Actas Oficiales de Dispensación")
     st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -792,7 +810,7 @@ with tab_actas:
 # PESTAÑA 4: NORMATIVA FEFO
 # ------------------------------------------
 with tab_normativa:
-    st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
+    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("⚖️ Normativa de Gestión FEFO")
     st.markdown("""
     **Principios del Sistema FEFO (*First Expired, First Out* - Primero en Caducar, Primero en Salir):**
