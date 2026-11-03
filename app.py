@@ -39,7 +39,7 @@ def clean_exact(s):
     s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8", errors='ignore')
     s = s.upper().strip()
     
-    # 3. UNIFICAR ABREVIATURAS Y PUNTUACIÓN (Evita desacoples entre "P.V." y "PV")
+    # 3. Unificar abreviaturas y puntuación común
     s = s.replace('P.V.', 'PV').replace('N°', 'N').replace('°', '').replace('.', '')
     
     # 4. Blindaje contra espacios en guiones y símbolos
@@ -53,23 +53,18 @@ def clean_exact(s):
 def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unificado_bytes, firmantes_custom=None):
     """
     Procesa una lista de PDFs en lote, realizando el cruce FEFO acumulativo
-    (el stock de los lotes se descuenta en tiempo real entre actas y líneas)
     y generando un Excel y un PDF consolidados.
     """
-    
-    # Carga segura de los Excels de Lotes y Stock
     df_lotes = cargar_excel_seguro(excel_lotes_bytes)
     df_unificado = cargar_excel_seguro(excel_unificado_bytes)
 
     df_lotes['clean_name'] = df_lotes['Producto'].apply(clean_exact)
     df_unificado['clean_name'] = df_unificado['Producto'].apply(clean_exact)
 
-    # Agrupación y ordenamiento FEFO previo
     df_lotes_grouped = df_lotes.groupby(['clean_name', 'Lote', 'F. Cad'], as_index=False)['Existen'].sum()
     df_lotes_grouped['F. Cad DT'] = pd.to_datetime(df_lotes_grouped['F. Cad'], errors='coerce')
     df_lotes_grouped = df_lotes_grouped.sort_values(by=['clean_name', 'F. Cad DT'], ascending=[True, True])
 
-    # Diccionario de stock dinámico global (rastrea el stock restante lote por lote)
     stock_disponible_dict = {}
     for _, row in df_lotes_grouped.iterrows():
         key = (row['clean_name'], row['Lote'], row['F. Cad'])
@@ -78,7 +73,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
     todos_los_resultados = []
     metadata_actas = [] 
 
-    # Iterar sobre cada archivo PDF recibido en el lote
     for idx_pdf, (nombre_pdf, pdf_bytes) in enumerate(lista_pdfs):
         try:
             reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
@@ -90,9 +84,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         except Exception as e:
             continue
 
-        # =========================================================================
-        # EXTRACCIÓN DEL SERVICIO SOLICITANTE
-        # =========================================================================
         servicio_nombre = "GENERAL"
         match_serv = re.search(r'Servicio\s*[:]\s*([^\r\n]+)', pdf_text, re.IGNORECASE)
         if match_serv:
@@ -103,9 +94,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             if len(raw_serv) > 1:
                 servicio_nombre = raw_serv
 
-        # =========================================================================
-        # EXTRACCIÓN DE FIRMANTES ELECTRÓNICOS
-        # =========================================================================
         firmantes_encontrados = []
         texto_plano_continuo = re.sub(r'[\r\n]+', ' ', pdf_text)
         matches_firma = re.finditer(r'(?:Firmado\s+electr[oó]nicamente\s+por|por\s*[:])\s*([A-ZÁÉÍÓÚÑ\s]{5,50})', texto_plano_continuo, re.IGNORECASE)
@@ -128,7 +116,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         validado_por = firmantes_encontrados[1] if len(firmantes_encontrados) > 1 else ("DANIEL GUILLERMO DELEG SARI" if "EMERGENCIA" in servicio_nombre.upper() else "XIMENA KARINA CABRERA ZENTENO")
         entregado_por = "GUARDALMACÉN / DESPACHADOR"
 
-        # Aplicar nombres de firmantes personalizados si se proporcionan
         if firmantes_custom:
             if isinstance(firmantes_custom, dict):
                 if nombre_pdf in firmantes_custom and isinstance(firmantes_custom[nombre_pdf], dict):
@@ -141,9 +128,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     validado_por = firmantes_custom.get('validado_por', validado_por)
                     entregado_por = firmantes_custom.get('entregado_por', entregado_por)
 
-        # =========================================================================
-        # EXTRACCIÓN DE ÍTEMS
-        # =========================================================================
         idx_tabla = pdf_text.find("Nro.")
         texto_items = pdf_text[idx_tabla:] if idx_tabla != -1 else pdf_text
         clean_blob = re.sub(r'\s+', ' ', texto_items)
@@ -218,7 +202,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                         disp_lote = stock_disponible_dict.get(key, 0.0)
                         
                         if disp_lote <= 0:
-                            continue  # Salta lotes agotados por completo en actas/líneas previas
+                            continue  
                         
                         if disp_lote >= cant_pendiente:
                             cant_a_usar = cant_pendiente
@@ -266,9 +250,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
     if df_final.empty:
         return None, None
 
-    # =========================================================================
-    # 4. GENERACIÓN DE REPORTE EXCEL CONSOLIDADO
-    # =========================================================================
     output_excel = io.BytesIO()
     wb = Workbook()
     ws = wb.active
@@ -312,9 +293,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
     wb.save(output_excel)
     output_excel.seek(0)
 
-    # =========================================================================
-    # 5. GENERACIÓN DE ACTAS OFICIALES EN PDF (CONSOLIDADAS POR LOTE)
-    # =========================================================================
     output_pdf = io.BytesIO()
     doc = SimpleDocTemplate(output_pdf, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
     elements = []
@@ -403,48 +381,30 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 
 # =========================================================================
-# INTERFAZ DE STREAMLIT
+# INTERFAZ DE STREAMLIT (SIN ELEMENTOS DUPLICADOS)
 # =========================================================================
 st.title("Sistema FEFO - Hospital Vicente Corral Moscoso")
 
 st.sidebar.header("📂 Carga de Archivos")
-uploaded_lotes = st.sidebar.file_uploader("Excel de Lotes", type=["xlsx", "xls"])
-uploaded_unificado = st.sidebar.file_uploader("Excel de Stock / Unificado", type=["xlsx", "xls"])
-uploaded_pdfs = st.sidebar.file_uploader("Pedidos en PDF (Múltiples)", type=["pdf"], accept_multiple_files=True)
+uploaded_lotes = st.sidebar.file_uploader("Excel de Lotes", type=["xlsx", "xls"], key="lotes_file")
+uploaded_unificado = st.sidebar.file_uploader("Excel de Stock / Unificado", type=["xlsx", "xls"], key="unificado_file")
+uploaded_pdfs = st.sidebar.file_uploader("Pedidos en PDF (Múltiples)", type=["pdf"], accept_multiple_files=True, key="pdf_files")
 
 st.sidebar.header("✍️ Personalización de Firmantes")
 with st.sidebar.expander("Modificar Firmantes de Actas"):
-    custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO")
-    custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR")
-    custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO")
+    custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="input_elab")
+    custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="input_entre")
+    custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="input_vali")
 
-# =========================================================================
-# INTERFAZ DE STREAMLIT
-# =========================================================================
-st.title("Sistema FEFO - Hospital Vicente Corral Moscoso")
-
-st.sidebar.header("📂 Carga de Archivos")
-uploaded_lotes = st.sidebar.file_uploader("Excel de Lotes", type=["xlsx", "xls"])
-uploaded_unificado = st.sidebar.file_uploader("Excel de Stock / Unificado", type=["xlsx", "xls"])
-uploaded_pdfs = st.sidebar.file_uploader("Pedidos en PDF (Múltiples)", type=["pdf"], accept_multiple_files=True)
-
-st.sidebar.header("✍️ Personalización de Firmantes")
-with st.sidebar.expander("Modificar Firmantes de Actas"):
-    custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO")
-    custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR")
-    custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO")
-
-if st.sidebar.button("🚀 Procesar Lote FEFO"):
+if st.sidebar.button("🚀 Procesar Lote FEFO", key="btn_procesar"):
     if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
         with st.spinner("Procesando lotes y aplicando FEFO acumulativo..."):
             
-            # LECTURA SEGURA DE BYTES PARA STREAMLIT CLOUD (Evita que el puntero falle)
             lotes_bytes = uploaded_lotes.getvalue()
             unificado_bytes = uploaded_unificado.getvalue()
             
             lista_pdfs = []
             for pdf in uploaded_pdfs:
-                # Asegurar lectura completa de cada PDF en bytes independientes
                 pdf_bytes = pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()
                 lista_pdfs.append((pdf.name, pdf_bytes))
 
@@ -460,8 +420,8 @@ if st.sidebar.button("🚀 Procesar Lote FEFO"):
 
             if excel_res and pdf_res:
                 st.success("¡Procesamiento completado con éxito!")
-                st.download_button("📥 Descargar Excel Consolidado", excel_res, "Consolidado_Lote_FEFO.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                st.download_button("📥 Descargar Actas en PDF", pdf_res, "Actas_Oficiales_Consolidas.pdf", "application/pdf")
+                st.download_button("📥 Descargar Excel Consolidado", excel_res, "Consolidado_Lote_FEFO.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key="dl_excel")
+                st.download_button("📥 Descargar Actas en PDF", pdf_res, "Actas_Oficiales_Consolidas.pdf", "application/pdf", key="dl_pdf")
             else:
                 st.error("No se pudieron generar resultados. Verifique que los nombres de los productos en los Excel coincidan con los PDFs.")
     else:
