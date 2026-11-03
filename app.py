@@ -418,7 +418,6 @@ with st.sidebar.expander("Modificar Firmantes de Actas"):
     custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR")
     custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO")
 
-if st.sidebar.button("🚀 Procesar Lote FEFO"):
  # =========================================================================
 # INTERFAZ DE STREAMLIT
 # =========================================================================
