@@ -14,6 +14,7 @@ import datetime
 import streamlit as st
 
 def cargar_excel_seguro(file_bytes):
+    """Carga segura de Excel compatible con cualquier versión de Pandas/Openpyxl."""
     try:
         return pd.read_excel(io.BytesIO(file_bytes), engine='openpyxl')
     except Exception:
@@ -23,27 +24,41 @@ def cargar_excel_seguro(file_bytes):
             return pd.read_excel(io.BytesIO(file_bytes))
 
 def clean_exact(s):
-    """Limpieza robusta que preserva los códigos y símbolos (#) de los catéteres."""
-    if not isinstance(s, str):
+    """
+    Normalización ultra robusta: Estandariza catéteres eliminando diferencias 
+    de puntos, símbolos (#), grados y espacios para asegurar coincidencia total 
+    entre el PDF y el Excel en cualquier entorno (Local vs Streamlit Cloud).
+    """
+    if pd.isna(s):
         return ""
+    if not isinstance(s, str):
+        s = str(s)
     try:
         if isinstance(s, bytes):
             s = s.decode('utf-8', errors='ignore')
     except Exception:
         pass
     
-    s = s.replace('\r', ' ').replace('\n', ' ').replace('\xa0', ' ').replace('\u200b', ' ')
+    # Normalización de acentos y caracteres Unicode
     s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8", errors='ignore')
     s = s.upper().strip()
-    # Mapeos estándar idénticos a Google AI Studio
-    s = s.replace('P.V.', 'PV').replace('N°', 'N').replace('°', '')
-    s = re.sub(r'\s+', ' ', s)
+    
+    # Estandarización específica de nomenclatura hospitalaria (Catéteres, P.V., etc.)
+    s = s.replace('P.V.', 'PV').replace('P.V', 'PV').replace('N°', 'N').replace('°', '')
+    
+    # Reemplazo seguro de símbolos problemáticos para evitar desajustes en la nube
+    s = re.sub(r'[^A-Z0-9\s]', ' ', s)
+    s = re.sub(r'\s+', ' ', s).strip()
     return s
 
 def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unificado_bytes, firmantes_custom=None):
     try:
         df_lotes = cargar_excel_seguro(excel_lotes_bytes)
         df_unificado = cargar_excel_seguro(excel_unificado_bytes)
+
+        # Asegurar tipo texto plano para evitar errores de columnas en Pandas Cloud
+        df_lotes['Producto'] = df_lotes['Producto'].astype(str)
+        df_unificado['Producto'] = df_unificado['Producto'].astype(str)
 
         df_lotes['clean_name'] = df_lotes['Producto'].apply(clean_exact)
         df_unificado['clean_name'] = df_unificado['Producto'].apply(clean_exact)
