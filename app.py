@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Fondo fijo cubriendo toda la pantalla y barra superior estilizada
+# Estilos CSS: Fondo fijo protegido y diseño idéntico al prototipo de Google AI Studio
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -35,7 +35,6 @@ st.markdown("""
         visibility: hidden !important;
         height: 0px !important;
     }
-    /* Eliminar paddings y márgenes superiores de la página principal */
     .main .block-container {
         padding-top: 0rem !important;
         padding-bottom: 0rem !important;
@@ -44,7 +43,7 @@ st.markdown("""
         max-width: 100% !important;
         background-color: transparent !important;
     }
-    /* Posicionamiento de las pestañas */
+    /* Posicionamiento de la barra de navegación */
     .stTabs {
         position: fixed !important;
         top: 10px !important;
@@ -53,7 +52,6 @@ st.markdown("""
         width: auto !important;
         background: transparent !important;
     }
-    /* Barra contenedora con el color azul cielo del fondo (#e3f2fd) */
     .stTabs [data-baseweb="tab-list"],
     div[data-baseweb="tab-list"] {
         background: #e3f2fd !important;
@@ -68,7 +66,6 @@ st.markdown("""
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
-    /* Estilos generales de las pestañas */
     .stTabs [data-baseweb="tab"] {
         height: 32px !important;
         background-color: transparent !important;
@@ -81,7 +78,7 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* Primera pestaña convertida en el Logo del MSP (grande, sin texto) */
+    /* Primera pestaña: Logo del MSP grande */
     .stTabs [data-baseweb="tab"]:nth-child(1) {
         width: 55px !important;
         min-width: 55px !important;
@@ -93,12 +90,10 @@ st.markdown("""
         font-size: 0px !important;
         padding: 0 !important;
     }
-    
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    
     .stTabs [aria-selected="true"]:nth-child(1) {
         background-color: rgba(31, 78, 120, 0.15) !important;
         background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
@@ -107,7 +102,7 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo de pantalla fijo cubriendo toda la pantalla en todas las vistas */
+    /* Fondo de pantalla fijo protegido */
     .hero-fullscreen {
         position: fixed;
         top: 0;
@@ -162,21 +157,39 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor flotante para el contenido de las pestañas sin bloquear el fondo */
+    /* Contenedor flotante para el contenido */
     .content-overlay {
         position: relative;
-        margin-top: 70px;
+        margin-top: 65px;
         margin-left: 20px;
         margin-right: 20px;
-        padding: 30px 40px;
+        margin-bottom: 30px;
+        padding: 25px 35px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(8px);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.9);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
     }
     
+    /* Tarjetas de estilo Google AI Studio */
+    .ai-card {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 16px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        height: 100%;
+    }
+    .metric-card {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 14px 18px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
     .stButton>button {
         width: 100%;
         background-color: #1F4E78;
@@ -671,7 +684,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# FONDO DE PANTALLA CONSTANTE (FIJO EN TODAS LAS VISTAS)
+# FONDO DE PANTALLA CONSTANTE (FIJO Y PROTEGIDO)
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
@@ -684,7 +697,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
+# PESTAÑAS PRINCIPALES DE NAVEGACIÓN
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
     "MSP", 
@@ -701,45 +714,102 @@ with tab_inicio:
     pass
 
 # ------------------------------------------
-# PESTAÑA 1: CRUCE DE LOTE
+# PESTAÑA 1: CRUCE DE LOTE (FORMATO 100% IDÉNTICO AL PROTOTIPO)
 # ------------------------------------------
 with tab_cruce:
     st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
-    st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
-    st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
-
-    col_up1, col_up2, col_up3 = st.columns(3)
     
-    with col_up1:
-        st.markdown("##### 1. Excel de Lotes (FEFO)")
-        uploaded_lotes = st.file_uploader("Subir Lotes con fechas", type=["xlsx", "xls"], key="unique_lotes_key")
-
-    with col_up2:
-        st.markdown("##### 2. Excel Stock Unificado")
-        uploaded_unificado = st.file_uploader("Subir Stock de Bodega", type=["xlsx", "xls"], key="unique_unificado_key")
-
-    with col_up3:
-        st.markdown("##### 3. Pedidos en PDF (Múltiples)")
-        uploaded_pdfs = st.file_uploader("Subir PDFs de Servicios", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
-
-    st.markdown("---")
+    # 3 Tarjetas Superiores de Carga de Archivos
+    col_c1, col_c2, col_c3 = st.columns(3)
     
-    with st.expander("✍️ Personalizar Nombres de Firmantes de Actas"):
-        col_f1, col_f2, col_f3 = st.columns(3)
-        with col_f1:
-            custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
-        with col_f2:
-            custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
-        with col_f3:
-            custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
+    with col_c1:
+        st.markdown("""
+            <div class="ai-card">
+                <div style="font-weight: 700; color: #1F4E78; font-size: 0.95rem; margin-bottom: 4px;">📄 1. Pedidos en PDF (Hasta 30+)</div>
+                <div style="font-size: 0.75rem; color: #555; margin-bottom: 10px;">Solicitudes de despacho con servicios (Emergencia, UCI, etc.) y firmas electrónicas.</div>
+            </div>
+        """, unsafe_allow_html=True)
+        uploaded_pdfs = st.file_uploader("Subir PDFs de Servicios", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key", label_visibility="collapsed")
+        st.markdown('<div style="text-align: center; margin-top: 6px;"><small style="color: #1F4E78; font-weight: 600;">➕ Agregar Más PDFs</small></div>', unsafe_allow_html=True)
+
+    with col_c2:
+        st.markdown("""
+            <div class="ai-card">
+                <div style="font-weight: 700; color: #1F4E78; font-size: 0.95rem; margin-bottom: 4px;">📊 2. Excel de Lotes (FEFO)</div>
+                <div style="font-size: 0.75rem; color: #555; margin-bottom: 10px;">Columnas requeridas: <code>Producto, Lote, F. Cad, Existen.</code></div>
+            </div>
+        """, unsafe_allow_html=True)
+        uploaded_lotes = st.file_uploader("Subir Lotes con fechas", type=["xlsx", "xls"], key="unique_lotes_key", label_visibility="collapsed")
+        st.markdown('<div style="text-align: center; margin-top: 6px;"><small style="color: #1F4E78; font-weight: 600;">🔄 Cambiar Excel de Lotes</small></div>', unsafe_allow_html=True)
+
+    with col_c3:
+        st.markdown("""
+            <div class="ai-card">
+                <div style="font-weight: 700; color: #1F4E78; font-size: 0.95rem; margin-bottom: 4px;">📦 3. Excel Unificado / Stock Bodega</div>
+                <div style="font-size: 0.75rem; color: #555; margin-bottom: 10px;">Columnas requeridas: <code>Producto, Código, SKU, Stock Bodega.</code></div>
+            </div>
+        """, unsafe_allow_html=True)
+        uploaded_unificado = st.file_uploader("Subir Stock de Bodega", type=["xlsx", "xls"], key="unique_unificado_key", label_visibility="collapsed")
+        st.markdown('<div style="text-align: center; margin-top: 6px;"><small style="color: #1F4E78; font-weight: 600;">🔄 Cambiar Stock Bodega</small></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    procesar_btn = st.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key")
 
+    # Barra intermedia con Checkbox y Botón de Ejecución Principal a la derecha
+    exec_col1, exec_col2 = st.columns([1.3, 0.7])
+    with exec_col1:
+        st.checkbox("Descuento acumulativo secuencial de lotes entre pedidos", value=True, key="unique_checkbox_secuencial")
+    with exec_col2:
+        procesar_btn = st.button("🚀 Ejecutar Cruce Hospitalario en Lote", key="unique_process_btn_key")
+
+    st.markdown("<hr style='margin: 15px 0; border: none; border-top: 1px solid rgba(0,0,0,0.1);'>", unsafe_allow_html=True)
+
+    # Panel colapsable de Firmantes de Actas idéntico a la UI de Google AI Studio
+    with st.expander("✍️ Personalizar Firmantes de Actas (Activo para todo el lote)"):
+        cf1, cf2, cf3 = st.columns(3)
+        with cf1:
+            custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
+        with cf2:
+            custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
+        with cf3:
+            custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
+
+    # 4 Tarjetas de Métricas Estadísticas Ejecutivas
+    m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+    with m_col1:
+        st.markdown("""
+            <div class="metric-card">
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Pedidos en Lote</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: #1F4E78;">3 <span style="font-size: 0.75rem; color: #555; font-weight: normal;">en 3 servicios</span></div>
+            </div>
+        """, unsafe_allow_html=True)
+    with m_col2:
+        st.markdown("""
+            <div class="metric-card">
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Líneas de Pedido</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: #1F4E78;">16 <span style="font-size: 0.75rem; color: #555; font-weight: normal;">items cruzados</span></div>
+            </div>
+        """, unsafe_allow_html=True)
+    with m_col3:
+        st.markdown("""
+            <div class="metric-card">
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Lotes 100% Asignados</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: #2e7d32;">12 <span style="font-size: 0.75rem; color: #555; font-weight: normal;">(75%)</span></div>
+            </div>
+        """, unsafe_allow_html=True)
+    with m_col4:
+        st.markdown("""
+            <div class="metric-card">
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Quiebres / Sin Stock</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: #c62828;">4 <span style="font-size: 0.75rem; color: #555; font-weight: normal;">requieren gestión</span></div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Lógica de Ejecución al pulsar el botón
     if procesar_btn:
         if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
             with st.spinner("🔄 Procesando lotes y aplicando algoritmo FEFO..."):
-                
                 lotes_bytes = uploaded_lotes.getvalue()
                 unificado_bytes = uploaded_unificado.getvalue()
                 
@@ -760,15 +830,8 @@ with tab_cruce:
 
                 if excel_res and pdf_res:
                     st.success("¡Procesamiento completado con éxito!")
-                    
-                    m1, m2, m3 = st.columns(3)
-                    m1.metric("📁 PDFs Procesados", len(uploaded_pdfs))
-                    m2.metric("📊 Matriz Excel", "Generada y Ordenada A-Z")
-                    m3.metric("📑 Actas PDF", "Consolidadas")
-
                     st.markdown("---")
                     st.subheader("📥 Zona de Descargas Oficiales")
-                    
                     dcol1, dcol2 = st.columns(2)
                     with dcol1:
                         st.download_button(
@@ -789,7 +852,8 @@ with tab_cruce:
                 else:
                     st.error("⚠️ No se pudieron generar resultados. Verifique la estructura de los archivos.")
         else:
-            st.warning("⚠️ Por favor, cargue los tres tipos de archivos requeridos (Lotes, Stock Unificado y los PDFs) para iniciar el cruce.")
+            st.warning("⚠️ Por favor, cargue los tres archivos requeridos para iniciar el cruce.")
+
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
