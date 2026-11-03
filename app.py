@@ -23,21 +23,40 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS personalizados (Incluyendo la tipografía elegante para el BIENVENIDO)
+# Estilos CSS avanzados para el fondo dividido a pantalla completa y difuminado estilo Coca-Cola
 st.markdown("""
     <style>
     /* Ocultar barra lateral totalmente */
     [data-testid="stSidebar"] {
         display: none;
     }
-    /* Estilo del banner */
-    .hero-container {
-        background: linear-gradient(105deg, #e3f2fd 0%, #f0f7ff 55%, #ffffff 55%);
-        border-radius: 24px;
-        padding: 35px;
-        margin-bottom: 30px;
-        box-shadow: 0px 8px 25px rgba(31, 78, 120, 0.08);
-        border: 1px solid #d0e1fd;
+    /* Eliminar márgenes por defecto de Streamlit para ocupar todo el ancho */
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 0rem;
+        padding-left: 0rem;
+        padding-right: 0rem;
+        max-width: 100% !important;
+    }
+    /* Contenedor principal de inicio a pantalla completa */
+    .hero-fullscreen {
+        position: relative;
+        width: 100vw;
+        height: 75vh;
+        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        overflow: hidden;
+        margin-left: calc(-50vw + 50%);
+        margin-right: calc(-50vw + 50%);
+        margin-top: -1rem;
+    }
+    .hero-left-content {
+        width: 50%;
+        padding-left: 6%;
+        padding-right: 4%;
+        z-index: 2;
     }
     .welcome-text {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -46,14 +65,28 @@ st.markdown("""
         color: #0d47a1;
         font-weight: 700;
         text-transform: uppercase;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
     }
     .hero-title {
-        font-size: 2.2rem;
+        font-size: 2.8rem;
         font-weight: 800;
         color: #1F4E78;
-        line-height: 1.2;
+        line-height: 1.15;
         margin-bottom: 15px;
+    }
+    .hero-right-image {
+        width: 55%;
+        height: 100%;
+        position: absolute;
+        right: 0;
+        top: 0;
+        background-image: url('https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752');
+        background-size: cover;
+        background-position: center;
+        /* Máscara de difuminado para que la imagen se funda hacia la izquierda */
+        -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 30%, rgba(0,0,0,1) 100%);
+        mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 30%, rgba(0,0,0,1) 100%);
+        z-index: 1;
     }
     .stButton>button {
         width: 100%;
@@ -551,7 +584,9 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 # ==========================================
 # CABECERA INSTITUCIONAL SUPERIOR
 # ==========================================
-st.image("http://www.acess.gob.ec/wp-content/uploads/2017/08/MSP-LOGO-WEB1.jpg", width=240)
+st.markdown('<div style="padding: 10px 20px;">', unsafe_allow_html=True)
+st.image("http://www.acess.gob.ec/wp-content/uploads/2017/08/MSP-LOGO-WEB1.jpg", width=220)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
 # PESTAÑAS PRINCIPALES SUPERIORES (TAB SYSTEM)
@@ -565,20 +600,16 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 ])
 
 # ------------------------------------------
-# PESTAÑA 0: INICIO (BANNER PRINCIPAL)
+# PESTAÑA 0: INICIO (BANNER A PANTALLA COMPLETA CON DIFUMINADO)
 # ------------------------------------------
 with tab_inicio:
     st.markdown("""
-        <div class="hero-container">
-            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-                <div style="flex: 1; min-width: 300px; padding-right: 20px;">
-                    <div class="welcome-text">✨ BIENVENIDO</div>
-                    <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
-                </div>
-                <div style="flex: 1; min-width: 300px; text-align: center; margin-top: 15px;">
-                    <img src="https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752" style="width: 100%; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                </div>
+        <div class="hero-fullscreen">
+            <div class="hero-left-content">
+                <div class="welcome-text">✨ BIENVENIDO</div>
+                <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
             </div>
+            <div class="hero-right-image"></div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -586,6 +617,7 @@ with tab_inicio:
 # PESTAÑA 1: CRUCE DE LOTE (CARGA Y RESULTADOS)
 # ------------------------------------------
 with tab_cruce:
+    st.markdown('<div style="padding: 20px;">', unsafe_allow_html=True)
     st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
     st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
 
@@ -671,25 +703,31 @@ with tab_cruce:
                     st.error("⚠️ No se pudieron generar resultados. Verifique la estructura de los archivos.")
         else:
             st.warning("⚠️ Por favor, cargue los tres tipos de archivos requeridos (Lotes, Stock Unificado y los PDFs) para iniciar el cruce.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
 # PESTAÑA 2: LOTES & BODEGA
 # ------------------------------------------
 with tab_bodega:
+    st.markdown('<div style="padding: 20px;">', unsafe_allow_html=True)
     st.subheader("📦 Control de Lotes y Existencias en Bodega")
     st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
 # PESTAÑA 3: ACTAS OFICIALES
 # ------------------------------------------
 with tab_actas:
+    st.markdown('<div style="padding: 20px;">', unsafe_allow_html=True)
     st.subheader("📄 Actas Oficiales de Dispensación")
     st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
 # PESTAÑA 4: NORMATIVA FEFO
 # ------------------------------------------
 with tab_normativa:
+    st.markdown('<div style="padding: 20px;">', unsafe_allow_html=True)
     st.subheader("⚖️ Normativa de Gestión FEFO")
     st.markdown("""
     **Principios del Sistema FEFO (*First Expired, First Out* - Primero en Caducar, Primero en Salir):**
@@ -697,3 +735,4 @@ with tab_normativa:
     * **Optimización de recursos:** Evitar pérdidas por caducidad en bodega y farmacia.
     * **Trazabilidad total:** Mantener registro exacto del número de lote asignado a cada servicio institucional.
     """)
+    st.markdown('</div>', unsafe_allow_html=True)
