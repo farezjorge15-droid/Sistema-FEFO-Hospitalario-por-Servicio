@@ -13,6 +13,119 @@ import io
 import datetime
 import streamlit as st
 
+# ==========================================
+# CONFIGURACIÓN DE PÁGINA STREAMLIT
+# ==========================================
+st.set_page_config(
+    page_title="Sistema FEFO | Hospital Vicente Corral Moscoso",
+    page_icon="🏥",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ==========================================
+# INYECCIÓN DE ESTILOS CSS PERSONALIZADOS
+# ==========================================
+st.markdown("""
+<style>
+    /* Estilo General y Paleta Hospitalaria */
+    :root {
+        --primary-color: #1F4E78;
+        --secondary-color: #007BFF;
+        --bg-light: #F4F7F9;
+        --card-bg: #FFFFFF;
+    }
+    
+    /* Header principal */
+    .main-header {
+        background: linear-gradient(135deg, #1F4E78 0%, #007BFF 100%);
+        padding: 24px;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .main-header h1 {
+        color: #FFFFFF !important;
+        font-weight: 700;
+        font-size: 1.9rem;
+        margin: 0;
+    }
+    .main-header p {
+        color: #D9E8F5;
+        font-size: 0.95rem;
+        margin-top: 5px;
+        margin-bottom: 0;
+    }
+
+    /* Tarjetas de métricas/resumen */
+    .metric-card {
+        background-color: var(--card-bg);
+        border-left: 5px solid #1F4E78;
+        padding: 16px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
+    }
+    .metric-card h4 {
+        color: #555555;
+        font-size: 0.85rem;
+        margin: 0 0 5px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .metric-card .value {
+        color: #1F4E78;
+        font-size: 1.4rem;
+        font-weight: 700;
+    }
+
+    /* Modificación de la barra lateral */
+    [data-testid="stSidebar"] {
+        background-color: #EBF3FA;
+        padding-top: 10px;
+    }
+    .sidebar-title {
+        font-weight: 700;
+        color: #1F4E78;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #1F4E78;
+        padding-bottom: 5px;
+    }
+
+    /* Botones primarios */
+    .stButton > button {
+        background: linear-gradient(135deg, #1F4E78 0%, #007BFF 100%);
+        color: white !important;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 10px 24px;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Tarjeta de descargas */
+    .download-box {
+        background-color: #E8F5E9;
+        border: 1px solid #A5D6A7;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 15px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
+# ==========================================
+# FUNCIONES LÓGICAS (SISTEMA BASE FEFO)
+# ==========================================
 def cargar_excel_seguro(file_bytes):
     try:
         return pd.read_excel(io.BytesIO(file_bytes), engine='openpyxl')
@@ -103,7 +216,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             key = (row['clean_name'], row['Lote'], row['F. Cad'])
             stock_disponible_dict[key] = float(row['Existen']) if pd.notna(row['Existen']) else 0.0
 
-        # PASO 1: Pre-detectar los nombres base de servicio para cada PDF y asegurar nombres únicos limpios
         nombres_servicios_raw = []
         for idx_pdf, (nombre_pdf, pdf_bytes) in enumerate(lista_pdfs):
             pdf_text = ""
@@ -127,7 +239,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     base_servicio = raw_serv.upper().strip()
             nombres_servicios_raw.append((idx_pdf, nombre_pdf, pdf_bytes, base_servicio, pdf_text))
 
-        # Asignar sufijos numéricos (1, 2, 3...) si se repite el nombre del servicio
         conteo_servicios = {}
         asignaciones_servicios = []
         for idx_pdf, nombre_pdf, pdf_bytes, base_serv, pdf_text in nombres_servicios_raw:
@@ -328,7 +439,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         if df_final.empty:
             return None, None
 
-        # --- CONSOLIDADO EN FORMATO MATRIZ ---
+        # MATRIZ EXCEL
         output_excel = io.BytesIO()
         wb = Workbook()
         ws = wb.active
@@ -401,7 +512,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         wb.save(output_excel)
         output_excel.seek(0)
 
-        # --- PDF DE ACTAS OFICIALES ---
+        # PDF ACTAS
         output_pdf = io.BytesIO()
         doc = SimpleDocTemplate(output_pdf, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
         elements = []
@@ -491,46 +602,172 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         st.error(f"Error interno en el procesamiento: {e}")
         return None, None
 
-st.title("Sistema FEFO - Hospital Vicente Corral Moscoso")
 
-st.sidebar.header("📂 Carga de Archivos")
-uploaded_lotes = st.sidebar.file_uploader("Excel de Lotes", type=["xlsx", "xls"], key="unique_lotes_key")
-uploaded_unificado = st.sidebar.file_uploader("Excel de Stock / Unificado", type=["xlsx", "xls"], key="unique_unificado_key")
-uploaded_pdfs = st.sidebar.file_uploader("Pedidos en PDF (Múltiples)", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
+# ==========================================
+# INTERFAZ GRÁFICA (HEADER PRINCIPAL)
+# ==========================================
+st.markdown("""
+<div class="main-header">
+    <h1>🏥 Sistema de Gestión FEFO & Cruce de Pedidos</h1>
+    <p>Hospital Provincial General Docente Vicente Corral Moscoso | Control Automatizado de Inventarios y Dispensación</p>
+</div>
+""", unsafe_allow_html=True)
 
-st.sidebar.header("✍️ Personalización de Firmantes")
-with st.sidebar.expander("Modificar Firmantes de Actas"):
+# ==========================================
+# BARRA LATERAL (SIDEBAR REDISEÑADA)
+# ==========================================
+st.sidebar.markdown('<div class="sidebar-title">📂 Carga de Archivos</div>', unsafe_allow_html=True)
+
+uploaded_lotes = st.sidebar.file_uploader(
+    "1. Excel de Lotes (Stock con F. Caducidad)", 
+    type=["xlsx", "xls"], 
+    key="unique_lotes_key"
+)
+
+uploaded_unificado = st.sidebar.file_uploader(
+    "2. Excel Unificado / Stock Bodega", 
+    type=["xlsx", "xls"], 
+    key="unique_unificado_key"
+)
+
+uploaded_pdfs = st.sidebar.file_uploader(
+    "3. Pedidos de Servicios (PDFs Múltiples)", 
+    type=["pdf"], 
+    accept_multiple_files=True, 
+    key="unique_pdfs_key"
+)
+
+st.sidebar.markdown("<br>", unsafe_allow_html=True)
+st.sidebar.markdown('<div class="sidebar-title">✍️ Personalización de Actas</div>', unsafe_allow_html=True)
+
+with st.sidebar.expander("📝 Configurar Responsables de Firma"):
     custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
     custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
     custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
 
-if st.sidebar.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key"):
-    if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
-        with st.spinner("Procesando lotes y aplicando FEFO acumulativo..."):
-            
-            lotes_bytes = uploaded_lotes.getvalue()
-            unificado_bytes = uploaded_unificado.getvalue()
-            
-            lista_pdfs = []
-            for pdf in uploaded_pdfs:
-                pdf_bytes = pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()
-                lista_pdfs.append((pdf.name, pdf_bytes))
+st.sidebar.markdown("<br>", unsafe_allow_html=True)
+btn_procesar = st.sidebar.button("🚀 Ejecutar Procesamiento FEFO", key="unique_process_btn_key")
 
-            firmantes_config = {
-                'elaborado_por': custom_elab,
-                'entregado_por': custom_entre,
-                'validado_por': custom_vali
-            }
 
-            excel_res, pdf_res = procesar_cruce_hospitalario_lote(
-                lista_pdfs, lotes_bytes, unificado_bytes, firmantes_custom=firmantes_config
-            )
+# ==========================================
+# CUERPO PRINCIPAL & PESTAÑAS
+# ==========================================
+tab_main, tab_details, tab_help = st.tabs(["⚡ Procesador & Descargas", "📊 Resumen de Carga", "ℹ️ Guía & Ayuda"])
 
-            if excel_res and pdf_res:
-                st.success("¡Procesamiento completado con éxito!")
-                st.download_button("📥 Descargar Excel Consolidado", excel_res, "Consolidado_Pedidos_Matriz_FEFO.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key="unique_dl_excel_key")
-                st.download_button("📥 Descargar Actas en PDF", pdf_res, "Actas_Oficiales_Consolidas.pdf", "application/pdf", key="unique_dl_pdf_key")
-            else:
-                st.error("No se pudieron generar resultados. Verifique que los archivos sean correctos.")
+with tab_main:
+    # Métricas de Estado de Carga rápida
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>1. Excel Lotes</h4>
+            <div class="value">{'✅ Carga lista' if uploaded_lotes else '❌ Pendiente'}</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>2. Excel Unificado</h4>
+            <div class="value">{'✅ Carga lista' if uploaded_unificado else '❌ Pendiente'}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        cant_pdfs = len(uploaded_pdfs) if uploaded_pdfs else 0
+        st.markdown(f"""
+        <div class="metric-card">
+            <h4>3. Pedidos PDF</h4>
+            <div class="value">{f'📄 {cant_pdfs} cargados' if cant_pdfs > 0 else '❌ Pendiente'}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # Ejecución al presionar el botón
+    if btn_procesar:
+        if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
+            with st.spinner("⏳ Procesando cruce de lotes, asignando algoritmos FEFO y generando actas..."):
+                
+                lotes_bytes = uploaded_lotes.getvalue()
+                unificado_bytes = uploaded_unificado.getvalue()
+                
+                lista_pdfs = []
+                for pdf in uploaded_pdfs:
+                    pdf_bytes = pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()
+                    lista_pdfs.append((pdf.name, pdf_bytes))
+
+                firmantes_config = {
+                    'elaborado_por': custom_elab,
+                    'entregado_por': custom_entre,
+                    'validado_por': custom_vali
+                }
+
+                excel_res, pdf_res = procesar_cruce_hospitalario_lote(
+                    lista_pdfs, lotes_bytes, unificado_bytes, firmantes_custom=firmantes_config
+                )
+
+                if excel_res and pdf_res:
+                    st.success("🎉 **¡Procesamiento finalizado con éxito!** Se han asignado los lotes óptimos FEFO y generado las actas.")
+                    
+                    st.markdown("### 📥 Descarga de Consolidados e Informes")
+                    
+                    col_down1, col_down2 = st.columns(2)
+                    
+                    with col_down1:
+                        st.download_button(
+                            label="📊 Descargar Matriz Consolidada (Excel)",
+                            data=excel_res,
+                            file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            key="unique_dl_excel_key",
+                            use_container_width=True
+                        )
+                    
+                    with col_down2:
+                        st.download_button(
+                            label="📄 Descargar Actas Oficiales (PDF)",
+                            data=pdf_res,
+                            file_name="Actas_Oficiales_Consolidadas.pdf",
+                            mime="application/pdf",
+                            key="unique_dl_pdf_key",
+                            use_container_width=True
+                        )
+                else:
+                    st.error("🚨 No se pudieron generar los resultados. Asegúrese de que las estructuras internas de las tablas de los Excel sean correctas.")
+        else:
+            st.warning("⚠️ **Requisito incompleto:** Por favor, cargue los tres tipos de archivo solicitados en el menú lateral antes de continuar.")
     else:
-        st.warning("⚠️ Por favor, cargue todos los archivos necesarios (Lotes, Stock y al menos un PDF).")
+        st.info("👈 Cargue los archivos requeridos en el panel lateral y presione **'Ejecutar Procesamiento FEFO'**.")
+
+with tab_details:
+    st.markdown("### 📋 Archivos Seleccionados para el Proceso")
+    if uploaded_lotes or uploaded_unificado or uploaded_pdfs:
+        datos_archivos = []
+        if uploaded_lotes:
+            datos_archivos.append({"Categoría": "Excel de Lotes", "Nombre de Archivo": uploaded_lotes.name, "Tamaño (KB)": round(uploaded_lotes.size/1024, 2)})
+        if uploaded_unificado:
+            datos_archivos.append({"Categoría": "Excel Unificado", "Nombre de Archivo": uploaded_unificado.name, "Tamaño (KB)": round(uploaded_unificado.size/1024, 2)})
+        if uploaded_pdfs:
+            for f in uploaded_pdfs:
+                datos_archivos.append({"Categoría": "Pedido PDF", "Nombre de Archivo": f.name, "Tamaño (KB)": round(f.size/1024, 2)})
+        
+        st.dataframe(pd.DataFrame(datos_archivos), use_container_width=True)
+    else:
+        st.write("Aún no ha subido ningún archivo.")
+
+with tab_help:
+    st.markdown("""
+    ### ℹ️ Acerca de esta herramienta
+
+    Este sistema automatiza el **despacho FEFO (*First Expired, First Out / Primero en Caducar, Primero en Salir*)** para farmacia y bodega médica hospitalaria.
+
+    #### 🔄 Flujo de Trabajo:
+    1. **Asignación Automática**: Selecciona automáticamente los lotes más próximos a vencer para atender los pedidos de los servicios.
+    2. **Control Acumulado**: Resta progresivamente las existencias a medida que procesa múltiples PDFs de pedidos en lote.
+    3. **Detección de Faltantes**: Marca con alertas rojas aquellos insumos con stock insuficientes o sin lote disponible.
+    4. **Generación de Formatos**:
+       - **Matriz Excel**: Formato resumido por columnas para bodega.
+       - **Acta PDF**: Documento oficial formateado para impresión con firmas de respaldo.
+    """)
