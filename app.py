@@ -23,7 +23,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Fondo fijo, barra de pestañas azul cielo y scroll vertical nativo habilitado
+# ==========================================
+# ESTILOS CSS CORREGIDOS (Fondo Fijo + Scroll y Diseño Original)
+# ==========================================
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -36,13 +38,13 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* Habilitar scroll vertical en el body y la app */
+    /* Habilitar scroll vertical nativo en la página */
     html, body, [data-testid="stAppViewContainer"], .stApp {
         overflow-y: auto !important;
         background-color: transparent !important;
     }
 
-    /* Imagen de fondo fija cubriendo toda la pantalla */
+    /* Fondo corporativo fijo (Degradado a la izquierda + Imagen del hospital a la derecha) */
     .stApp::before {
         content: "";
         position: fixed;
@@ -50,7 +52,7 @@ st.markdown("""
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%),
+        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, rgba(240,247,255,0) 50%),
                     url('https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752');
         background-size: cover;
         background-position: center;
@@ -65,14 +67,14 @@ st.markdown("""
         padding-left: 3rem !important;
         padding-right: 3rem !important;
         max-width: 100% !important;
-        background-color: rgba(255, 255, 255, 0.85);
+        background-color: rgba(255, 255, 255, 0.88);
         backdrop-filter: blur(8px);
         border-radius: 12px;
         margin: 20px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
     }
 
-    /* Posicionamiento de las pestañas de navegación */
+    /* Posicionamiento fijo de las pestañas de navegación */
     .stTabs {
         position: fixed !important;
         top: 15px !important;
