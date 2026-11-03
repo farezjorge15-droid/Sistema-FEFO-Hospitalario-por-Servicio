@@ -23,10 +23,20 @@ def cargar_excel_seguro(file_bytes):
             return pd.read_excel(io.BytesIO(file_bytes))
 
 def clean_exact(s):
+    """Limpieza robusta que preserva los códigos y símbolos (#) de los catéteres."""
     if not isinstance(s, str):
         return ""
-    s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8")
+    try:
+        if isinstance(s, bytes):
+            s = s.decode('utf-8', errors='ignore')
+    except Exception:
+        pass
+    
+    s = s.replace('\r', ' ').replace('\n', ' ').replace('\xa0', ' ').replace('\u200b', ' ')
+    s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8", errors='ignore')
     s = s.upper().strip()
+    # Mapeos estándar idénticos a Google AI Studio
+    s = s.replace('P.V.', 'PV').replace('N°', 'N').replace('°', '')
     s = re.sub(r'\s+', ' ', s)
     return s
 
@@ -141,7 +151,8 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     if not match_unif.empty:
                         codigo = match_unif.iloc[0].get('Código', match_unif.iloc[0].get('Codigo', 'SIN-CODIGO'))
                         sku = match_unif.iloc[0].get('SKU', 'SIN-SKU')
-                        col_bodega = [c for c in match_unif.columns if 'BOD' in str(c).upper() or 'FARM' in str(c).upper()][0] if [c for c in match_unif.columns if 'BOD' in str(c).upper()] else match_unif.columns[-1]
+                        cols_posibles = [c for c in match_unif.columns if any(w in str(c).upper() for w in ['BOD', 'FARM', 'STOCK', 'EXIST', 'TOTAL'])]
+                        col_bodega = cols_posibles[0] if cols_posibles else match_unif.columns[-1]
                         stock_bodega = match_unif.iloc[0][col_bodega]
                         if pd.isna(stock_bodega):
                             stock_bodega = 0.0
