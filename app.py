@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Inyección limpia del logo MSP en la primera pestaña
+# Estilos CSS: Logo MSP grande, sin rastro de la palabra Inicio y perfectamente integrado
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -53,24 +53,25 @@ st.markdown("""
         width: auto !important;
         background: transparent !important;
     }
-    /* Barra contenedora ultra delgada y compacta */
+    /* Barra contenedora compacta */
     .stTabs [data-baseweb="tab-list"],
     div[data-baseweb="tab-list"] {
         background: rgba(255, 255, 255, 0.4) !important;
         background-color: rgba(255, 255, 255, 0.4) !important;
         border-radius: 6px !important;
-        padding: 2px 4px !important;
+        padding: 2px 6px !important;
         border-bottom: none !important;
-        gap: 4px !important;
+        gap: 6px !important;
         backdrop-filter: blur(6px) !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        align-items: center !important;
     }
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
-    /* Estilos generales de las pestañas */
+    /* Estilos generales de las demás pestañas */
     .stTabs [data-baseweb="tab"] {
-        height: 28px !important;
+        height: 32px !important;
         background-color: transparent !important;
         border-radius: 4px !important;
         padding: 0px 10px !important;
@@ -81,31 +82,36 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* Transformar la primera pestaña en el Logo del MSP de forma precisa */
+    /* === TRANSFORMACIÓN ABSOLUTA DE LA PRIMERA PESTAÑA EN LOGO MSP GIGANTE === */
     .stTabs [data-baseweb="tab"]:nth-child(1) {
-        width: 38px !important;
-        min-width: 38px !important;
+        width: 65px !important;
+        min-width: 65px !important;
+        height: 38px !important;
         padding: 0px !important;
+        margin: 0px !important;
         background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
-        background-size: 80% 80% !important;
+        background-size: contain !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
+        overflow: hidden !important;
     }
-    /* Ocultar el texto interno "Inicio" de la primera pestaña para que solo se vea el logo */
-    .stTabs [data-baseweb="tab"]:nth-child(1) p,
-    .stTabs [data-baseweb="tab"]:nth-child(1) div {
-        color: transparent !important;
-        font-size: 0px !important;
+    
+    /* Ocultar cualquier texto, icono o elemento hijo de la primera pestaña */
+    .stTabs [data-baseweb="tab"]:nth-child(1) * {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
     }
 
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
+    
     .stTabs [aria-selected="true"]:nth-child(1) {
-        background-color: rgba(31, 78, 120, 0.25) !important;
+        background-color: rgba(31, 78, 120, 0.2) !important;
         background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
-        background-size: 80% 80% !important;
+        background-size: contain !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
     }
