@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS avanzados: Barra de pestañas totalmente transparente para ver el fondo continuo
+# Estilos CSS avanzados: Forzar transparencia total en la barra contenedora de pestañas
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -42,8 +42,9 @@ st.markdown("""
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
+        background-color: transparent !important;
     }
-    /* Contenedor principal de las pestañas posicionado en la esquina superior */
+    /* Contenedor principal de las pestañas */
     .stTabs {
         position: absolute !important;
         top: 15px !important;
@@ -52,22 +53,27 @@ st.markdown("""
         width: auto !important;
         background: transparent !important;
     }
-    /* Eliminar cualquier fondo blanco o contenedor de la barra de pestañas */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 10px !important;
+    /* Forzar transparencia absoluta en la barra de pestañas de BaseWeb */
+    .stTabs [data-baseweb="tab-list"],
+    div[data-baseweb="tab-list"],
+    .stTabs div {
         background: transparent !important;
         background-color: transparent !important;
         border-bottom: none !important;
-        padding: 0px !important;
     }
-    /* Contenedor interno de las pestañas sin fondo */
+    /* Eliminar el fondo blanco del contenedor de pestañas */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px !important;
+        padding: 0px !important;
+        background-color: transparent !important;
+    }
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
     /* Botones individuales de las pestañas con efecto flotante translúcido */
     .stTabs [data-baseweb="tab"] {
         height: 38px !important;
-        background-color: rgba(255, 255, 255, 0.75) !important;
+        background-color: rgba(255, 255, 255, 0.8) !important;
         border-radius: 8px !important;
         padding: 0px 16px !important;
         font-weight: 600 !important;
