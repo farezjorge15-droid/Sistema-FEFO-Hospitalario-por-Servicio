@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS con fondo fijo y contenedor con scroll vertical interno
+# Estilos CSS profesionales de ancho completo (full-width) y diseño moderno
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -36,20 +36,20 @@ st.markdown("""
         height: 0px !important;
     }
     
+    /* Configuración general de la página para ocupar toda la pantalla con scroll fluido */
     html, body, [data-testid="stAppViewContainer"], .main {
         background-color: #f0f7ff !important;
-        overflow: hidden !important;
+        overflow-y: auto !important;
         height: 100vh !important;
     }
 
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
+        padding-bottom: 5rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
-        overflow: hidden !important;
     }
     
     /* Posicionamiento fijo de la barra de navegación superior */
@@ -111,7 +111,7 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo estático fijo (wallpaper que no se mueve) */
+    /* Fondo estático fluido */
     .hero-fullscreen {
         position: fixed;
         top: 0;
@@ -167,23 +167,19 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor con altura fija/máxima y scroll vertical interno */
-    .content-overlay {
+    /* Contenedor profesional de ancho completo distribuido */
+    .content-container {
         position: relative;
         margin-top: 65px;
         margin-left: 20px;
         margin-right: 20px;
-        height: calc(100vh - 85px) !important;
-        max-height: calc(100vh - 85px) !important;
-        overflow-y: auto !important;
-        padding: 25px 35px;
+        padding: 30px 40px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-        box-sizing: border-box;
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(12px);
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
     }
     
     .stButton>button {
@@ -713,7 +709,7 @@ with tab_inicio:
 # PESTAÑA 1: CRUCE DE LOTE
 # ------------------------------------------
 with tab_cruce:
-    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
+    st.markdown('<div class="content-container">', unsafe_allow_html=True)
     st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
     st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
 
@@ -805,7 +801,7 @@ with tab_cruce:
 # PESTAÑA 2: LOTES & BODEGA
 # ------------------------------------------
 with tab_bodega:
-    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
+    st.markdown('<div class="content-container">', unsafe_allow_html=True)
     st.subheader("📦 Control de Lotes y Existencias en Bodega")
     st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -814,7 +810,7 @@ with tab_bodega:
 # PESTAÑA 3: ACTAS OFICIALES
 # ------------------------------------------
 with tab_actas:
-    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
+    st.markdown('<div class="content-container">', unsafe_allow_html=True)
     st.subheader("📄 Actas Oficiales de Dispensación")
     st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -823,7 +819,7 @@ with tab_actas:
 # PESTAÑA 4: NORMATIVA FEFO
 # ------------------------------------------
 with tab_normativa:
-    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
+    st.markdown('<div class="content-container">', unsafe_allow_html=True)
     st.subheader("⚖️ Normativa de Gestión FEFO")
     st.markdown("""
     **Principios del Sistema FEFO (*First Expired, First Out* - Primero en Caducar, Primero en Salir):**
