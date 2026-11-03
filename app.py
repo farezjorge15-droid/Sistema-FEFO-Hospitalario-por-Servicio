@@ -14,51 +14,42 @@ import datetime
 import streamlit as st
 
 # ==========================================
-# CONFIGURACIÓN DE PÁGINA E INTERFAZ WEB
+# CONFIGURACIÓN DE PÁGINA (OCULTAR SIDEBAR)
 # ==========================================
 st.set_page_config(
     page_title="Sistema FEFO - Hospital Vicente Corral Moscoso",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS personalizados para replicar el encabezado y navegación
+# Estilos CSS personalizados (Ocultar barra lateral por completo y mejorar botones)
 st.markdown("""
     <style>
-    /* Estilo del contenedor principal del Banner */
+    /* Ocultar barra lateral totalmente */
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+    /* Estilo del banner */
     .hero-container {
         background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
         border-radius: 16px;
-        padding: 25px;
-        margin-bottom: 25px;
+        padding: 20px;
+        margin-bottom: 20px;
         box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
         border: 1px solid #cfd8dc;
     }
     .hero-title {
-        font-size: 2.2rem;
+        font-size: 2rem;
         font-weight: 800;
         color: #1F4E78;
         line-height: 1.2;
         margin-bottom: 10px;
     }
     .hero-subtitle {
-        font-size: 1.1rem;
+        font-size: 1rem;
         color: #455a64;
         font-weight: 500;
-    }
-    /* Estilo de los botones navegables tipo pill (Paso 4) */
-    .nav-btn {
-        background-color: #1F4E78;
-        color: white !important;
-        font-weight: 600;
-        padding: 8px 16px;
-        border-radius: 20px;
-        text-align: center;
-        display: inline-block;
-        margin-right: 5px;
-        font-size: 0.9rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .stButton>button {
         width: 100%;
@@ -392,7 +383,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         if df_final.empty:
             return None, None
 
-        # --- CONSOLIDADO EN FORMATO MATRIZ ---
         output_excel = io.BytesIO()
         wb = Workbook()
         ws = wb.active
@@ -465,7 +455,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         wb.save(output_excel)
         output_excel.seek(0)
 
-        # --- PDF DE ACTAS OFICIALES ---
         output_pdf = io.BytesIO()
         doc = SimpleDocTemplate(output_pdf, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
         elements = []
@@ -556,117 +545,143 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# ESTRUCTURA DE LA PÁGINA (PASOS 1 A 4)
+# CABECERA INSTITUCIONAL SUPERIOR
 # ==========================================
+st.image("http://www.acess.gob.ec/wp-content/uploads/2017/08/MSP-LOGO-WEB1.jpg", width=240)
 
-# CABECERA NAVEGABLE SUPERIOR (Paso 1 y Paso 4)
-col_nav_logo, col_nav_menu = st.columns([1, 2])
-
-with col_nav_logo:
-    # PASO 1: Logo oficial del MSP en la parte superior izquierda
-    st.image("http://www.acess.gob.ec/wp-content/uploads/2017/08/MSP-LOGO-WEB1.jpg", width=220)
-
-with col_nav_menu:
-    # PASO 4: Botones con formato azul navegable en la parte superior derecha
-    st.markdown("""
-        <div style="text-align: right; padding-top: 15px;">
-            <span class="nav-btn">📊 Cruce de Lote</span>
-            <span class="nav-btn">📦 Lotes & Bodega</span>
-            <span class="nav-btn">📄 Actas Oficiales</span>
-            <span class="nav-btn">⚖️ Normativa FEFO</span>
-        </div>
-    """, unsafe_allow_html=True)
-
-st.markdown("<hr style='margin-top: 10px; margin-bottom: 20px;'>", unsafe_allow_html=True)
-
-# BANNER PRINCIPAL DE BIENVENIDA (Paso 2 y Paso 3)
+# BANNER PRINCIPAL CON IMAGEN DEL HOSPITAL
 with st.container():
-    col_banner_text, col_banner_img = st.columns([1.2, 1])
-    
-    with col_banner_text:
-        # PASO 2: Nombre completo del hospital e información institucional
+    col_text, col_img = st.columns([1.2, 1])
+    with col_text:
         st.markdown('<div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>', unsafe_allow_html=True)
         st.markdown('<div class="hero-subtitle">Sistema Institucional Automatizado de Dispensación Farmacéutica, Control de Lotes y Cruce de Stock por Servicio (Método FEFO).</div>', unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.info("💡 **Indicaciones:** Cargue los archivos solicitados en la barra lateral e inicie el cruce acumulativo de inventario.")
-
-    with col_banner_img:
-        # PASO 3: Imagen oficial del hospital a la derecha del banner
+    with col_img:
         st.image("https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752", use_container_width=True)
 
-# BARRA LATERAL (CARGA Y CONFIGURACIÓN)
-with st.sidebar:
-    st.header("📂 Panel de Carga de Archivos")
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ==========================================
+# PESTAÑAS PRINCIPALES SUPERIORES (TAB SYSTEM)
+# ==========================================
+tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
+    "📊 Cruce de Lote", 
+    "📦 Lotes & Bodega", 
+    "📄 Actas Oficiales", 
+    "⚖️ Normativa FEFO"
+])
+
+# ------------------------------------------
+# PESTAÑA 1: CRUCE DE LOTE (CARGA Y RESULTADOS)
+# ------------------------------------------
+with tab_cruce:
+    st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
+    st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
+
+    col_up1, col_up2, col_up3 = st.columns(3)
     
-    with st.expander("1. Inventarios y Stock", expanded=True):
-        uploaded_lotes = st.file_uploader("Excel de Lotes (FEFO)", type=["xlsx", "xls"], key="unique_lotes_key")
-        uploaded_unificado = st.file_uploader("Excel de Stock Unificado", type=["xlsx", "xls"], key="unique_unificado_key")
-    
-    with st.expander("2. Pedidos en PDF", expanded=True):
-        uploaded_pdfs = st.file_uploader("Solicitudes en PDF (Múltiples)", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
+    with col_up1:
+        st.markdown("##### 1. Excel de Lotes (FEFO)")
+        uploaded_lotes = st.file_uploader("Subir Lotes con fechas", type=["xlsx", "xls"], key="unique_lotes_key")
+
+    with col_up2:
+        st.markdown("##### 2. Excel Stock Unificado")
+        uploaded_unificado = st.file_uploader("Subir Stock de Bodega", type=["xlsx", "xls"], key="unique_unificado_key")
+
+    with col_up3:
+        st.markdown("##### 3. Pedidos en PDF (Múltiples)")
+        uploaded_pdfs = st.file_uploader("Subir PDFs de Servicios", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
 
     st.markdown("---")
-    st.header("✍️ Firmantes de Actas")
-    with st.expander("Modificar Nombres"):
-        custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
-        custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
-        custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
+    
+    with st.expander("✍️ Personalizar Nombres de Firmantes de Actas"):
+        col_f1, col_f2, col_f3 = st.columns(3)
+        with col_f1:
+            custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
+        with col_f2:
+            custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
+        with col_f3:
+            custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
     procesar_btn = st.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key")
 
-# EJECUCIÓN Y RESULTADOS
-if procesar_btn:
-    if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
-        with st.spinner("🔄 Procesando lotes y generando matriz acumulativa..."):
-            
-            lotes_bytes = uploaded_lotes.getvalue()
-            unificado_bytes = uploaded_unificado.getvalue()
-            
-            lista_pdfs = []
-            for pdf in uploaded_pdfs:
-                pdf_bytes = pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()
-                lista_pdfs.append((pdf.name, pdf_bytes))
-
-            firmantes_config = {
-                'elaborado_por': custom_elab,
-                'entregado_por': custom_entre,
-                'validado_por': custom_vali
-            }
-
-            excel_res, pdf_res = procesar_cruce_hospitalario_lote(
-                lista_pdfs, lotes_bytes, unificado_bytes, firmantes_custom=firmantes_config
-            )
-
-            if excel_res and pdf_res:
-                st.success("¡Procesamiento completado con éxito!")
+    if procesar_btn:
+        if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
+            with st.spinner("🔄 Procesando lotes y aplicando algoritmo FEFO..."):
                 
-                col1, col2, col3 = st.columns(3)
-                col1.metric("📁 PDFs Procesados", len(uploaded_pdfs))
-                col2.metric("📊 Matriz Excel", "Generada (A-Z)")
-                col3.metric("📑 Actas PDF", "Consolidadas")
-
-                st.markdown("---")
-                st.subheader("📥 Zona de Descargas Oficiales")
+                lotes_bytes = uploaded_lotes.getvalue()
+                unificado_bytes = uploaded_unificado.getvalue()
                 
-                dcol1, dcol2 = st.columns(2)
-                with dcol1:
-                    st.download_button(
-                        label="📥 Descargar Excel Consolidado (Matriz)",
-                        data=excel_res,
-                        file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        key="unique_dl_excel_key"
-                    )
-                with dcol2:
-                    st.download_button(
-                        label="📥 Descargar Actas Oficiales en PDF",
-                        data=pdf_res,
-                        file_name="Actas_Oficiales_Consolidas.pdf",
-                        mime="application/pdf",
-                        key="unique_dl_pdf_key"
-                    )
-            else:
-                st.error("⚠️ No se pudieron generar resultados. Verifique que los archivos cargados sean los correctos.")
-    else:
-        st.warning("⚠️ Por favor, cargue todos los archivos obligatorios en la barra lateral antes de continuar.")
+                lista_pdfs = []
+                for pdf in uploaded_pdfs:
+                    pdf_bytes = pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()
+                    lista_pdfs.append((pdf.name, pdf_bytes))
+
+                firmantes_config = {
+                    'elaborado_por': custom_elab,
+                    'entregado_por': custom_entre,
+                    'validado_por': custom_vali
+                }
+
+                excel_res, pdf_res = procesar_cruce_hospitalario_lote(
+                    lista_pdfs, lotes_bytes, unificado_bytes, firmantes_custom=firmantes_config
+                )
+
+                if excel_res and pdf_res:
+                    st.success("¡Procesamiento completado con éxito!")
+                    
+                    m1, m2, m3 = st.columns(3)
+                    m1.metric("📁 PDFs Procesados", len(uploaded_pdfs))
+                    m2.metric("📊 Matriz Excel", "Generada y Ordenada A-Z")
+                    m3.metric("📑 Actas PDF", "Consolidadas")
+
+                    st.markdown("---")
+                    st.subheader("📥 Zona de Descargas Oficiales")
+                    
+                    dcol1, dcol2 = st.columns(2)
+                    with dcol1:
+                        st.download_button(
+                            label="📥 Descargar Excel Consolidado (Matriz)",
+                            data=excel_res,
+                            file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            key="unique_dl_excel_key"
+                        )
+                    with dcol2:
+                        st.download_button(
+                            label="📥 Descargar Actas Oficiales en PDF",
+                            data=pdf_res,
+                            file_name="Actas_Oficiales_Consolidas.pdf",
+                            mime="application/pdf",
+                            key="unique_dl_pdf_key"
+                        )
+                else:
+                    st.error("⚠️ No se pudieron generar resultados. Verifique la estructura de los archivos.")
+        else:
+            st.warning("⚠️ Por favor, cargue los tres tipos de archivos requeridos (Lotes, Stock Unificado y los PDFs) para iniciar el cruce.")
+
+# ------------------------------------------
+# PESTAÑA 2: LOTES & BODEGA
+# ------------------------------------------
+with tab_bodega:
+    st.subheader("📦 Control de Lotes y Existencias en Bodega")
+    st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
+
+# ------------------------------------------
+# PESTAÑA 3: ACTAS OFICIALES
+# ------------------------------------------
+with tab_actas:
+    st.subheader("📄 Actas Oficiales de Dispensación")
+    st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
+
+# ------------------------------------------
+# PESTAÑA 4: NORMATIVA FEFO
+# ------------------------------------------
+with tab_normativa:
+    st.subheader("⚖️ Normativa de Gestión FEFO")
+    st.markdown("""
+    **Principios del Sistema FEFO (*First Expired, First Out* - Primero en Caducar, Primero en Salir):**
+    * **Prioridad de despacho:** Asignar primero los dispositivos e insumos médicos con fecha de vencimiento más próxima.
+    * **Optimización de recursos:** Evitar pérdidas por caducidad en bodega y farmacia.
+    * **Trazabilidad total:** Mantener registro exacto del número de lote asignado a cada servicio institucional.
+    """)
