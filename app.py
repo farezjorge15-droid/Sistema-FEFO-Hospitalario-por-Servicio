@@ -56,14 +56,9 @@ def buscar_producto_inteligente(p_name_limpio, df_unificado, df_lotes_grouped):
     return pd.DataFrame(), p_name_limpio
 
 def consolidar_lotes_texto(texto_lotes_crudo):
-    """
-    Toma cadenas de lotes (ej: '20250510 (1 unids) / 20251220 (4 unids) / 20251220 (5 unids)')
-    y suma las cantidades de los lotes repetidos en una sola cantidad consolidada.
-    """
     if not isinstance(texto_lotes_crudo, str) or not texto_lotes_crudo or 'SIN LOTE' in texto_lotes_crudo or 'FALTAN' in texto_lotes_crudo:
         return str(texto_lotes_crudo)
     
-    # Separar por '/' o '|'
     segmentos = re.split(r'[/|]', texto_lotes_crudo)
     acumulador_lotes = {}
     
@@ -71,17 +66,14 @@ def consolidar_lotes_texto(texto_lotes_crudo):
         seg = seg.strip()
         if not seg:
             continue
-        # Extraer el nombre del lote y la cantidad entre paréntesis
         match = re.search(r'^(.*?)\s*\((\d+)\s*unids?\)', seg, re.IGNORECASE)
         if match:
             lote_nombre = match.group(1).strip()
             cantidad = int(match.group(2))
             acumulador_lotes[lote_nombre] = acumulador_lotes.get(lote_nombre, 0) + cantidad
         else:
-            # Si no tiene formato de cantidad, se deja tal cual
             acumulador_lotes[seg] = acumulador_lotes.get(seg, 0)
             
-    # Reconstruir la cadena unificada
     resultado_final = []
     for lote, cant in acumulador_lotes.items():
         if cant > 0:
@@ -205,7 +197,26 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
                     if not match_unif.empty:
                         codigo = match_unif.iloc[0].get('Código', match_unif.iloc[0].get('Codigo', 'SIN-CODIGO'))
-                        sku = match_unif.iloc[0].get('SKU', 'SIN-SKU')
+                        sku = match_unif.iloc[0].get('SKU', match_unif.iloc[0].get('Sku', match_unif.iloc[0].get('SKU.', 'SIN-SKU')))
+                        
+                        # Buscar Presentación en el unificado o en lotes si existe la columna
+                        presentacion = "N/A"
+                        for col_p in ['Presentacion', 'PRESENTACION', 'Presentación', 'PRESENTACIÓN']:
+                            if col_p in match_unif.columns:
+                                val_p = match_unif.iloc[0][col_p]
+                                if pd.notna(val_p):
+                                    presentacion = str(val_p)
+                                    break
+                        if presentacion == "N/A":
+                            # Buscar en df_lotes si tiene columna de presentación
+                            match_lote_temp = df_lotes[df_lotes['clean_name'] == p_name_raw]
+                            for col_p in ['Presentacion', 'PRESENTACION', 'Presentación', 'PRESENTACIÓN']:
+                                if not match_lote_temp.empty and col_p in match_lote_temp.columns:
+                                    val_p = match_lote_temp.iloc[0][col_p]
+                                    if pd.notna(val_p):
+                                        presentacion = str(val_p)
+                                        break
+
                         cols_posibles = [c for c in match_unif.columns if any(w in str(c).upper() for w in ['BOD', 'FARM', 'STOCK', 'EXIST', 'TOTAL'])]
                         col_bodega = cols_posibles[0] if cols_posibles else match_unif.columns[-1]
                         stock_bodega = match_unif.iloc[0][col_bodega]
@@ -214,6 +225,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     else:
                         codigo = 'SIN-CODIGO'
                         sku = 'SIN-SKU'
+                        presentacion = 'N/A'
                         stock_bodega = 0.0
 
                     _, matched_key_lotes = buscar_producto_inteligente(p_name_raw, df_lotes_grouped.drop_duplicates(subset=['clean_name']), df_lotes_grouped)
@@ -226,6 +238,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                             'Nro.': pdf_row['Nro.'],
                             'Código': str(codigo),
                             'SKU': str(sku),
+                            'Presentación': str(presentacion),
                             'Dispositivo Médico': pdf_row['Dispositivo Médico'],
                             'Cant. Solicitada': pdf_row['Cantidades Solicitadas'],
                             'Cant. Aprobada': pdf_row['Cantidades Aprobadas'],
@@ -261,7 +274,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                             lotes_info.append(f"FALTAN ({int(cant_pendiente)} unids)")
                             fechas_info.append("STOCK INSUFICIENTE")
                             
-                        # Consolidar lotes repetidos de forma limpia
                         lotes_crudos_str = " / ".join(lotes_info)
                         lotes_consolidados_str = consolidar_lotes_texto(lotes_crudos_str)
                             
@@ -271,6 +283,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                             'Nro.': pdf_row['Nro.'],
                             'Código': str(codigo),
                             'SKU': str(sku),
+                            'Presentación': str(presentacion),
                             'Dispositivo Médico': pdf_row['Dispositivo Médico'],
                             'Cant. Solicitada': pdf_row['Cantidades Solicitadas'],
                             'Cant. Aprobada': pdf_row['Cantidades Aprobadas'],
@@ -294,7 +307,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         if df_final.empty:
             return None, None
 
-        # --- CONSOLIDADO EN FORMATO MATRIZ ---
+        # --- CONSOLIDADO EN FORMATO MATRIZ CON SKU Y PRESENTACIÓN ---
         output_excel = io.BytesIO()
         wb = Workbook()
         ws = wb.active
@@ -313,7 +326,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         ws.cell(row=1, column=1).font = Font(name="Calibri", size=12, bold=True, color="1F4E78")
         ws.append([]) 
 
-        headers_matriz = ['DISPOSITIVO / INSUMO', 'CÓDIGO', 'STOCK BODEGA', 'LOTE Y CADUCIDAD ASIGNADA (FEFO)'] + servicios_unicos + ['TOTAL APROBADO']
+        headers_matriz = ['DISPOSITIVO / INSUMO', 'CÓDIGO', 'SKU', 'PRESENTACIÓN', 'STOCK BODEGA', 'LOTE Y CADUCIDAD ASIGNADA (FEFO)'] + servicios_unicos + ['TOTAL APROBADO']
         ws.append(headers_matriz)
 
         for col_num, _ in enumerate(headers_matriz, 1):
@@ -322,20 +335,21 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             cell.font = header_font
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
-        productos_unicos = df_final[['Código', 'Dispositivo Médico', 'Stock Bodega']].drop_duplicates(subset=['Dispositivo Médico'])
+        productos_unicos = df_final[['Código', 'SKU', 'Presentación', 'Dispositivo Médico', 'Stock Bodega']].drop_duplicates(subset=['Dispositivo Médico'])
 
         for idx, p_row in productos_unicos.iterrows():
             prod_nombre = p_row['Dispositivo Médico']
             prod_codigo = p_row['Código']
+            prod_sku = p_row['SKU']
+            prod_pres = p_row['Presentación']
             prod_stock = p_row['Stock Bodega']
             
             df_prod_all = df_final[df_final['Dispositivo Médico'] == prod_nombre]
             
-            # Unir y consolidar todos los lotes de todas las solicitudes de este producto
             lotes_brutos_totales = " / ".join(df_prod_all['Lotes y Cantidades a Despachar'].dropna().astype(str))
             lotes_str = consolidar_lotes_texto(lotes_brutos_totales)
 
-            fila_datos = [prod_nombre, prod_codigo, prod_stock, lotes_str]
+            fila_datos = [prod_nombre, prod_codigo, prod_sku, prod_pres, prod_stock, lotes_str]
             
             total_aprob_prod = 0
             for serv in servicios_unicos:
