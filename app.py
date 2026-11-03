@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Barra azul cielo unificada y diseño profesional
+# Estilos CSS: Fondo fijo, barra de pestañas azul cielo y scroll vertical nativo habilitado
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -35,24 +35,53 @@ st.markdown("""
         visibility: hidden !important;
         height: 0px !important;
     }
-    /* Eliminar paddings y márgenes superiores de la página principal */
-    .main .block-container {
-        padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
-        padding-left: 0rem !important;
-        padding-right: 0rem !important;
-        max-width: 100% !important;
+    
+    /* Habilitar scroll vertical en el body y la app */
+    html, body, [data-testid="stAppViewContainer"], .stApp {
+        overflow-y: auto !important;
         background-color: transparent !important;
     }
-    /* Posicionamiento de las pestañas */
+
+    /* Imagen de fondo fija cubriendo toda la pantalla */
+    .stApp::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%),
+                    url('https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        z-index: -1;
+    }
+
+    /* Contenedor principal alineado y ordenado */
+    .main .block-container {
+        padding-top: 5rem !important;
+        padding-bottom: 3rem !important;
+        padding-left: 3rem !important;
+        padding-right: 3rem !important;
+        max-width: 100% !important;
+        background-color: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(8px);
+        border-radius: 12px;
+        margin: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Posicionamiento de las pestañas de navegación */
     .stTabs {
         position: fixed !important;
-        top: 10px !important;
-        left: 15px !important;
+        top: 15px !important;
+        left: 20px !important;
         z-index: 99999 !important;
         width: auto !important;
         background: transparent !important;
     }
+    
     /* Barra contenedora con el color azul cielo del fondo (#e3f2fd) */
     .stTabs [data-baseweb="tab-list"],
     div[data-baseweb="tab-list"] {
@@ -68,6 +97,7 @@ st.markdown("""
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
+    
     /* Estilos generales de las pestañas */
     .stTabs [data-baseweb="tab"] {
         height: 32px !important;
@@ -107,77 +137,7 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo de pantalla fijo cubriendo toda la pantalla */
-    .hero-fullscreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        overflow: hidden;
-        margin: 0 !important;
-        z-index: 0;
-    }
-    .hero-left-content {
-        width: 50%;
-        padding-left: 6%;
-        padding-right: 4%;
-        z-index: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        transform: translateY(-20px);
-    }
-    .welcome-text {
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        font-size: 1.1rem;
-        letter-spacing: 3px;
-        color: #0d47a1;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-bottom: 12px;
-    }
-    .hero-title {
-        font-size: 2.8rem;
-        font-weight: 800;
-        color: #1F4E78;
-        line-height: 1.15;
-        margin-bottom: 15px;
-    }
-    .hero-right-image {
-        width: 55%;
-        height: 100%;
-        position: absolute;
-        right: 0;
-        top: 0;
-        background-image: url('https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752');
-        background-size: cover;
-        background-position: center;
-        -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,1) 100%);
-        mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,1) 100%);
-        z-index: 1;
-    }
-    
-    /* Contenedor flotante traslúcido para el contenido de las demás pestañas */
-    .content-overlay {
-        position: relative;
-        margin-top: 65px;
-        margin-left: 20px;
-        margin-right: 20px;
-        margin-bottom: 20px;
-        padding: 30px 40px;
-        z-index: 10;
-        background: rgba(255, 255, 255, 0.88);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-    }
-    
+    /* Estilos de botones generales */
     .stButton>button {
         width: 100%;
         background-color: #1F4E78;
@@ -672,15 +632,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# FONDO DE PANTALLA FIJO (SÓLO IMAGEN, SIN TEXTO DE BIENVENIDA GLOBAL)
-# ==========================================
-st.markdown("""
-    <div class="hero-fullscreen">
-        <div class="hero-right-image"></div>
-    </div>
-""", unsafe_allow_html=True)
-
-# ==========================================
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
@@ -692,24 +643,20 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 ])
 
 # ------------------------------------------
-# PESTAÑA 0: INICIO (Aquí SÍ aparece el texto de Bienvenida)
+# PESTAÑA 0: INICIO
 # ------------------------------------------
 with tab_inicio:
     st.markdown("""
-        <div class="hero-fullscreen" style="z-index: 5;">
-            <div class="hero-left-content">
-                <div class="welcome-text">✨ BIENVENIDO</div>
-                <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
-            </div>
-            <div class="hero-right-image"></div>
+        <div style="padding: 40px 20px;">
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 1.1rem; letter-spacing: 3px; color: #0d47a1; font-weight: 700; text-transform: uppercase; margin-bottom: 12px;">✨ BIENVENIDO</div>
+            <div style="font-size: 2.8rem; font-weight: 800; color: #1F4E78; line-height: 1.15; margin-bottom: 15px;">Hospital Provincial General Docente Vicente Corral Moscoso</div>
         </div>
     """, unsafe_allow_html=True)
 
 # ------------------------------------------
-# PESTAÑA 1: CRUCE DE LOTE (Solo fondo de pantalla y panel de carga)
+# PESTAÑA 1: CRUCE DE LOTE
 # ------------------------------------------
 with tab_cruce:
-    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
     st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
 
@@ -795,31 +742,25 @@ with tab_cruce:
                     st.error("⚠️ No se pudieron generar resultados. Verifique la estructura de los archivos.")
         else:
             st.warning("⚠️ Por favor, cargue los tres tipos de archivos requeridos (Lotes, Stock Unificado y los PDFs) para iniciar el cruce.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
 # PESTAÑA 2: LOTES & BODEGA
 # ------------------------------------------
 with tab_bodega:
-    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("📦 Control de Lotes y Existencias en Bodega")
     st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
 # PESTAÑA 3: ACTAS OFICIALES
 # ------------------------------------------
 with tab_actas:
-    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("📄 Actas Oficiales de Dispensación")
     st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
 # PESTAÑA 4: NORMATIVA FEFO
 # ------------------------------------------
 with tab_normativa:
-    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("⚖️ Normativa de Gestión FEFO")
     st.markdown("""
     **Principios del Sistema FEFO (*First Expired, First Out* - Primero en Caducar, Primero en Salir):**
@@ -827,4 +768,3 @@ with tab_normativa:
     * **Optimización de recursos:** Evitar pérdidas por caducidad en bodega y farmacia.
     * **Trazabilidad total:** Mantener registro exacto del número de lote asignado a cada servicio institucional.
     """)
-    st.markdown('</div>', unsafe_allow_html=True)
