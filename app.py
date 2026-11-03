@@ -23,10 +23,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS corregidos: Fondo continuo total + Pestañas flotantes visibles
+# Estilos CSS avanzados: Barra de pestañas totalmente transparente para ver el fondo continuo
 st.markdown("""
     <style>
-    /* Ocultar sidebar y header nativo de Streamlit */
+    /* Ocultar barra lateral y header nativo de Streamlit */
     [data-testid="stSidebar"] {
         display: none !important;
     }
@@ -35,7 +35,7 @@ st.markdown("""
         visibility: hidden !important;
         height: 0px !important;
     }
-    /* Eliminar paddings superiores de la página */
+    /* Eliminar paddings y márgenes superiores de la página */
     .main .block-container {
         padding-top: 0rem !important;
         padding-bottom: 0rem !important;
@@ -43,37 +43,44 @@ st.markdown("""
         padding-right: 0rem !important;
         max-width: 100% !important;
     }
-    /* Posicionamiento flotante de las pestañas por encima del fondo */
+    /* Contenedor principal de las pestañas posicionado en la esquina superior */
     .stTabs {
         position: absolute !important;
-        top: 20px !important;
+        top: 15px !important;
         left: 20px !important;
         z-index: 99999 !important;
         width: auto !important;
         background: transparent !important;
     }
+    /* Eliminar cualquier fondo blanco o contenedor de la barra de pestañas */
     .stTabs [data-baseweb="tab-list"] {
         gap: 10px !important;
+        background: transparent !important;
         background-color: transparent !important;
         border-bottom: none !important;
+        padding: 0px !important;
     }
-    /* Botones de navegación estilizados */
+    /* Contenedor interno de las pestañas sin fondo */
+    div[data-baseweb="tab-highlight"] {
+        background-color: transparent !important;
+    }
+    /* Botones individuales de las pestañas con efecto flotante translúcido */
     .stTabs [data-baseweb="tab"] {
-        height: 40px !important;
-        background-color: rgba(255, 255, 255, 0.85) !important;
+        height: 38px !important;
+        background-color: rgba(255, 255, 255, 0.75) !important;
         border-radius: 8px !important;
-        padding: 0px 18px !important;
+        padding: 0px 16px !important;
         font-weight: 600 !important;
         color: #1F4E78 !important;
-        border: 1px solid rgba(31, 78, 120, 0.2) !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08) !important;
+        border: 1px solid rgba(31, 78, 120, 0.25) !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.06) !important;
         backdrop-filter: blur(5px) !important;
     }
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    /* Banner full screen que cubre desde la cima sin franja blanca */
+    /* Banner full screen que cubre desde la cima sin cortes */
     .hero-fullscreen {
         position: relative;
         width: 100vw;
@@ -84,7 +91,7 @@ st.markdown("""
         justify-content: space-between;
         overflow: hidden;
         margin-top: 0rem;
-        padding-top: 80px; /* Evita que las pestañas tapen el texto */
+        padding-top: 70px;
         z-index: 1;
     }
     .hero-left-content {
@@ -138,7 +145,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# MOTOR LÓGICO FEFO (INTACTO)
+# MOTOR LÓGICO FEFO (INTACTO Y PROTEGIDO)
 # ==========================================
 
 def cargar_excel_seguro(file_bytes):
