@@ -107,17 +107,17 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         metadata_actas = [] 
 
         for idx_pdf, (nombre_pdf, pdf_bytes) in enumerate(lista_pdfs):
+            pdf_text = ""
             try:
                 reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
-                pdf_text = ""
                 for page in reader.pages:
                     text_page = page.extract_text()
                     if text_page:
                         pdf_text += text_page + "\n"
             except Exception:
-                continue
+                pdf_text = ""
 
-            servicio_nombre = "GENERAL"
+            servicio_nombre = f"SERVICIO_{idx_pdf + 1}"
             match_serv = re.search(r'Servicio\s*[:]\s*([^\r\n]+)', pdf_text, re.IGNORECASE)
             if match_serv:
                 raw_serv = match_serv.group(1).strip()
@@ -184,114 +184,122 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     if i > 3:
                         break
 
+            # GARANTÍA: Si el PDF no pudo extraer ítems mediante expresión regular, se registra al menos un ítem de control para que el archivo NUNCA sea descartado
+            if not items_extraidos:
+                items_extraidos.append({
+                    'Nro.': 1,
+                    'Dispositivo Médico': 'REVISAR ARCHIVO PDF (SIN ITEMS DETECTADOS)',
+                    'Cantidades Solicitadas': 0,
+                    'Cantidades Aprobadas': 0
+                })
+
             df_pdf = pd.DataFrame(items_extraidos)
-            if not df_pdf.empty:
-                df_pdf['Nro.'] = range(1, len(df_pdf) + 1)
-                df_pdf['clean_name'] = df_pdf['Dispositivo Médico'].apply(clean_exact)
+            df_pdf['Nro.'] = range(1, len(df_pdf) + 1)
+            df_pdf['clean_name'] = df_pdf['Dispositivo Médico'].apply(clean_exact)
 
-                for _, pdf_row in df_pdf.iterrows():
-                    p_name_raw = pdf_row['clean_name']
-                    cant_pendiente = pdf_row['Cantidades Aprobadas']
+            for _, pdf_row in df_pdf.iterrows():
+                p_name_raw = pdf_row['clean_name']
+                cant_pendiente = pdf_row['Cantidades Aprobadas']
+                
+                match_unif, _ = buscar_producto_inteligente(p_name_raw, df_unificado, df_lotes_grouped)
+
+                if not match_unif.empty:
+                    codigo = match_unif.iloc[0].get('Código', match_unif.iloc[0].get('Codigo', 'SIN-CODIGO'))
+                    sku = match_unif.iloc[0].get('SKU', match_unif.iloc[0].get('Sku', match_unif.iloc[0].get('SKU.', 'SIN-SKU')))
                     
-                    match_unif, _ = buscar_producto_inteligente(p_name_raw, df_unificado, df_lotes_grouped)
-
-                    if not match_unif.empty:
-                        codigo = match_unif.iloc[0].get('Código', match_unif.iloc[0].get('Codigo', 'SIN-CODIGO'))
-                        sku = match_unif.iloc[0].get('SKU', match_unif.iloc[0].get('Sku', match_unif.iloc[0].get('SKU.', 'SIN-SKU')))
-                        
-                        presentacion = "N/A"
+                    presentacion = "N/A"
+                    for col_p in ['Presentacion', 'PRESENTACION', 'Presentación', 'PRESENTACIÓN']:
+                        if col_p in match_unif.columns:
+                            val_p = match_unif.iloc[0][col_p]
+                            if pd.notna(val_p):
+                                presentacion = str(val_p)
+                                break
+                    if presentacion == "N/A":
+                        match_lote_temp = df_lotes[df_lotes['clean_name'] == p_name_raw]
                         for col_p in ['Presentacion', 'PRESENTACION', 'Presentación', 'PRESENTACIÓN']:
-                            if col_p in match_unif.columns:
-                                val_p = match_unif.iloc[0][col_p]
+                            if not match_lote_temp.empty and col_p in match_lote_temp.columns:
+                                val_p = match_lote_temp.iloc[0][col_p]
                                 if pd.notna(val_p):
                                     presentacion = str(val_p)
                                     break
-                        if presentacion == "N/A":
-                            match_lote_temp = df_lotes[df_lotes['clean_name'] == p_name_raw]
-                            for col_p in ['Presentacion', 'PRESENTACION', 'Presentación', 'PRESENTACIÓN']:
-                                if not match_lote_temp.empty and col_p in match_lote_temp.columns:
-                                    val_p = match_lote_temp.iloc[0][col_p]
-                                    if pd.notna(val_p):
-                                        presentacion = str(val_p)
-                                        break
 
-                        cols_posibles = [c for c in match_unif.columns if any(w in str(c).upper() for w in ['BOD', 'FARM', 'STOCK', 'EXIST', 'TOTAL'])]
-                        col_bodega = cols_posibles[0] if cols_posibles else match_unif.columns[-1]
-                        stock_bodega = match_unif.iloc[0][col_bodega]
-                        if pd.isna(stock_bodega):
-                            stock_bodega = 0.0
-                    else:
-                        codigo = 'SIN-CODIGO'
-                        sku = 'SIN-SKU'
-                        presentacion = 'N/A'
+                    cols_posibles = [c for c in match_unif.columns if any(w in str(c).upper() for w in ['BOD', 'FARM', 'STOCK', 'EXIST', 'TOTAL'])]
+                    col_bodega = cols_posibles[0] if cols_posibles else match_unif.columns[-1]
+                    stock_bodega = match_unif.iloc[0][col_bodega]
+                    if pd.isna(stock_bodega):
                         stock_bodega = 0.0
+                else:
+                    codigo = 'SIN-CODIGO'
+                    sku = 'SIN-SKU'
+                    presentacion = 'N/A'
+                    stock_bodega = 0.0
 
-                    _, matched_key_lotes = buscar_producto_inteligente(p_name_raw, df_lotes_grouped.drop_duplicates(subset=['clean_name']), df_lotes_grouped)
-                    lotes_prod = df_lotes_grouped[df_lotes_grouped['clean_name'] == matched_key_lotes]
+                _, matched_key_lotes = buscar_producto_inteligente(p_name_raw, df_lotes_grouped.drop_duplicates(subset=['clean_name']), df_lotes_grouped)
+                lotes_prod = df_lotes_grouped[df_lotes_grouped['clean_name'] == matched_key_lotes]
 
-                    if lotes_prod.empty or float(stock_bodega) <= 0:
-                        item_data = {
-                            'PDF Origen': nombre_pdf,
-                            'Servicio': servicio_nombre,
-                            'Nro.': pdf_row['Nro.'],
-                            'Código': str(codigo),
-                            'SKU': str(sku),
-                            'Presentación': str(presentacion),
-                            'Dispositivo Médico': pdf_row['Dispositivo Médico'],
-                            'Cant. Solicitada': pdf_row['Cantidades Solicitadas'],
-                            'Cant. Aprobada': pdf_row['Cantidades Aprobadas'],
-                            'Lotes y Cantidades a Despachar': 'SIN LOTE DISPONIBLE (0 unids)',
-                            'Fechas de Caducidad': 'S/F',
-                            'Stock Bodega': float(stock_bodega),
-                            'Alerta_Rojo': True
-                        }
-                    else:
-                        lotes_info = []
-                        fechas_info = []
-                        for _, l_row in lotes_prod.iterrows():
-                            if cant_pendiente <= 0:
-                                break
-                            key = (matched_key_lotes, l_row['Lote'], l_row['F. Cad'])
-                            disp_lote = stock_disponible_dict.get(key, 0.0)
-                            if disp_lote <= 0:
-                                continue
-                            if disp_lote >= cant_pendiente:
-                                cant_a_usar = cant_pendiente
-                                stock_disponible_dict[key] -= cant_pendiente  
-                                cant_pendiente = 0
-                            else:
-                                cant_a_usar = disp_lote
-                                stock_disponible_dict[key] = 0  
-                                cant_pendiente -= disp_lote
-                            
-                            lotes_info.append(f"{l_row['Lote']} ({int(cant_a_usar)} unids)")
-                            fecha_fmt = l_row['F. Cad DT'].strftime('%d/%m/%Y') if pd.notna(l_row['F. Cad DT']) else str(l_row['F. Cad'])
-                            fechas_info.append(f"{l_row['Lote']}: {fecha_fmt}")
+                if lotes_prod.empty or float(stock_bodega) <= 0:
+                    item_data = {
+                        'PDF Origen': nombre_pdf,
+                        'Servicio': servicio_nombre,
+                        'Nro.': pdf_row['Nro.'],
+                        'Código': str(codigo),
+                        'SKU': str(sku),
+                        'Presentación': str(presentacion),
+                        'Dispositivo Médico': pdf_row['Dispositivo Médico'],
+                        'Cant. Solicitada': pdf_row['Cantidades Solicitadas'],
+                        'Cant. Aprobada': pdf_row['Cantidades Aprobadas'],
+                        'Lotes y Cantidades a Despachar': 'SIN LOTE DISPONIBLE (0 unids)',
+                        'Fechas de Caducidad': 'S/F',
+                        'Stock Bodega': float(stock_bodega),
+                        'Alerta_Rojo': True
+                    }
+                else:
+                    lotes_info = []
+                    fechas_info = []
+                    for _, l_row in lotes_prod.iterrows():
+                        if cant_pendiente <= 0:
+                            break
+                        key = (matched_key_lotes, l_row['Lote'], l_row['F. Cad'])
+                        disp_lote = stock_disponible_dict.get(key, 0.0)
+                        if disp_lote <= 0:
+                            continue
+                        if disp_lote >= cant_pendiente:
+                            cant_a_usar = cant_pendiente
+                            stock_disponible_dict[key] -= cant_pendiente  
+                            cant_pendiente = 0
+                        else:
+                            cant_a_usar = disp_lote
+                            stock_disponible_dict[key] = 0  
+                            cant_pendiente -= disp_lote
                         
-                        if cant_pendiente > 0:
-                            lotes_info.append(f"FALTAN ({int(cant_pendiente)} unids)")
-                            fechas_info.append("STOCK INSUFICIENTE")
-                            
-                        lotes_crudos_str = " / ".join(lotes_info)
-                        lotes_consolidados_str = consolidar_lotes_texto(lotes_crudos_str)
-                            
-                        item_data = {
-                            'PDF Origen': nombre_pdf,
-                            'Servicio': servicio_nombre,
-                            'Nro.': pdf_row['Nro.'],
-                            'Código': str(codigo),
-                            'SKU': str(sku),
-                            'Presentación': str(presentacion),
-                            'Dispositivo Médico': pdf_row['Dispositivo Médico'],
-                            'Cant. Solicitada': pdf_row['Cantidades Solicitadas'],
-                            'Cant. Aprobada': pdf_row['Cantidades Aprobadas'],
-                            'Lotes y Cantidades a Despachar': lotes_consolidados_str,
-                            'Fechas de Caducidad': " / ".join(fechas_info),
-                            'Stock Bodega': float(stock_bodega),
-                            'Alerta_Rojo': False
-                        }
+                        lotes_info.append(f"{l_row['Lote']} ({int(cant_a_usar)} unids)")
+                        fecha_fmt = l_row['F. Cad DT'].strftime('%d/%m/%Y') if pd.notna(l_row['F. Cad DT']) else str(l_row['F. Cad'])
+                        fechas_info.append(f"{l_row['Lote']}: {fecha_fmt}")
                     
-                    todos_los_resultados.append(item_data)
+                    if cant_pendiente > 0:
+                        lotes_info.append(f"FALTAN ({int(cant_pendiente)} unids)")
+                        fechas_info.append("STOCK INSUFICIENTE")
+                        
+                    lotes_crudos_str = " / ".join(lotes_info)
+                    lotes_consolidados_str = consolidar_lotes_texto(lotes_crudos_str)
+                        
+                    item_data = {
+                        'PDF Origen': nombre_pdf,
+                        'Servicio': servicio_nombre,
+                        'Nro.': pdf_row['Nro.'],
+                        'Código': str(codigo),
+                        'SKU': str(sku),
+                        'Presentación': str(presentacion),
+                        'Dispositivo Médico': pdf_row['Dispositivo Médico'],
+                        'Cant. Solicitada': pdf_row['Cantidades Solicitadas'],
+                        'Cant. Aprobada': pdf_row['Cantidades Aprobadas'],
+                        'Lotes y Cantidades a Despachar': lotes_consolidados_str,
+                        'Fechas de Caducidad': " / ".join(fechas_info),
+                        'Stock Bodega': float(stock_bodega),
+                        'Alerta_Rojo': False
+                    }
+                
+                todos_los_resultados.append(item_data)
 
             metadata_actas.append({
                 'nombre_pdf': nombre_pdf,
@@ -305,7 +313,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         if df_final.empty:
             return None, None
 
-        # --- CONSOLIDADO EN FORMATO MATRIZ (ORDENADO DE LA A - Z) ---
+        # --- CONSOLIDADO EN FORMATO MATRIZ (INCLUYENDO TODOS LOS ARCHIVOS Y ORDENADO DE A - Z) ---
         output_excel = io.BytesIO()
         wb = Workbook()
         ws = wb.active
@@ -364,7 +372,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             ws.append(fila_datos)
 
             current_row = ws.max_row
-            is_alert = (prod_stock <= 0) or ('FALTAN' in lotes_str) or ('SIN LOTE' in lotes_str)
+            is_alert = (prod_stock <= 0) or ('FALTAN' in lotes_str) or ('SIN LOTE' in lotes_str) or ('REVISAR' in prod_nombre)
 
             for col_num in range(1, len(headers_matriz) + 1):
                 cell = ws.cell(row=current_row, column=col_num)
