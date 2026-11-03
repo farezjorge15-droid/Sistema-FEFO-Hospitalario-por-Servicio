@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Fondo fijo protegido y diseño idéntico al prototipo de Google AI Studio
+# Estilos CSS: Scroll vertical fluido, sin scroll horizontal y fondo fijo protegido
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -37,13 +37,18 @@ st.markdown("""
     }
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
+        padding-bottom: 2rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
+        overflow-x: hidden !important;
     }
-    /* Posicionamiento de la barra de navegación */
+    body {
+        overflow-x: hidden !important;
+    }
+    
+    /* Posicionamiento de la barra de navegación fija arriba */
     .stTabs {
         position: fixed !important;
         top: 10px !important;
@@ -102,7 +107,7 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo de pantalla fijo protegido */
+    /* Fondo de pantalla fijo protegido de fondo */
     .hero-fullscreen {
         position: fixed;
         top: 0;
@@ -116,6 +121,7 @@ st.markdown("""
         overflow: hidden;
         margin: 0 !important;
         z-index: 0;
+        pointer-events: none;
     }
     .hero-left-content {
         width: 50%;
@@ -157,23 +163,24 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor flotante para el contenido */
+    /* Contenedor de contenido con scroll vertical natural y adaptado al ancho de pantalla */
     .content-overlay {
         position: relative;
         margin-top: 65px;
         margin-left: 20px;
         margin-right: 20px;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
         padding: 25px 35px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.82);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.9);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        box-sizing: border-box;
     }
     
-    /* Tarjetas de estilo Google AI Studio */
+    /* Tarjetas y componentes */
     .ai-card {
         background: #ffffff;
         border: 1px solid #e0e0e0;
@@ -714,7 +721,7 @@ with tab_inicio:
     pass
 
 # ------------------------------------------
-# PESTAÑA 1: CRUCE DE LOTE (FORMATO 100% IDÉNTICO AL PROTOTIPO)
+# PESTAÑA 1: CRUCE DE LOTE (FORMATO IDÉNTICO AL PROTOTIPO Y RESPONSIVO)
 # ------------------------------------------
 with tab_cruce:
     st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
@@ -763,7 +770,7 @@ with tab_cruce:
 
     st.markdown("<hr style='margin: 15px 0; border: none; border-top: 1px solid rgba(0,0,0,0.1);'>", unsafe_allow_html=True)
 
-    # Panel colapsable de Firmantes de Actas idéntico a la UI de Google AI Studio
+    # Panel colapsable de Firmantes de Actas
     with st.expander("✍️ Personalizar Firmantes de Actas (Activo para todo el lote)"):
         cf1, cf2, cf3 = st.columns(3)
         with cf1:
