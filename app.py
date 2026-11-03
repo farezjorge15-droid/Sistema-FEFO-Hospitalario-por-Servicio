@@ -36,12 +36,11 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* FORZAR SCROLL VERTICAL NATIVO EN EL NAVEGADOR */
-    html, body, [data-testid="stAppViewContainer"], .main, .block-container {
-        overflow: auto !important;
-        overflow-y: scroll !important;
-        height: auto !important;
-        max-height: none !important;
+    /* FORZAR SCROLL INTERACTIVO REAL EN STREAMLIT */
+    html, body, [data-testid="stAppViewContainer"], .main {
+        background-color: #f0f7ff !important;
+        overflow-y: auto !important;
+        height: 100vh !important;
     }
 
     .main .block-container {
@@ -51,6 +50,7 @@ st.markdown("""
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
+        overflow: visible !important;
     }
     
     /* Posicionamiento fijo de la barra de navegación superior */
@@ -112,12 +112,12 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo de pantalla estático y protegido al fondo */
+    /* Fondo estático fluido (permite scroll y mantiene la estética) */
     .hero-fullscreen {
-        position: fixed;
+        position: absolute;
         top: 0;
         left: 0;
-        width: 100vw;
+        width: 100%;
         height: 100vh;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
@@ -168,7 +168,7 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor principal con flujo vertical natural */
+    /* Contenedor principal con interacción de scroll total */
     .content-overlay {
         position: relative;
         margin-top: 65px;
@@ -177,7 +177,7 @@ st.markdown("""
         margin-bottom: 80px;
         padding: 25px 35px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.92);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.9);
@@ -215,7 +215,6 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-
 # ==========================================
 # MOTOR LÓGICO FEFO (INTACTO Y PROTEGIDO)
 # ==========================================
