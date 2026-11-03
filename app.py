@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Fondo fijo cubriendo toda la pantalla y barra superior estilizada
+# Estilos CSS Profesionales e Institucionales (Diseño Ejecutivo Moderno)
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -38,7 +38,7 @@ st.markdown("""
     /* Eliminar paddings y márgenes superiores de la página principal */
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
+        padding-bottom: 2rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
@@ -47,41 +47,48 @@ st.markdown("""
     /* Posicionamiento de las pestañas */
     .stTabs {
         position: fixed !important;
-        top: 10px !important;
-        left: 15px !important;
+        top: 12px !important;
+        left: 20px !important;
         z-index: 99999 !important;
         width: auto !important;
         background: transparent !important;
     }
-    /* Barra contenedora con el color azul cielo del fondo (#e3f2fd) */
+    /* Barra contenedora con diseño glassmorphism y color institucional */
     .stTabs [data-baseweb="tab-list"],
     div[data-baseweb="tab-list"] {
-        background: #e3f2fd !important;
-        background-color: #e3f2fd !important;
-        border-radius: 8px !important;
-        padding: 3px 6px !important;
+        background: rgba(255, 255, 255, 0.90) !important;
+        background-color: rgba(255, 255, 255, 0.90) !important;
+        border-radius: 10px !important;
+        padding: 4px 8px !important;
         border-bottom: none !important;
-        gap: 6px !important;
-        backdrop-filter: blur(8px) !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
+        gap: 8px !important;
+        backdrop-filter: blur(12px) !important;
+        box-shadow: 0 4px 20px rgba(31, 78, 120, 0.12) !important;
+        border: 1px solid rgba(227, 242, 253, 0.8) !important;
     }
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
     /* Estilos generales de las pestañas */
     .stTabs [data-baseweb="tab"] {
-        height: 32px !important;
+        height: 36px !important;
         background-color: transparent !important;
-        border-radius: 6px !important;
-        padding: 0px 12px !important;
-        font-size: 0.8rem !important;
+        border-radius: 8px !important;
+        padding: 0px 14px !important;
+        font-size: 0.85rem !important;
         font-weight: 600 !important;
         color: #1F4E78 !important;
         border: none !important;
         box-shadow: none !important;
+        transition: all 0.2s ease-in-out;
     }
     
-    /* Primera pestaña convertida en el Logo del MSP (grande, sin texto) */
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: rgba(31, 78, 120, 0.08) !important;
+        color: #0d47a1 !important;
+    }
+    
+    /* Primera pestaña convertida en el Logo del MSP */
     .stTabs [data-baseweb="tab"]:nth-child(1) {
         width: 55px !important;
         min-width: 55px !important;
@@ -97,6 +104,7 @@ st.markdown("""
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
+        box-shadow: 0 2px 8px rgba(31, 78, 120, 0.3) !important;
     }
     
     .stTabs [aria-selected="true"]:nth-child(1) {
@@ -107,14 +115,14 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo de pantalla fijo cubriendo toda la pantalla en todas las vistas */
+    /* Fondo de pantalla fijo cubriendo toda la pantalla */
     .hero-fullscreen {
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
+        background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 50%, #ffffff 100%);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -123,33 +131,44 @@ st.markdown("""
         z-index: 0;
     }
     .hero-left-content {
-        width: 50%;
-        padding-left: 6%;
-        padding-right: 4%;
+        width: 48%;
+        padding-left: 5%;
+        padding-right: 3%;
         z-index: 1;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        transform: translateY(-20px);
+        transform: translateY(-15px);
     }
     .welcome-text {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        font-size: 1.1rem;
+        font-size: 0.9rem;
         letter-spacing: 3px;
         color: #0d47a1;
         font-weight: 700;
         text-transform: uppercase;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
     .hero-title {
-        font-size: 2.8rem;
+        font-size: 2.6rem;
         font-weight: 800;
         color: #1F4E78;
-        line-height: 1.15;
+        line-height: 1.18;
         margin-bottom: 15px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    .hero-subtitle {
+        font-size: 1.05rem;
+        color: #555555;
+        margin-bottom: 25px;
+        line-height: 1.5;
+        font-weight: 400;
     }
     .hero-right-image {
-        width: 55%;
+        width: 52%;
         height: 100%;
         position: absolute;
         right: 0;
@@ -157,37 +176,54 @@ st.markdown("""
         background-image: url('https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752');
         background-size: cover;
         background-position: center;
-        -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,1) 100%);
-        mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,1) 100%);
+        -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 20%, rgba(0,0,0,1) 100%);
+        mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 20%, rgba(0,0,0,1) 100%);
         z-index: 1;
     }
     
-    /* Contenedor flotante para el contenido de las pestañas sin bloquear el fondo */
+    /* Contenedor flotante executive-ready para las pestañas */
     .content-overlay {
         position: relative;
-        margin-top: 70px;
-        margin-left: 20px;
-        margin-right: 20px;
-        padding: 30px 40px;
+        margin-top: 75px;
+        margin-left: 25px;
+        margin-right: 25px;
+        padding: 35px 45px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(8px);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(16px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        box-shadow: 0 12px 40px rgba(31, 78, 120, 0.08);
     }
     
     .stButton>button {
         width: 100%;
         background-color: #1F4E78;
         color: white;
-        font-weight: bold;
+        font-weight: 700;
         border-radius: 8px;
-        padding: 0.6rem 1rem;
+        padding: 0.65rem 1.2rem;
+        border: none;
+        box-shadow: 0 4px 12px rgba(31, 78, 120, 0.2);
+        transition: all 0.2s ease;
     }
     .stButton>button:hover {
         background-color: #153450;
         color: white;
+        box-shadow: 0 6px 16px rgba(31, 78, 120, 0.3);
+        transform: translateY(-1px);
+    }
+    .stDownloadButton>button {
+        background-color: #2e7d32;
+        color: white;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 0.65rem 1.2rem;
+        border: none;
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+    }
+    .stDownloadButton>button:hover {
+        background-color: #1b5e20;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -671,23 +707,24 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# FONDO DE PANTALLA CONSTANTE (FIJO EN TODAS LAS VISTAS)
+# FONDO DE PANTALLA CONSTANTE
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
         <div class="hero-left-content">
-            <div class="welcome-text">✨ BIENVENIDO</div>
+            <div class="welcome-text">✨ SISTEMA INSTITUCIONAL</div>
             <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
+            <div class="hero-subtitle">Gestión automatizada de cruce FEFO, lotes y generación de actas oficiales con trazabilidad estricta.</div>
         </div>
         <div class="hero-right-image"></div>
     </div>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
+# PESTAÑAS PRINCIPALES DE NAVEGACIÓN
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "MSP", 
+    "msp", 
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
@@ -698,98 +735,40 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 # PESTAÑA 0: INICIO
 # ------------------------------------------
 with tab_inicio:
-    pass
+    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
+    st.markdown("### 🏥 Bienvenido al Sistema de Cruce FEFO y Lotes")
+    st.markdown("Utilice las pestañas superiores para navegar entre el motor de cruce de pedidos, la consulta de stock en bodega, la generación de actas oficiales y la revisión de normativas.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
 # PESTAÑA 1: CRUCE DE LOTE
 # ------------------------------------------
 with tab_cruce:
     st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
-    st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
-    st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
-
-    col_up1, col_up2, col_up3 = st.columns(3)
+    st.markdown("### 📊 Cruce de Lotes y Pedidos (FEFO)")
+    st.write("Cargue los archivos PDF de pedidos de los servicios y los archivos Excel de control de inventario y lotes.")
     
-    with col_up1:
-        st.markdown("##### 1. Excel de Lotes (FEFO)")
-        uploaded_lotes = st.file_uploader("Subir Lotes con fechas", type=["xlsx", "xls"], key="unique_lotes_key")
-
-    with col_up2:
-        st.markdown("##### 2. Excel Stock Unificado")
-        uploaded_unificado = st.file_uploader("Subir Stock de Bodega", type=["xlsx", "xls"], key="unique_unificado_key")
-
-    with col_up3:
-        st.markdown("##### 3. Pedidos en PDF (Múltiples)")
-        uploaded_pdfs = st.file_uploader("Subir PDFs de Servicios", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
-
-    st.markdown("---")
-    
-    with st.expander("✍️ Personalizar Nombres de Firmantes de Actas"):
-        col_f1, col_f2, col_f3 = st.columns(3)
-        with col_f1:
-            custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
-        with col_f2:
-            custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
-        with col_f3:
-            custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    procesar_btn = st.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key")
-
-    if procesar_btn:
-        if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
-            with st.spinner("🔄 Procesando lotes y aplicando algoritmo FEFO..."):
-                
-                lotes_bytes = uploaded_lotes.getvalue()
-                unificado_bytes = uploaded_unificado.getvalue()
-                
-                lista_pdfs = []
-                for pdf in uploaded_pdfs:
-                    pdf_bytes = pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()
-                    lista_pdfs.append((pdf.name, pdf_bytes))
-
-                firmantes_config = {
-                    'elaborado_por': custom_elab,
-                    'entregado_por': custom_entre,
-                    'validado_por': custom_vali
-                }
-
-                excel_res, pdf_res = procesar_cruce_hospitalario_lote(
-                    lista_pdfs, lotes_bytes, unificado_bytes, firmantes_custom=firmantes_config
-                )
-
-                if excel_res and pdf_res:
-                    st.success("¡Procesamiento completado con éxito!")
-                    
-                    m1, m2, m3 = st.columns(3)
-                    m1.metric("📁 PDFs Procesados", len(uploaded_pdfs))
-                    m2.metric("📊 Matriz Excel", "Generada y Ordenada A-Z")
-                    m3.metric("📑 Actas PDF", "Consolidadas")
-
-                    st.markdown("---")
-                    st.subheader("📥 Zona de Descargas Oficiales")
-                    
-                    dcol1, dcol2 = st.columns(2)
-                    with dcol1:
-                        st.download_button(
-                            label="📥 Descargar Excel Consolidado (Matriz)",
-                            data=excel_res,
-                            file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            key="unique_dl_excel_key"
-                        )
-                    with dcol2:
-                        st.download_button(
-                            label="📥 Descargar Actas Oficiales en PDF",
-                            data=pdf_res,
-                            file_name="Actas_Oficiales_Consolidas.pdf",
-                            mime="application/pdf",
-                            key="unique_dl_pdf_key"
-                        )
-                else:
-                    st.error("⚠️ No se pudieron generar resultados. Verifique la estructura de los archivos.")
+    col1, col2 = st.columns(2)
+    with col1:
+        uploaded_pdfs = st.file_uploader("📂 Archivos PDF de Pedidos de Servicios", type=['pdf'], accept_multiple_files=True)
+        excel_lotes = st.file_uploader("📊 Excel de Lotes y Caducidades", type=['xlsx', 'xls'])
+    with col2:
+        excel_unificado = st.file_uploader("📈 Excel Catálogo / Stock General", type=['xlsx', 'xls'])
+        
+    if st.button("🚀 Ejecutar Cruce FEFO"):
+        if uploaded_pdfs and excel_lotes and excel_unificado:
+            pdf_tuples = [(p.name, p.getvalue()) for p in uploaded_pdfs]
+            excel_lotes_bytes = excel_lotes.getvalue()
+            excel_unificado_bytes = excel_unificado.getvalue()
+            
+            with st.spinner("Procesando cruce de lotes bajo normativa FEFO..."):
+                ex_bytes, pdf_bytes = procesar_cruce_hospitalario_lote(pdf_tuples, excel_lotes_bytes, excel_unificado_bytes)
+                if ex_bytes and pdf_bytes:
+                    st.success("¡Cruce completado con éxito!")
+                    st.download_button("📥 Descargar Consolidado Excel", data=ex_bytes, file_name="Consolidado_FEFO.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    st.download_button("📥 Descargar Actas en PDF", data=pdf_bytes, file_name="Actas_Oficiales_FEFO.pdf", mime="application/pdf")
         else:
-            st.warning("⚠️ Por favor, cargue los tres tipos de archivos requeridos (Lotes, Stock Unificado y los PDFs) para iniciar el cruce.")
+            st.warning("Por favor cargue todos los archivos requeridos (PDFs de pedidos, Excel de lotes y Excel unificado).")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
@@ -797,8 +776,12 @@ with tab_cruce:
 # ------------------------------------------
 with tab_bodega:
     st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
-    st.subheader("📦 Control de Lotes y Existencias en Bodega")
-    st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
+    st.markdown("### 📦 Consulta de Inventario y Lotes en Bodega")
+    st.write("Visualice y filtre el estado actual de las existencias, fechas de caducidad y trazabilidad por lote.")
+    archivo_bodega = st.file_uploader("Cargar Archivo Excel de Bodega para Consulta", type=['xlsx', 'xls'], key="bodega_file")
+    if archivo_bodega:
+        df_b = cargar_excel_seguro(archivo_bodega.getvalue())
+        st.dataframe(df_b, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
@@ -806,8 +789,9 @@ with tab_bodega:
 # ------------------------------------------
 with tab_actas:
     st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
-    st.subheader("📄 Actas Oficiales de Dispensación")
-    st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
+    st.markdown("### 📄 Gestión de Actas Oficiales y Firmantes")
+    st.write("Configure los firmantes responsables y genere los reportes formales listos para firma electrónica.")
+    st.info("El sistema asigna automáticamente los firmantes detectados en los metadatos de los PDFs institucionales.")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------------------
@@ -815,11 +799,10 @@ with tab_actas:
 # ------------------------------------------
 with tab_normativa:
     st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
-    st.subheader("⚖️ Normativa de Gestión FEFO")
+    st.markdown("### ⚖️ Normativa y Lineamientos FEFO")
     st.markdown("""
-    **Principios del Sistema FEFO (*First Expired, First Out* - Primero en Caducar, Primero en Salir):**
-    * **Prioridad de despacho:** Asignar primero los dispositivos e insumos médicos con fecha de vencimiento más próxima.
-    * **Optimización de recursos:** Evitar pérdidas por caducidad en bodega y farmacia.
-    * **Trazabilidad total:** Mantener registro exacto del número de lote asignado a cada servicio institucional.
+    * **Principio FEFO (First Expire, First Out):** Los productos con fecha de caducidad más cercana deben ser despachados y consumidos primero para minimizar la merma por caducidad.
+    * **Trazabilidad Institucional:** Cada despacho y cruce de lote debe quedar respaldado mediante acta oficial firmada por los responsables de servicio, bodega y validación.
+    * **Control de Stock Crítico:** Los ítems con stock insuficiente o sin lotes disponibles se resaltan automáticamente en alertas operativas.
     """)
     st.markdown('</div>', unsafe_allow_html=True)
