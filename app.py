@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Scroll vertical totalmente libre y habilitado
+# Estilos CSS: Fondo fijo inamovible + Contenedor con scroll vertical fluido por encima
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -36,15 +36,16 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* Habilitar scroll vertical en el contenedor principal de Streamlit */
-    html, body, [data-testid="stAppViewContainer"], .main {
+    /* Permitir scroll vertical en el contenedor principal de la vista */
+    [data-testid="stAppViewContainer"] {
+        background: transparent !important;
         overflow-y: auto !important;
-        height: auto !important;
+        height: 100vh !important;
     }
 
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 6rem !important;
+        padding-bottom: 8rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
@@ -110,21 +111,21 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo de pantalla protegido (diseño seguro sin bloquear el scroll) */
+    /* FONDO FIJO INAMOVIBLE (Se queda estático como wallpaper al fondo) */
     .hero-fullscreen {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100vh;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
         margin: 0 !important;
-        z-index: 0;
-        pointer-events: none;
+        z-index: 0 !important;
+        pointer-events: none !important;
     }
     .hero-left-content {
         width: 50%;
@@ -166,13 +167,13 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor principal con flujo vertical fluido */
+    /* CONTENEDOR DE CONTENIDO (Se desplaza fluidamente POR ENCIMA del fondo fijo) */
     .content-overlay {
         position: relative;
         margin-top: 70px;
         margin-left: 20px;
         margin-right: 20px;
-        margin-bottom: 80px;
+        margin-bottom: 100px;
         padding: 25px 35px;
         z-index: 10;
         background: rgba(255, 255, 255, 0.92);
@@ -703,7 +704,7 @@ if 'pdf_bytes_cache' not in st.session_state:
     st.session_state.pdf_bytes_cache = None
 
 # ==========================================
-# FONDO DE PANTALLA CONSTANTE (PROTEGIDO)
+# FONDO DE PANTALLA CONSTANTE (PROTEGIDO Y FIJO)
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
