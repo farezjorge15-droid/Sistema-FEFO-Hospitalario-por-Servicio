@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS estrictos según tus indicaciones
+# Estilos CSS: Fondo fijo cubriendo toda la pantalla y barra superior estilizada
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -35,25 +35,16 @@ st.markdown("""
         visibility: hidden !important;
         height: 0px !important;
     }
-    
-    /* 1. Imagen de fondo original fija cubriendo toda la pantalla y 3. Scroll vertical en body y .stApp */
-    html, body, .stApp {
-        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%) !important;
-        background-size: cover !important;
-        background-attachment: fixed !important;
-        background-repeat: no-repeat !important;
-        overflow-y: auto !important;
-    }
-
-    /* 2. Mantener la alineación y contenedor normal de Streamlit */
+    /* Eliminar paddings y márgenes superiores de la página principal */
     .main .block-container {
-        padding-top: 3rem !important;
-        padding-bottom: 5rem !important;
-        max-width: 85rem !important;
+        padding-top: 0rem !important;
+        padding-bottom: 0rem !important;
+        padding-left: 0rem !important;
+        padding-right: 0rem !important;
+        max-width: 100% !important;
         background-color: transparent !important;
     }
-    
-    /* Posicionamiento fijo de la barra de navegación superior */
+    /* Posicionamiento de las pestañas */
     .stTabs {
         position: fixed !important;
         top: 10px !important;
@@ -62,6 +53,7 @@ st.markdown("""
         width: auto !important;
         background: transparent !important;
     }
+    /* Barra contenedora con el color azul cielo del fondo (#e3f2fd) */
     .stTabs [data-baseweb="tab-list"],
     div[data-baseweb="tab-list"] {
         background: #e3f2fd !important;
@@ -76,6 +68,7 @@ st.markdown("""
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
+    /* Estilos generales de las pestañas */
     .stTabs [data-baseweb="tab"] {
         height: 32px !important;
         background-color: transparent !important;
@@ -88,7 +81,7 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* Primera pestaña: Logo del MSP grande */
+    /* Primera pestaña convertida en el Logo del MSP (grande, sin texto) */
     .stTabs [data-baseweb="tab"]:nth-child(1) {
         width: 55px !important;
         min-width: 55px !important;
@@ -100,10 +93,12 @@ st.markdown("""
         font-size: 0px !important;
         padding: 0 !important;
     }
+    
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
     }
+    
     .stTabs [aria-selected="true"]:nth-child(1) {
         background-color: rgba(31, 78, 120, 0.15) !important;
         background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
@@ -112,26 +107,30 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Banner original de bienvenida */
+    /* Fondo de pantalla fijo cubriendo toda la pantalla en todas las vistas */
     .hero-fullscreen {
-        position: relative;
-        width: 100%;
-        min-height: 80vh;
-        background: transparent;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
         margin: 0 !important;
+        z-index: 0;
     }
     .hero-left-content {
         width: 50%;
-        padding-left: 2%;
+        padding-left: 6%;
         padding-right: 4%;
-        z-index: 2;
+        z-index: 1;
         display: flex;
         flex-direction: column;
         justify-content: center;
+        transform: translateY(-20px);
     }
     .welcome-text {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -163,17 +162,19 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor translúcido ordenado para las pestañas de contenido */
-    .content-container {
+    /* Contenedor flotante para el contenido de las pestañas sin bloquear el fondo */
+    .content-overlay {
         position: relative;
-        margin-top: 20px;
+        margin-top: 70px;
+        margin-left: 20px;
+        margin-right: 20px;
         padding: 30px 40px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.88);
-        backdrop-filter: blur(10px);
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.95);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(8px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
     }
     
     .stButton>button {
@@ -670,6 +671,19 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
+# FONDO DE PANTALLA CONSTANTE (FIJO EN TODAS LAS VISTAS)
+# ==========================================
+st.markdown("""
+    <div class="hero-fullscreen">
+        <div class="hero-left-content">
+            <div class="welcome-text">✨ BIENVENIDO</div>
+            <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
+        </div>
+        <div class="hero-right-image"></div>
+    </div>
+""", unsafe_allow_html=True)
+
+# ==========================================
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
@@ -684,21 +698,13 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 # PESTAÑA 0: INICIO
 # ------------------------------------------
 with tab_inicio:
-    st.markdown("""
-        <div class="hero-fullscreen">
-            <div class="hero-left-content">
-                <div class="welcome-text">✨ BIENVENIDO</div>
-                <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
-            </div>
-            <div class="hero-right-image"></div>
-        </div>
-    """, unsafe_allow_html=True)
+    pass
 
 # ------------------------------------------
 # PESTAÑA 1: CRUCE DE LOTE
 # ------------------------------------------
 with tab_cruce:
-    st.markdown('<div class="content-container">', unsafe_allow_html=True)
+    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
     st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
 
@@ -790,7 +796,7 @@ with tab_cruce:
 # PESTAÑA 2: LOTES & BODEGA
 # ------------------------------------------
 with tab_bodega:
-    st.markdown('<div class="content-container">', unsafe_allow_html=True)
+    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("📦 Control de Lotes y Existencias en Bodega")
     st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -799,7 +805,7 @@ with tab_bodega:
 # PESTAÑA 3: ACTAS OFICIALES
 # ------------------------------------------
 with tab_actas:
-    st.markdown('<div class="content-container">', unsafe_allow_html=True)
+    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("📄 Actas Oficiales de Dispensación")
     st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -808,7 +814,7 @@ with tab_actas:
 # PESTAÑA 4: NORMATIVA FEFO
 # ------------------------------------------
 with tab_normativa:
-    st.markdown('<div class="content-container">', unsafe_allow_html=True)
+    st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
     st.subheader("⚖️ Normativa de Gestión FEFO")
     st.markdown("""
     **Principios del Sistema FEFO (*First Expired, First Out* - Primero en Caducar, Primero en Salir):**
