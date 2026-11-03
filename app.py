@@ -41,20 +41,14 @@ def clean_exact(s):
     return s
 
 def buscar_producto_inteligente(p_name_limpio, df_unificado, df_lotes_grouped):
-    """
-    Busca el producto de forma inteligente diferenciando calibres (ej: 14, 18, 20, 22).
-    """
-    # 1. Coincidencia exacta limpia
     match = df_unificado[df_unificado['clean_name'] == p_name_limpio]
     if not match.empty:
         return match, p_name_limpio
 
-    # 2. Búsqueda por palabras clave exactas (asegurando que si pide '18' o '20', coincida con el número exacto)
     palabras = [w for w in p_name_limpio.split() if len(w) > 1 and w not in ['CON', 'DEL', 'LAS', 'LOS', 'POR']]
     if palabras:
         for _, row in df_unificado.iterrows():
             c_name = row['clean_name']
-            # Verificamos que todas las palabras clave principales coincidan
             if all(pal in c_name for pal in palabras):
                 matched_df = df_unificado[df_unificado['clean_name'] == c_name]
                 return matched_df, c_name
@@ -171,8 +165,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     p_name_raw = pdf_row['clean_name']
                     cant_pendiente = pdf_row['Cantidades Aprobadas']
                     
-                    # 1. Búsqueda en Stock Unificado
-                    match_unif, matched_key_unif = buscar_producto_inteligente(p_name_raw, df_unificado, df_lotes_grouped)
+                    match_unif, _ = buscar_producto_inteligente(p_name_raw, df_unificado, df_lotes_grouped)
 
                     if not match_unif.empty:
                         codigo = match_unif.iloc[0].get('Código', match_unif.iloc[0].get('Codigo', 'SIN-CODIGO'))
@@ -187,7 +180,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                         sku = 'SIN-SKU'
                         stock_bodega = 0.0
 
-                    # 2. Búsqueda específica en Lotes usando también búsqueda inteligente para asegurar el calibre exacto
                     _, matched_key_lotes = buscar_producto_inteligente(p_name_raw, df_lotes_grouped.drop_duplicates(subset=['clean_name']), df_lotes_grouped)
                     lotes_prod = df_lotes_grouped[df_lotes_grouped['clean_name'] == matched_key_lotes]
 
@@ -262,14 +254,16 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         if df_final.empty:
             return None, None
 
+        # --- CONSOLIDADO EN FORMATO MATRIZ (IDÉNTICO AL QUE SUBISTE) ---
         output_excel = io.BytesIO()
         wb = Workbook()
         ws = wb.active
-        ws.title = "Consolidado Lote FEFO"
+        ws.title = "ConsolidadoPedidos"
 
-        headers = ['PDF Origen', 'Servicio', 'Nro.', 'Código', 'SKU', 'Dispositivo Médico', 'Cant. Solicitada', 'Cant. Aprobada', 'Lotes y Cantidades a Despachar', 'Fechas de Caducidad', 'Stock Bodega']
-        ws.append(headers)
-
+        # Agrupamos por producto para generar la matriz por servicios
+        servicios_unicos = sorted(df_final['Servicio'].unique())
+        
+        # Estilos corporativos
         header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
         header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
         red_fill = PatternFill(start_color="FCE4D6", end_color="FCE4D6", fill_type="solid")
@@ -277,26 +271,55 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         normal_font = Font(name="Calibri", size=11)
         border_thin = Border(left=Side(style='thin', color='D9D9D9'), right=Side(style='thin', color='D9D9D9'), top=Side(style='thin', color='D9D9D9'), bottom=Side(style='thin', color='D9D9D9'))
 
-        for col_num, header in enumerate(headers, 1):
-            cell = ws.cell(row=1, column=col_num)
+        # Título principal
+        ws.append([f"DETALLE DE PEDIDOS Y LOTES ASIGNADOS POR SERVICIO (Generado el {datetime.datetime.now().strftime('%Y-%m-%d')})"])
+        ws.cell(row=1, column=1).font = Font(name="Calibri", size=12, bold=True, color="1F4E78")
+        ws.append([]) # Fila en blanco
+
+        # Encabezados de la matriz: Dispositivo Médico, Cód, Stock, más un columna por cada servicio y Total
+        headers_matriz = ['DISPOSITIVO / INSUMO', 'CÓDIGO', 'STOCK BODEGA', 'LOTE Y CADUCIDAD ASIGNADA (FEFO)'] + servicios_unicos + ['TOTAL APROBADO']
+        ws.append(headers_matriz)
+
+        for col_num, _ in enumerate(headers_matriz, 1):
+            cell = ws.cell(row=3, column=col_num)
             cell.fill = header_fill
             cell.font = header_font
-            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
-        for r_idx, row in df_final.iterrows():
-            row_data = [
-                row['PDF Origen'], row['Servicio'], row['Nro.'], row['Código'], row['SKU'], 
-                row['Dispositivo Médico'], row['Cant. Solicitada'], row['Cant. Aprobada'], 
-                row['Lotes y Cantidades a Despachar'], row['Fechas de Caducidad'], row['Stock Bodega']
-            ]
-            ws.append(row_data)
-            current_row = r_idx + 2
-            is_zero_stock = row['Alerta_Rojo'] or (row['Stock Bodega'] <= 0)
+        # Pivoteamos los datos para llenar la matriz
+        productos_unicos = df_final[['Código', 'Dispositivo Médico', 'Stock Bodega', 'Lotes y Cantidades a Despachar']].drop_duplicates(subset=['Dispositivo Médico'])
+
+        for idx, p_row in productos_unicos.iterrows():
+            prod_nombre = p_row['Dispositivo Médico']
+            prod_codigo = p_row['Código']
+            prod_stock = p_row['Stock Bodega']
             
-            for col_num in range(1, len(headers) + 1):
+            # Recopilamos lotes asignados para este producto en general
+            df_prod_all = df_final[df_final['Dispositivo Médico'] == prod_nombre]
+            lotes_str = " | ".join(df_prod_all['Lotes y Cantidades a Despachar'].unique())
+
+            fila_datos = [prod_nombre, prod_codigo, prod_stock, lotes_str]
+            
+            total_aprob_prod = 0
+            for serv in servicios_unicos:
+                match_serv = df_prod_all[df_prod_all['Servicio'] == serv]
+                if not match_serv.empty:
+                    cant = match_serv['Cant. Aprobada'].sum()
+                    fila_datos.append(cant)
+                    total_aprob_prod += cant
+                else:
+                    fila_datos.append("")
+            
+            fila_datos.append(total_aprob_prod)
+            ws.append(fila_datos)
+
+            current_row = ws.max_row
+            is_alert = (prod_stock <= 0) or ('FALTAN' in lotes_str) or ('SIN LOTE' in lotes_str)
+
+            for col_num in range(1, len(headers_matriz) + 1):
                 cell = ws.cell(row=current_row, column=col_num)
                 cell.border = border_thin
-                if is_zero_stock:
+                if is_alert:
                     cell.fill = red_fill
                     cell.font = red_font
                 else:
@@ -305,6 +328,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         wb.save(output_excel)
         output_excel.seek(0)
 
+        # --- PDF DE ACTAS OFICIALES ---
         output_pdf = io.BytesIO()
         doc = SimpleDocTemplate(output_pdf, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
         elements = []
@@ -431,7 +455,7 @@ if st.sidebar.button("🚀 Procesar Lote FEFO", key="unique_process_btn_key"):
 
             if excel_res and pdf_res:
                 st.success("¡Procesamiento completado con éxito!")
-                st.download_button("📥 Descargar Excel Consolidado", excel_res, "Consolidado_Lote_FEFO.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key="unique_dl_excel_key")
+                st.download_button("📥 Descargar Excel Consolidado", excel_res, "Consolidado_Pedidos_Matriz_FEFO.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key="unique_dl_excel_key")
                 st.download_button("📥 Descargar Actas en PDF", pdf_res, "Actas_Oficiales_Consolidas.pdf", "application/pdf", key="unique_dl_pdf_key")
             else:
                 st.error("No se pudieron generar resultados. Verifique que los archivos sean correctos.")
