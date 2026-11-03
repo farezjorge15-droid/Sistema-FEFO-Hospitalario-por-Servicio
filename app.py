@@ -282,14 +282,20 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                         validado_por = firmantes_custom.get('validado_por', validado_por)
                         entregado_por = firmantes_custom.get('entregado_por', entregado_por)
 
+            # Extracción robusta para PDFs normales y firmados electrónicamente (_signed.pdf)
             idx_tabla = pdf_text.find("Nro.")
+            if idx_tabla == -1:
+                idx_tabla = pdf_text.find("N°")
+            if idx_tabla == -1:
+                idx_tabla = 0
+
             texto_items = pdf_text[idx_tabla:] if idx_tabla != -1 else pdf_text
-            clean_blob = re.sub(r'\s+', ' ', texto_items)
+            clean_blob = re.sub(r'[\r\n]+', ' ', texto_items)
             items_extraidos = []
             
             for i in range(1, 100):
-                pattern_item = rf'(?:^|\s){i}\s+(.+?)\s*\(\s*AUTORIZADA[^\)]+\)\s*(\d+)\s+(\d+)'
-                m = re.search(pattern_item, clean_blob)
+                pattern_item = rf'(?:^|\s){i}\s+(.+?)\s*\(\s*AUTORIZAD[AO][^\)]*\)\s*(\d+)\s+(\d+)'
+                m = re.search(pattern_item, clean_blob, re.IGNORECASE)
                 if m:
                     desc = m.group(1).strip()
                     sol = int(m.group(2))
@@ -302,13 +308,32 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     })
                     clean_blob = clean_blob.replace(m.group(0), "", 1)
                 else:
-                    if i > 3:
+                    # Respaldo secundario flexible para PDFs firmados con variaciones en formato
+                    pattern_alt = rf'(?:^|\s){i}\s+(.+?)\s+(\d+)\s+(\d+)'
+                    m_alt = re.search(pattern_alt, clean_blob)
+                    if m_alt and i > 2:
+                        desc = m_alt.group(1).strip()
+                        sol = int(m_alt.group(2))
+                        aprob = int(m_alt.group(3))
+                        if not any(w in desc.upper() for w in ['FIRMADO', 'ELECTRONICAMENTE', 'VALIDAR', 'STAMPING']):
+                            items_extraidos.append({
+                                'Nro.': i,
+                                'Dispositivo Médico': desc,
+                                'Cantidades Solicitadas': sol,
+                                'Cantidades Aprobadas': aprob
+                            })
+                            clean_blob = clean_blob.replace(m_alt.group(0), "", 1)
+                            continue
+
+                    if i > 5 and not items_extraidos:
+                        break
+                    elif i > 40 and len(items_extraidos) > 0:
                         break
 
             if not items_extraidos:
                 items_extraidos.append({
                     'Nro.': 1,
-                    'Dispositivo Médico': 'REVISAR ARCHIVO PDF (SIN ITEMS DETECTADOS)',
+                    'Dispositivo Médico': f'ADVERTENCIA: REVISAR ARCHIVO {nombre_pdf}',
                     'Cantidades Solicitadas': 0,
                     'Cantidades Aprobadas': 0
                 })
