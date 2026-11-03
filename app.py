@@ -23,14 +23,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS personalizados (Diseño del Banner con división fluida estilo referencia)
+# Estilos CSS personalizados
 st.markdown("""
     <style>
     /* Ocultar barra lateral totalmente */
     [data-testid="stSidebar"] {
         display: none;
     }
-    /* Estilo del banner con división fluida y moderna */
+    /* Estilo del banner */
     .hero-container {
         background: linear-gradient(105deg, #e3f2fd 0%, #f0f7ff 55%, #ffffff 55%);
         border-radius: 24px;
@@ -38,8 +38,6 @@ st.markdown("""
         margin-bottom: 30px;
         box-shadow: 0px 8px 25px rgba(31, 78, 120, 0.08);
         border: 1px solid #d0e1fd;
-        position: relative;
-        overflow: hidden;
     }
     .hero-title {
         font-size: 2.2rem;
@@ -555,7 +553,8 @@ st.image("http://www.acess.gob.ec/wp-content/uploads/2017/08/MSP-LOGO-WEB1.jpg",
 # ==========================================
 # PESTAÑAS PRINCIPALES SUPERIORES (TAB SYSTEM)
 # ==========================================
-tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
+tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
+    "🏠 Inicio",
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
@@ -563,16 +562,15 @@ tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 ])
 
 # ------------------------------------------
-# PESTAÑA 1: CRUCE DE LOTE (BANNER ESTILO S-CURVE Y CARGA)
+# PESTAÑA 0: INICIO (BANNER PRINCIPAL)
 # ------------------------------------------
-with tab_cruce:
-    # BANNER PRINCIPAL CON DIVISIÓN DIAGONAL/S-CURVE ESTILO REFERENCIA (TEXTO IZQ, IMAGEN DER)
+with tab_inicio:
     st.markdown("""
         <div class="hero-container">
             <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;">
                 <div style="flex: 1; min-width: 300px; padding-right: 20px;">
                     <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
-                    <div class="hero-subtitle">Sistema Institucional Automatizado de Dispensación Farmacéutica, Control de Lotes y Cruce de Stock por Servicio (Método FEFO).</div>
+                    <div class="hero-subtitle">Sistema Institucional Automatizado de Dispensación Farmacéutica, Control de Lotes y Cruce de Stock por Servicio (Método FEFO).<br><br><b>Bienvenido al sistema.</b> Haga clic en la pestaña superior <b>"📊 Cruce de Lote"</b> para comenzar a cargar sus archivos de inventario y solicitudes en PDF.</div>
                 </div>
                 <div style="flex: 1; min-width: 300px; text-align: center; margin-top: 15px;">
                     <img src="https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752" style="width: 100%; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
@@ -581,7 +579,10 @@ with tab_cruce:
         </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("---")
+# ------------------------------------------
+# PESTAÑA 1: CRUCE DE LOTE (CARGA Y RESULTADOS)
+# ------------------------------------------
+with tab_cruce:
     st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
     st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
 
