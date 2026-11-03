@@ -106,6 +106,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         todos_los_resultados = []
         metadata_actas = [] 
 
+        # GARANTÍA TOTAL: Recorremos cada archivo PDF asegurando un identificador de columna único basado en su posición (1, 2, 3...)
         for idx_pdf, (nombre_pdf, pdf_bytes) in enumerate(lista_pdfs):
             pdf_text = ""
             try:
@@ -117,9 +118,9 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             except Exception:
                 pdf_text = ""
 
-            # Usar el nombre del archivo PDF limpio como identificador único de columna para garantizar que aparezcan todos
+            # Identificador único garantizado para la columna del Excel (ej: "01 - NombreArchivo.pdf")
             nombre_limpio_pdf = nombre_pdf.replace('.pdf', '').replace('.PDF', '').strip()
-            servicio_nombre = f"{nombre_limpio_pdf}"
+            servicio_nombre = f"[{idx_pdf + 1:02d}] {nombre_limpio_pdf}"
             
             match_serv = re.search(r'Servicio\s*[:]\s*([^\r\n]+)', pdf_text, re.IGNORECASE)
             if match_serv:
@@ -128,8 +129,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     if stop_word in raw_serv.upper():
                         raw_serv = raw_serv.upper().split(stop_word)[0].strip()
                 if len(raw_serv) > 1:
-                    # Combinamos el servicio detectado con el nombre del archivo para asegurar unicidad absoluta
-                    servicio_nombre = f"{raw_serv} ({nombre_limpio_pdf})"
+                    servicio_nombre = f"{raw_serv} | [{idx_pdf + 1:02d}] {nombre_limpio_pdf}"
 
             firmantes_encontrados = []
             texto_plano_continuo = re.sub(r'[\r\n]+', ' ', pdf_text)
@@ -316,7 +316,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         if df_final.empty:
             return None, None
 
-        # --- CONSOLIDADO EN FORMATO MATRIZ (CADA PDF COMO COLUMNA ÚNICA E INDEPENDIENTE) ---
+        # --- CONSOLIDADO EN FORMATO MATRIZ (GARANTIZANDO EL 100% DE COLUMNAS PARA CADA PDF) ---
         output_excel = io.BytesIO()
         wb = Workbook()
         ws = wb.active
