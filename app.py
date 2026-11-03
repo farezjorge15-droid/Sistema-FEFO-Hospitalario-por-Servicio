@@ -687,7 +687,7 @@ st.markdown("""
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "", 
+    "MSP", 
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
