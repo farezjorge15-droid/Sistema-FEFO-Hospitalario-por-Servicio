@@ -14,7 +14,7 @@ import datetime
 import streamlit as st
 
 def cargar_excel_seguro(file_bytes):
-    """Carga segura de Excel compatible con archivos originales en entornos Linux/Windows."""
+    """Carga segura de Excel compatible con archivos originales."""
     try:
         return pd.read_excel(io.BytesIO(file_bytes), engine='openpyxl')
     except Exception:
@@ -32,29 +32,16 @@ def clean_exact(s):
     except Exception:
         pass
     
-    # 1. Reemplazar saltos de línea internos y espacios invisibles
     s = s.replace('\r', ' ').replace('\n', ' ').replace('\xa0', ' ').replace('\u200b', ' ')
-    
-    # 2. Normalización de acentos y caracteres especiales
     s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8", errors='ignore')
     s = s.upper().strip()
-    
-    # 3. Unificar abreviaturas y puntuación común
     s = s.replace('P.V.', 'PV').replace('N°', 'N').replace('°', '').replace('.', '')
-    
-    # 4. Blindaje contra espacios en guiones y símbolos
     s = re.sub(r'\s*-\s*', '-', s)
     s = re.sub(r'\s*#\s*', '#', s)
-    
-    # 5. Estandarizar espacios múltiples
     s = re.sub(r'\s+', ' ', s)
     return s
 
 def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unificado_bytes, firmantes_custom=None):
-    """
-    Procesa una lista de PDFs en lote, realizando el cruce FEFO acumulativo
-    y generando un Excel y un PDF consolidados.
-    """
     df_lotes = cargar_excel_seguro(excel_lotes_bytes)
     df_unificado = cargar_excel_seguro(excel_unificado_bytes)
 
@@ -164,7 +151,14 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                 if not match_unif.empty:
                     codigo = match_unif.iloc[0].get('Código', match_unif.iloc[0].get('Codigo', 'SIN-CODIGO'))
                     sku = match_unif.iloc[0].get('SKU', 'SIN-SKU')
-                    col_bodega = [c for c in match_unif.columns if 'BOD' in str(c).upper() or 'FARM' in str(c).upper()][0] if [c for c in match_unif.columns if 'BOD' in str(c).upper()] else match_unif.columns[-1]
+                    
+                    # BLINDAJE TOTAL DE BODEGA: Busca la columna numérica o de stock de forma segura
+                    cols_posibles = [c for c in match_unif.columns if any(w in str(c).upper() for w in ['BOD', 'FARM', 'STOCK', 'EXIST', 'TOTAL'])]
+                    if cols_posibles:
+                        col_bodega = cols_posibles[0]
+                    else:
+                        col_bodega = match_unif.columns[-1]
+                        
                     stock_bodega = match_unif.iloc[0][col_bodega]
                     if pd.isna(stock_bodega):
                         stock_bodega = 0.0
@@ -380,9 +374,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
     return output_excel.getvalue(), output_pdf.getvalue()
 
 
-# =========================================================================
-# INTERFAZ DE STREAMLIT (SIN ELEMENTOS DUPLICADOS)
-# =========================================================================
 st.title("Sistema FEFO - Hospital Vicente Corral Moscoso")
 
 st.sidebar.header("📂 Carga de Archivos")
