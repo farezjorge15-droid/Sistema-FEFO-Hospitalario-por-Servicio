@@ -24,26 +24,27 @@ st.set_page_config(
 )
 
 # ==========================================
-# INYECCIÓN DE ESTILOS CSS PERSONALIZADOS
+# INYECCIÓN DE ESTILOS CSS PERSONALIZADOS (FONDO DE PANTALLA)
 # ==========================================
 st.markdown("""
 <style>
-    /* Estilo General y Paleta Hospitalaria */
-    :root {
-        --primary-color: #1F4E78;
-        --secondary-color: #007BFF;
-        --bg-light: #F4F7F9;
-        --card-bg: #FFFFFF;
+    /* Fondo de pantalla con la imagen del hospital y degradado desvanecido */
+    .stApp {
+        background: linear-gradient(to right, rgba(255, 255, 255, 0.92) 35%, rgba(255, 255, 255, 0.35) 75%), 
+                    url("https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
     }
-    
+
     /* Header principal */
     .main-header {
-        background: linear-gradient(135deg, #1F4E78 0%, #007BFF 100%);
+        background: linear-gradient(135deg, rgba(31, 78, 120, 0.95) 0%, rgba(0, 123, 255, 0.95) 100%);
         padding: 24px;
         border-radius: 12px;
         color: white;
         margin-bottom: 25px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
     .main-header h1 {
         color: #FFFFFF !important;
@@ -58,14 +59,15 @@ st.markdown("""
         margin-bottom: 0;
     }
 
-    /* Tarjetas de métricas/resumen */
+    /* Tarjetas de métricas/resumen con fondo translúcido */
     .metric-card {
-        background-color: var(--card-bg);
+        background-color: rgba(255, 255, 255, 0.9);
         border-left: 5px solid #1F4E78;
         padding: 16px;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         margin-bottom: 15px;
+        backdrop-filter: blur(5px);
     }
     .metric-card h4 {
         color: #555555;
@@ -82,7 +84,8 @@ st.markdown("""
 
     /* Modificación de la barra lateral */
     [data-testid="stSidebar"] {
-        background-color: #EBF3FA;
+        background-color: rgba(235, 243, 250, 0.95);
+        backdrop-filter: blur(8px);
         padding-top: 10px;
     }
     .sidebar-title {
@@ -109,15 +112,6 @@ st.markdown("""
     .stButton > button:hover {
         transform: translateY(-2px);
         box-shadow: 0 5px 12px rgba(0,0,0,0.15);
-    }
-
-    /* Tarjeta de descargas */
-    .download-box {
-        background-color: #E8F5E9;
-        border: 1px solid #A5D6A7;
-        border-radius: 10px;
-        padding: 20px;
-        margin-top: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -614,7 +608,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# BARRA LATERAL (SIDEBAR REDISEÑADA)
+# BARRA LATERAL (SIDEBAR)
 # ==========================================
 st.sidebar.markdown('<div class="sidebar-title">📂 Carga de Archivos</div>', unsafe_allow_html=True)
 
@@ -655,7 +649,6 @@ btn_procesar = st.sidebar.button("🚀 Ejecutar Procesamiento FEFO", key="unique
 tab_main, tab_details, tab_help = st.tabs(["⚡ Procesador & Descargas", "📊 Resumen de Carga", "ℹ️ Guía & Ayuda"])
 
 with tab_main:
-    # Métricas de Estado de Carga rápida
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -685,7 +678,6 @@ with tab_main:
 
     st.markdown("---")
 
-    # Ejecución al presionar el botón
     if btn_procesar:
         if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
             with st.spinner("⏳ Procesando cruce de lotes, asignando algoritmos FEFO y generando actas..."):
