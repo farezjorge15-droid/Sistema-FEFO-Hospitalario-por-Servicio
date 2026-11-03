@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Fondo fijo protegido + Scroll interactivo fluido
+# Estilos CSS: Scroll vertical totalmente libre y habilitado
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -36,10 +36,10 @@ st.markdown("""
         height: 0px !important;
     }
     
-    /* Habilitar scroll fluido en el contenedor principal de la aplicación */
-    [data-testid="stAppViewContainer"] {
-        background: transparent !important;
+    /* Habilitar scroll vertical en el contenedor principal de Streamlit */
+    html, body, [data-testid="stAppViewContainer"], .main {
         overflow-y: auto !important;
+        height: auto !important;
     }
 
     .main .block-container {
@@ -110,21 +110,21 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* FONDO FIJO PROTEGIDO (Inamovible al fondo y transparente a clics) */
+    /* Fondo de pantalla protegido (diseño seguro sin bloquear el scroll) */
     .hero-fullscreen {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
         display: flex;
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
         margin: 0 !important;
-        z-index: 0 !important;
-        pointer-events: none !important;
+        z-index: 0;
+        pointer-events: none;
     }
     .hero-left-content {
         width: 50%;
@@ -166,7 +166,7 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor flotante con flujo libre para el scroll */
+    /* Contenedor principal con flujo vertical fluido */
     .content-overlay {
         position: relative;
         margin-top: 70px;
@@ -215,7 +215,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# MOTOR LÓGICO FEFO (INTACTO Y PROTEGIDO)
+# MOTOR LÓGICO FEFO (PROTEGIDO E ÍNTEGRO)
 # ==========================================
 
 def cargar_excel_seguro(file_bytes):
@@ -703,7 +703,7 @@ if 'pdf_bytes_cache' not in st.session_state:
     st.session_state.pdf_bytes_cache = None
 
 # ==========================================
-# FONDO DE PANTALLA CONSTANTE (FIJO Y PROTEGIDO)
+# FONDO DE PANTALLA CONSTANTE (PROTEGIDO)
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
@@ -733,7 +733,7 @@ with tab_inicio:
     pass
 
 # ------------------------------------------
-# PESTAÑA 1: CRUCE DE LOTE (100% IDÉNTICO AL PROTOTIPO Y CON SCROLL FLUIDO)
+# PESTAÑA 1: CRUCE DE LOTE
 # ------------------------------------------
 with tab_cruce:
     st.markdown('<div class="content-overlay">', unsafe_allow_html=True)
