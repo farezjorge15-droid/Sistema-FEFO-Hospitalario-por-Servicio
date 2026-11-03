@@ -117,7 +117,10 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             except Exception:
                 pdf_text = ""
 
-            servicio_nombre = f"SERVICIO_{idx_pdf + 1}"
+            # Usar el nombre del archivo PDF limpio como identificador único de columna para garantizar que aparezcan todos
+            nombre_limpio_pdf = nombre_pdf.replace('.pdf', '').replace('.PDF', '').strip()
+            servicio_nombre = f"{nombre_limpio_pdf}"
+            
             match_serv = re.search(r'Servicio\s*[:]\s*([^\r\n]+)', pdf_text, re.IGNORECASE)
             if match_serv:
                 raw_serv = match_serv.group(1).strip()
@@ -125,7 +128,8 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     if stop_word in raw_serv.upper():
                         raw_serv = raw_serv.upper().split(stop_word)[0].strip()
                 if len(raw_serv) > 1:
-                    servicio_nombre = raw_serv
+                    # Combinamos el servicio detectado con el nombre del archivo para asegurar unicidad absoluta
+                    servicio_nombre = f"{raw_serv} ({nombre_limpio_pdf})"
 
             firmantes_encontrados = []
             texto_plano_continuo = re.sub(r'[\r\n]+', ' ', pdf_text)
@@ -184,7 +188,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     if i > 3:
                         break
 
-            # GARANTÍA: Si el PDF no pudo extraer ítems mediante expresión regular, se registra al menos un ítem de control para que el archivo NUNCA sea descartado
             if not items_extraidos:
                 items_extraidos.append({
                     'Nro.': 1,
@@ -313,7 +316,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         if df_final.empty:
             return None, None
 
-        # --- CONSOLIDADO EN FORMATO MATRIZ (INCLUYENDO TODOS LOS ARCHIVOS Y ORDENADO DE A - Z) ---
+        # --- CONSOLIDADO EN FORMATO MATRIZ (CADA PDF COMO COLUMNA ÚNICA E INDEPENDIENTE) ---
         output_excel = io.BytesIO()
         wb = Workbook()
         ws = wb.active
