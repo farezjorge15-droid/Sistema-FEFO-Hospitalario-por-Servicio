@@ -55,6 +55,42 @@ def buscar_producto_inteligente(p_name_limpio, df_unificado, df_lotes_grouped):
 
     return pd.DataFrame(), p_name_limpio
 
+def consolidar_lotes_texto(texto_lotes_crudo):
+    """
+    Toma cadenas de lotes (ej: '20250510 (1 unids) / 20251220 (4 unids) / 20251220 (5 unids)')
+    y suma las cantidades de los lotes repetidos en una sola cantidad consolidada.
+    """
+    if not isinstance(texto_lotes_crudo, str) or not texto_lotes_crudo or 'SIN LOTE' in texto_lotes_crudo or 'FALTAN' in texto_lotes_crudo:
+        return str(texto_lotes_crudo)
+    
+    # Separar por '/' o '|'
+    segmentos = re.split(r'[/|]', texto_lotes_crudo)
+    acumulador_lotes = {}
+    
+    for seg in segmentos:
+        seg = seg.strip()
+        if not seg:
+            continue
+        # Extraer el nombre del lote y la cantidad entre paréntesis
+        match = re.search(r'^(.*?)\s*\((\d+)\s*unids?\)', seg, re.IGNORECASE)
+        if match:
+            lote_nombre = match.group(1).strip()
+            cantidad = int(match.group(2))
+            acumulador_lotes[lote_nombre] = acumulador_lotes.get(lote_nombre, 0) + cantidad
+        else:
+            # Si no tiene formato de cantidad, se deja tal cual
+            acumulador_lotes[seg] = acumulador_lotes.get(seg, 0)
+            
+    # Reconstruir la cadena unificada
+    resultado_final = []
+    for lote, cant in acumulador_lotes.items():
+        if cant > 0:
+            resultado_final.append(f"{lote} ({cant} unids)")
+        else:
+            resultado_final.append(lote)
+            
+    return " / ".join(resultado_final)
+
 def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unificado_bytes, firmantes_custom=None):
     try:
         df_lotes = cargar_excel_seguro(excel_lotes_bytes)
@@ -225,6 +261,10 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                             lotes_info.append(f"FALTAN ({int(cant_pendiente)} unids)")
                             fechas_info.append("STOCK INSUFICIENTE")
                             
+                        # Consolidar lotes repetidos de forma limpia
+                        lotes_crudos_str = " / ".join(lotes_info)
+                        lotes_consolidados_str = consolidar_lotes_texto(lotes_crudos_str)
+                            
                         item_data = {
                             'PDF Origen': nombre_pdf,
                             'Servicio': servicio_nombre,
@@ -234,7 +274,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                             'Dispositivo Médico': pdf_row['Dispositivo Médico'],
                             'Cant. Solicitada': pdf_row['Cantidades Solicitadas'],
                             'Cant. Aprobada': pdf_row['Cantidades Aprobadas'],
-                            'Lotes y Cantidades a Despachar': " / ".join(lotes_info),
+                            'Lotes y Cantidades a Despachar': lotes_consolidados_str,
                             'Fechas de Caducidad': " / ".join(fechas_info),
                             'Stock Bodega': float(stock_bodega),
                             'Alerta_Rojo': False
@@ -254,16 +294,14 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         if df_final.empty:
             return None, None
 
-        # --- CONSOLIDADO EN FORMATO MATRIZ (IDÉNTICO AL QUE SUBISTE) ---
+        # --- CONSOLIDADO EN FORMATO MATRIZ ---
         output_excel = io.BytesIO()
         wb = Workbook()
         ws = wb.active
         ws.title = "ConsolidadoPedidos"
 
-        # Agrupamos por producto para generar la matriz por servicios
         servicios_unicos = sorted(df_final['Servicio'].unique())
         
-        # Estilos corporativos
         header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
         header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
         red_fill = PatternFill(start_color="FCE4D6", end_color="FCE4D6", fill_type="solid")
@@ -271,12 +309,10 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         normal_font = Font(name="Calibri", size=11)
         border_thin = Border(left=Side(style='thin', color='D9D9D9'), right=Side(style='thin', color='D9D9D9'), top=Side(style='thin', color='D9D9D9'), bottom=Side(style='thin', color='D9D9D9'))
 
-        # Título principal
         ws.append([f"DETALLE DE PEDIDOS Y LOTES ASIGNADOS POR SERVICIO (Generado el {datetime.datetime.now().strftime('%Y-%m-%d')})"])
         ws.cell(row=1, column=1).font = Font(name="Calibri", size=12, bold=True, color="1F4E78")
-        ws.append([]) # Fila en blanco
+        ws.append([]) 
 
-        # Encabezados de la matriz: Dispositivo Médico, Cód, Stock, más un columna por cada servicio y Total
         headers_matriz = ['DISPOSITIVO / INSUMO', 'CÓDIGO', 'STOCK BODEGA', 'LOTE Y CADUCIDAD ASIGNADA (FEFO)'] + servicios_unicos + ['TOTAL APROBADO']
         ws.append(headers_matriz)
 
@@ -286,17 +322,18 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             cell.font = header_font
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
-        # Pivoteamos los datos para llenar la matriz
-        productos_unicos = df_final[['Código', 'Dispositivo Médico', 'Stock Bodega', 'Lotes y Cantidades a Despachar']].drop_duplicates(subset=['Dispositivo Médico'])
+        productos_unicos = df_final[['Código', 'Dispositivo Médico', 'Stock Bodega']].drop_duplicates(subset=['Dispositivo Médico'])
 
         for idx, p_row in productos_unicos.iterrows():
             prod_nombre = p_row['Dispositivo Médico']
             prod_codigo = p_row['Código']
             prod_stock = p_row['Stock Bodega']
             
-            # Recopilamos lotes asignados para este producto en general
             df_prod_all = df_final[df_final['Dispositivo Médico'] == prod_nombre]
-            lotes_str = " | ".join(df_prod_all['Lotes y Cantidades a Despachar'].unique())
+            
+            # Unir y consolidar todos los lotes de todas las solicitudes de este producto
+            lotes_brutos_totales = " / ".join(df_prod_all['Lotes y Cantidades a Despachar'].dropna().astype(str))
+            lotes_str = consolidar_lotes_texto(lotes_brutos_totales)
 
             fila_datos = [prod_nombre, prod_codigo, prod_stock, lotes_str]
             
