@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Barra azul cielo unificada, fondo persistente y logo MSP grande
+# Estilos CSS: Fondo transparente/cristal en todas las vistas para que se vea el fondo de pantalla
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -81,7 +81,7 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* Primera pestaña convertida en el Logo del MSP (2x más grande, sin texto) */
+    /* Primera pestaña convertida en el Logo del MSP (grande, sin texto) */
     .stTabs [data-baseweb="tab"]:nth-child(1) {
         width: 60px !important;
         min-width: 60px !important;
@@ -109,7 +109,7 @@ st.markdown("""
 
     /* Banner de fondo constante para todas las vistas */
     .hero-fullscreen {
-        position: relative;
+        position: fixed;
         width: 100vw;
         height: 100vh;
         background: linear-gradient(90deg, #e3f2fd 0%, #f0f7ff 50%, #ffffff 50%);
@@ -160,17 +160,21 @@ st.markdown("""
         mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,1) 100%);
         z-index: 1;
     }
+    /* Contenedor flotante traslúcido para que se vea el fondo de pantalla detrás */
     .content-overlay {
         position: absolute;
-        top: 70px;
-        left: 0;
-        width: 100vw;
-        height: calc(100vh - 70px);
+        top: 65px;
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
         overflow-y: auto;
-        padding: 30px 50px;
+        padding: 30px 40px;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.92);
+        background: rgba(255, 255, 255, 0.45);
         backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
     }
     .stButton>button {
         width: 100%;
@@ -666,7 +670,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# FONDO DE PANTALLA CONSTANTE (VISIBLE EN TODO MOMENTO)
+# FONDO DE PANTALLA CONSTANTE (FIJO EN TODAS LAS VISTAS)
 # ==========================================
 st.markdown("""
     <div class="hero-fullscreen">
@@ -682,7 +686,7 @@ st.markdown("""
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "inicio", 
+    "MSP", 
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
@@ -693,7 +697,6 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 # PESTAÑA 0: INICIO
 # ------------------------------------------
 with tab_inicio:
-    # El fondo ya está fijo en pantalla, no requiere contenido extra aquí
     pass
 
 # ------------------------------------------
