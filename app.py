@@ -35,16 +35,24 @@ st.markdown("""
         visibility: hidden !important;
         height: 0px !important;
     }
+    
+    /* Habilitar scroll vertical nativo y fluido en toda la página */
+    html, body, [data-testid="stAppViewContainer"], .main {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: 100% !important;
+    }
+
     .main .block-container {
         padding-top: 0rem !important;
-        padding-bottom: 3rem !important;
+        padding-bottom: 4rem !important;
         padding-left: 0rem !important;
         padding-right: 0rem !important;
         max-width: 100% !important;
         background-color: transparent !important;
     }
     
-    /* Posicionamiento de la barra de navegación fija arriba */
+    /* Posicionamiento fijo de la barra de navegación superior */
     .stTabs {
         position: fixed !important;
         top: 10px !important;
@@ -103,7 +111,7 @@ st.markdown("""
         background-position: center !important;
     }
 
-    /* Fondo de pantalla fijo protegido de fondo */
+    /* Fondo de pantalla estático y protegido al fondo */
     .hero-fullscreen {
         position: fixed;
         top: 0;
@@ -159,13 +167,13 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Contenedor principal con scroll vertical natural y libre */
+    /* Contenedor de contenido adaptable con flujo libre hacia abajo */
     .content-overlay {
         position: relative;
         margin-top: 65px;
         margin-left: 20px;
         margin-right: 20px;
-        margin-bottom: 40px;
+        margin-bottom: 50px;
         padding: 25px 35px;
         z-index: 10;
         background: rgba(255, 255, 255, 0.88);
