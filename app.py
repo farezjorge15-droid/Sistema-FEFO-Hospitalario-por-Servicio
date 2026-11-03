@@ -23,33 +23,36 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS personalizados (Ocultar barra lateral por completo y mejorar botones)
+# Estilos CSS personalizados (Diseño del Banner con división fluida estilo referencia)
 st.markdown("""
     <style>
     /* Ocultar barra lateral totalmente */
     [data-testid="stSidebar"] {
         display: none;
     }
-    /* Estilo del banner */
+    /* Estilo del banner con división fluida y moderna */
     .hero-container {
-        background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
-        border: 1px solid #cfd8dc;
+        background: linear-gradient(105deg, #e3f2fd 0%, #f0f7ff 55%, #ffffff 55%);
+        border-radius: 24px;
+        padding: 35px;
+        margin-bottom: 30px;
+        box-shadow: 0px 8px 25px rgba(31, 78, 120, 0.08);
+        border: 1px solid #d0e1fd;
+        position: relative;
+        overflow: hidden;
     }
     .hero-title {
-        font-size: 2rem;
+        font-size: 2.2rem;
         font-weight: 800;
         color: #1F4E78;
         line-height: 1.2;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
     }
     .hero-subtitle {
-        font-size: 1rem;
+        font-size: 1.05rem;
         color: #455a64;
         font-weight: 500;
+        line-height: 1.5;
     }
     .stButton>button {
         width: 100%;
@@ -549,17 +552,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 # ==========================================
 st.image("http://www.acess.gob.ec/wp-content/uploads/2017/08/MSP-LOGO-WEB1.jpg", width=240)
 
-# BANNER PRINCIPAL CON IMAGEN DEL HOSPITAL
-with st.container():
-    col_text, col_img = st.columns([1.2, 1])
-    with col_text:
-        st.markdown('<div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>', unsafe_allow_html=True)
-        st.markdown('<div class="hero-subtitle">Sistema Institucional Automatizado de Dispensación Farmacéutica, Control de Lotes y Cruce de Stock por Servicio (Método FEFO).</div>', unsafe_allow_html=True)
-    with col_img:
-        st.image("https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752", use_container_width=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-
 # ==========================================
 # PESTAÑAS PRINCIPALES SUPERIORES (TAB SYSTEM)
 # ==========================================
@@ -571,9 +563,25 @@ tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 ])
 
 # ------------------------------------------
-# PESTAÑA 1: CRUCE DE LOTE (CARGA Y RESULTADOS)
+# PESTAÑA 1: CRUCE DE LOTE (BANNER ESTILO S-CURVE Y CARGA)
 # ------------------------------------------
 with tab_cruce:
+    # BANNER PRINCIPAL CON DIVISIÓN DIAGONAL/S-CURVE ESTILO REFERENCIA (TEXTO IZQ, IMAGEN DER)
+    st.markdown("""
+        <div class="hero-container">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                <div style="flex: 1; min-width: 300px; padding-right: 20px;">
+                    <div class="hero-title">Hospital Provincial General Docente Vicente Corral Moscoso</div>
+                    <div class="hero-subtitle">Sistema Institucional Automatizado de Dispensación Farmacéutica, Control de Lotes y Cruce de Stock por Servicio (Método FEFO).</div>
+                </div>
+                <div style="flex: 1; min-width: 300px; text-align: center; margin-top: 15px;">
+                    <img src="https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752" style="width: 100%; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("---")
     st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
     st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
 
