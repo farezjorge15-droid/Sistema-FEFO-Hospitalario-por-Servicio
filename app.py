@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS avanzados: Forzar transparencia total en la barra contenedora de pestañas
+# Estilos CSS: Recupera el fondo completo, la imagen y hace transparente la barra de pestañas
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -35,7 +35,7 @@ st.markdown("""
         visibility: hidden !important;
         height: 0px !important;
     }
-    /* Eliminar paddings y márgenes superiores de la página */
+    /* Eliminar paddings y márgenes superiores de la página principal */
     .main .block-container {
         padding-top: 0rem !important;
         padding-bottom: 0rem !important;
@@ -44,7 +44,7 @@ st.markdown("""
         max-width: 100% !important;
         background-color: transparent !important;
     }
-    /* Contenedor principal de las pestañas */
+    /* Contenedor absoluto de las pestañas flotando sobre el banner */
     .stTabs {
         position: absolute !important;
         top: 15px !important;
@@ -53,24 +53,19 @@ st.markdown("""
         width: auto !important;
         background: transparent !important;
     }
-    /* Forzar transparencia absoluta en la barra de pestañas de BaseWeb */
+    /* Transparencia total en la barra contenedora de pestañas */
     .stTabs [data-baseweb="tab-list"],
-    div[data-baseweb="tab-list"],
-    .stTabs div {
+    div[data-baseweb="tab-list"] {
         background: transparent !important;
         background-color: transparent !important;
         border-bottom: none !important;
-    }
-    /* Eliminar el fondo blanco del contenedor de pestañas */
-    .stTabs [data-baseweb="tab-list"] {
         gap: 10px !important;
         padding: 0px !important;
-        background-color: transparent !important;
     }
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
-    /* Botones individuales de las pestañas con efecto flotante translúcido */
+    /* Botones de las pestañas */
     .stTabs [data-baseweb="tab"] {
         height: 38px !important;
         background-color: rgba(255, 255, 255, 0.8) !important;
@@ -86,7 +81,7 @@ st.markdown("""
         background-color: #1F4E78 !important;
         color: white !important;
     }
-    /* Banner full screen que cubre desde la cima sin cortes */
+    /* Banner full screen: Fondo azul y la imagen del hospital restaurados */
     .hero-fullscreen {
         position: relative;
         width: 100vw;
@@ -96,7 +91,7 @@ st.markdown("""
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
-        margin-top: 0rem;
+        margin: 0 !important;
         padding-top: 70px;
         z-index: 1;
     }
@@ -640,7 +635,7 @@ tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
 ])
 
 # ------------------------------------------
-# PESTAÑA 0: INICIO
+# PESTAÑA 0: INICIO (CON FONDO AZUL E IMAGEN RECUPERADOS)
 # ------------------------------------------
 with tab_inicio:
     st.markdown("""
