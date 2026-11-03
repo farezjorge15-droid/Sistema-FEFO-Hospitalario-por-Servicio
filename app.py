@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Barra de pestañas ultra pequeña y texto centrado verticalmente
+# Estilos CSS: Logo del MSP en la primera pestaña y diseño optimizado
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -68,7 +68,7 @@ st.markdown("""
     div[data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
-    /* Botones de las pestañas más pequeños y ajustados */
+    /* Estilos generales de las pestañas */
     .stTabs [data-baseweb="tab"] {
         height: 28px !important;
         background-color: transparent !important;
@@ -80,9 +80,23 @@ st.markdown("""
         border: none !important;
         box-shadow: none !important;
     }
+    /* Convertir la primera pestaña (Inicio) en el botón con el Logo MSP */
+    .stTabs [data-baseweb="tab"]:first-child {
+        width: 34px !important;
+        min-width: 34px !important;
+        background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        color: transparent !important;
+        font-size: 0px !important;
+    }
     .stTabs [aria-selected="true"] {
         background-color: #1F4E78 !important;
         color: white !important;
+    }
+    .stTabs [aria-selected="true"]:first-child {
+        background-color: rgba(31, 78, 120, 0.2) !important;
     }
     /* Banner full screen: Centrado vertical exacto para el texto */
     .hero-fullscreen {
@@ -106,7 +120,7 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         justify-content: center;
-        transform: translateY(-20px); /* Sube ligeramente el bloque para un centrado óptimo */
+        transform: translateY(-20px);
     }
     .welcome-text {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -632,9 +646,10 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 # ==========================================
 # PESTAÑAS PRINCIPALES DE NAVEGACIÓN
+# (La primera pestaña mantiene el espacio para transformarse en el logo MSP)
 # ==========================================
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "🏠 Inicio",
+    "Inicio",
     "📊 Cruce de Lote", 
     "📦 Lotes & Bodega", 
     "📄 Actas Oficiales", 
