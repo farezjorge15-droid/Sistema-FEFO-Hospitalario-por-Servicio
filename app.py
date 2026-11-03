@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS: Barra flotante de color azul cielo y logo MSP grande e interactivo
+# Estilos CSS: Barra azul cielo (#e3f2fd) y logo MSP grande como botón de inicio
 st.markdown("""
     <style>
     /* Ocultar barra lateral y header nativo de Streamlit */
@@ -44,21 +44,67 @@ st.markdown("""
         max-width: 100% !important;
         background-color: transparent !important;
     }
-    
-    /* Barra flotante superior con el color azul cielo del fondo (#e3f2fd) */
-    .nav-bar-container {
+    /* Posicionamiento de las pestañas */
+    .stTabs {
         position: absolute !important;
         top: 10px !important;
         left: 15px !important;
         z-index: 99999 !important;
-        background: rgba(227, 242, 253, 0.85) !important;
-        backdrop-filter: blur(8px) !important;
+        width: auto !important;
+        background: transparent !important;
+    }
+    /* Barra contenedora con el color azul cielo del fondo (#e3f2fd) */
+    .stTabs [data-baseweb="tab-list"],
+    div[data-baseweb="tab-list"] {
+        background: #e3f2fd !important;
+        background-color: #e3f2fd !important;
         border-radius: 8px !important;
-        padding: 4px 10px !important;
+        padding: 3px 6px !important;
+        border-bottom: none !important;
+        gap: 6px !important;
+        backdrop-filter: blur(8px) !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+    }
+    div[data-baseweb="tab-highlight"] {
+        background-color: transparent !important;
+    }
+    /* Estilos generales de las pestañas */
+    .stTabs [data-baseweb="tab"] {
+        height: 32px !important;
+        background-color: transparent !important;
+        border-radius: 6px !important;
+        padding: 0px 12px !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        color: #1F4E78 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Primera pestaña convertida en el Logo del MSP (2x más grande, sin texto) */
+    .stTabs [data-baseweb="tab"]:nth-child(1) {
+        width: 60px !important;
+        min-width: 60px !important;
+        background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
+        background-size: 85% 85% !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        color: transparent !important;
+        font-size: 0px !important;
+        padding: 0 !important;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #1F4E78 !important;
+        color: white !important;
+    }
+    
+    .stTabs [aria-selected="true"]:nth-child(1) {
+        background-color: rgba(31, 78, 120, 0.15) !important;
+        background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
+        background-size: 85% 85% !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
     }
 
     /* Banner full screen: Centrado vertical exacto para el texto */
@@ -128,12 +174,6 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-
-# ==========================================
-# GESTIÓN DE ESTADO DE NAVEGACIÓN
-# ==========================================
-if 'nav_tab' not in st.session_state:
-    st.session_state.nav_tab = "Inicio"
 
 # ==========================================
 # MOTOR LÓGICO FEFO (INTACTO Y PROTEGIDO)
@@ -614,69 +654,20 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         return None, None
 
 # ==========================================
-# BARRA DE NAVEGACIÓN PERSONALIZADA (CUSTOM NAV BAR)
+# PESTAÑAS PRINCIPALES DE NAVEGACIÓN (UNIFICADAS)
 # ==========================================
-st.markdown('<div class="nav-bar-container">', unsafe_allow_html=True)
-nav_cols = st.columns([0.8, 2.2, 2.2, 2.2, 2.2])
+tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
+    "", 
+    "📊 Cruce de Lote", 
+    "📦 Lotes & Bodega", 
+    "📄 Actas Oficiales", 
+    "⚖️ Normativa FEFO"
+])
 
-with nav_cols[0]:
-    # Botón con imagen del logo MSP grande, sin texto "Inicio"
-    if st.button(" ", key="btn_logo_msp", help="Ir a Inicio"):
-        st.session_state.nav_tab = "Inicio"
-        st.rerun()
-
-with nav_cols[1]:
-    if st.button("📊 Cruce de Lote", key="btn_cruce", use_container_width=True):
-        st.session_state.nav_tab = "Cruce de Lote"
-        st.rerun()
-
-with nav_cols[2]:
-    if st.button("📦 Lotes & Bodega", key="btn_bodega", use_container_width=True):
-        st.session_state.nav_tab = "Lotes & Bodega"
-        st.rerun()
-
-with nav_cols[3]:
-    if st.button("📄 Actas Oficiales", key="btn_actas", use_container_width=True):
-        st.session_state.nav_tab = "Actas Oficiales"
-        st.rerun()
-
-with nav_cols[4]:
-    if st.button("⚖️ Normativa FEFO", key="btn_normativa", use_container_width=True):
-        st.session_state.nav_tab = "Normativa FEFO"
-        st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Inyectar estilos CSS para el botón del logo MSP (hacerlo grande, con la imagen exacta y sin bordes molestos)
-st.markdown("""
-    <style>
-    div[data-testid="column"]:nth-child(1) button {
-        background-image: url('https://images.seeklogo.com/logo-png/23/2/ministerio-de-salud-publica-logo-png_seeklogo-231476.png') !important;
-        background-size: contain !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        width: 55px !important;
-        height: 36px !important;
-        min-height: 36px !important;
-        padding: 0 !important;
-    }
-    div[data-testid="column"]:nth-child(1) button:hover {
-        background-color: rgba(31, 78, 120, 0.1) !important;
-        border-radius: 6px !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# ==========================================
-# RENDERIZADO SEGÚN LA PESTAÑA ACTIVA
-# ==========================================
-
-current_tab = st.session_state.nav_tab
-
-if current_tab == "Inicio":
+# ------------------------------------------
+# PESTAÑA 0: INICIO
+# ------------------------------------------
+with tab_inicio:
     st.markdown("""
         <div class="hero-fullscreen">
             <div class="hero-left-content">
@@ -687,7 +678,10 @@ if current_tab == "Inicio":
         </div>
     """, unsafe_allow_html=True)
 
-elif current_tab == "Cruce de Lote":
+# ------------------------------------------
+# PESTAÑA 1: CRUCE DE LOTE
+# ------------------------------------------
+with tab_cruce:
     st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
     st.subheader("📋 Carga de Archivos para Cruce de Stock (FEFO)")
     st.info("💡 Seleccione los archivos de inventario y los pedidos en PDF para iniciar el cruce de stock.")
@@ -776,19 +770,28 @@ elif current_tab == "Cruce de Lote":
             st.warning("⚠️ Por favor, cargue los tres tipos de archivos requeridos (Lotes, Stock Unificado y los PDFs) para iniciar el cruce.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-elif current_tab == "Lotes & Bodega":
+# ------------------------------------------
+# PESTAÑA 2: LOTES & BODEGA
+# ------------------------------------------
+with tab_bodega:
     st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
     st.subheader("📦 Control de Lotes y Existencias en Bodega")
     st.write("En este apartado podrá consultar información sobre los inventarios cargados.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-elif current_tab == "Actas Oficiales":
+# ------------------------------------------
+# PESTAÑA 3: ACTAS OFICIALES
+# ------------------------------------------
+with tab_actas:
     st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
     st.subheader("📄 Actas Oficiales de Dispensación")
     st.write("Vista previa e historial de actas generadas para los servicios hospitalarios.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-elif current_tab == "Normativa FEFO":
+# ------------------------------------------
+# PESTAÑA 4: NORMATIVA FEFO
+# ------------------------------------------
+with tab_normativa:
     st.markdown('<div style="padding: 100px 30px 40px 30px;">', unsafe_allow_html=True)
     st.subheader("⚖️ Normativa de Gestión FEFO")
     st.markdown("""
