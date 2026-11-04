@@ -464,7 +464,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
         df_final = pd.DataFrame(todos_los_resultados)
         if df_final.empty:
-            return None, None
+            return None, None, None
 
         # MATRIZ EXCEL
         output_excel = io.BytesIO()
@@ -624,10 +624,10 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         doc.build(elements)
         output_pdf.seek(0)
 
-        return output_excel.getvalue(), output_pdf.getvalue()
+        return output_excel.getvalue(), output_pdf.getvalue(), df_final
     except Exception as e:
         st.error(f"Error interno en el procesamiento: {e}")
-        return None, None
+        return None, None, None
 
 
 # ==========================================
@@ -768,41 +768,8 @@ elif selected_tab == "📚 Cruce de Lote":
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN: CUADROS DE REPORTES / MÉTRICAS KPI (PÁGINA 6.PNG)
+    # PROCESAMIENTO AL HACER CLIC EN EL BOTÓN
     # ==========================================
-    num_pdfs_val = len(uploaded_pdfs) if uploaded_pdfs else 3
-    num_items_val = 16 if 'excel_res' not in st.session_state else 16
-    lotes_asignados_val = 12 if 'excel_res' not in st.session_state else 12
-    quiebres_val = 4 if 'excel_res' not in st.session_state else 4
-
-    col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
-
-    with col_kpi1:
-        with st.container(border=True):
-            st.markdown("Pedidos en Lote &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 📄", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='color:#163a5f; margin: 0; padding: 5px 0;'>{num_pdfs_val}</h2>", unsafe_allow_html=True)
-            st.markdown(f"<span style='color:#666; font-size:0.82rem;'>en {num_pdfs_val} servicios</span>", unsafe_allow_html=True)
-
-    with col_kpi2:
-        with st.container(border=True):
-            st.markdown("Líneas de Pedido &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 📦", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='color:#163a5f; margin: 0; padding: 5px 0;'>{num_items_val}</h2>", unsafe_allow_html=True)
-            st.markdown("<span style='color:#666; font-size:0.82rem;'>ítems cruzados</span>", unsafe_allow_html=True)
-
-    with col_kpi3:
-        with st.container(border=True):
-            st.markdown("Lotes 100% Asignados &nbsp;&nbsp;&nbsp; ✅", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='color:#008000; margin: 0; padding: 5px 0;'>{lotes_asignados_val} <span style='font-size:1rem; color:#666;'>(75%)</span></h2>", unsafe_allow_html=True)
-            st.markdown("<span style='color:transparent; font-size:0.82rem;'>.</span>", unsafe_allow_html=True)
-
-    with col_kpi4:
-        with st.container(border=True):
-            st.markdown("Quiebres / Sin Stock &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⚠️", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='color:#C00000; margin: 0; padding: 5px 0;'>{quiebres_val}</h2>", unsafe_allow_html=True)
-            st.markdown("<span style='color:#666; font-size:0.82rem;'>requieren gestión</span>", unsafe_allow_html=True)
-
-    st.markdown("---")
-
     if btn_procesar:
         if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
             with st.spinner("⏳ Procesando cruce de lotes, asignando algoritmos FEFO y generando actas..."):
@@ -821,41 +788,93 @@ elif selected_tab == "📚 Cruce de Lote":
                     'validado_por': custom_vali
                 }
 
-                excel_res, pdf_res = procesar_cruce_hospitalario_lote(
+                excel_res, pdf_res, df_resultado = procesar_cruce_hospitalario_lote(
                     lista_pdfs, lotes_bytes, unificado_bytes, firmantes_custom=firmantes_config
                 )
 
-                if excel_res and pdf_res:
+                if excel_res and pdf_res and df_resultado is not None:
                     st.session_state['excel_res'] = excel_res
                     st.session_state['pdf_res'] = pdf_res
+                    st.session_state['df_resultado'] = df_resultado
                     st.success("🎉 **¡Procesamiento finalizado con éxito!** Se han asignado los lotes óptimos FEFO y generado las actas.")
-                    
-                    st.markdown("### 📥 Descarga de Consolidados e Informes")
-                    col_down1, col_down2 = st.columns(2)
-                    
-                    with col_down1:
-                        st.download_button(
-                            label="📊 Descargar Matriz Consolidada (Excel)",
-                            data=excel_res,
-                            file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            key="unique_dl_excel_key",
-                            use_container_width=True
-                        )
-                    
-                    with col_down2:
-                        st.download_button(
-                            label="📄 Descargar Actas Oficiales (PDF)",
-                            data=pdf_res,
-                            file_name="Actas_Oficiales_Consolidas.pdf",
-                            mime="application/pdf",
-                            key="unique_dl_pdf_key",
-                            use_container_width=True
-                        )
                 else:
                     st.error("🚨 No se pudieron generar los resultados. Asegúrese de que las estructuras internas de las tablas de los Excel sean correctas.")
         else:
             st.warning("⚠️ **Requisito incompleto:** Por favor, cargue los tres tipos de archivo en sus respectivas tarjetas antes de ejecutar el proceso.")
+
+    # ==========================================
+    # SECCIÓN: CUADROS DE REPORTES / MÉTRICAS KPI REALES
+    # ==========================================
+    if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None:
+        df_res = st.session_state['df_resultado']
+        num_pdfs_val = df_res['PDF Origen'].nunique()
+        num_servicios_val = df_res['Servicio'].nunique()
+        num_items_val = len(df_res)
+        
+        # Calcular asignados 100% (sin quiebres de stock o faltantes)
+        sin_quiebres = df_res[~df_res['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False)]
+        lotes_asignados_val = len(sin_quiebres)
+        porcentaje_asignados = int((lotes_asignados_val / num_items_val) * 100) if num_items_val > 0 else 0
+        quiebres_val = num_items_val - lotes_asignados_val
+    else:
+        num_pdfs_val = len(uploaded_pdfs) if uploaded_pdfs else 0
+        num_servicios_val = num_pdfs_val
+        num_items_val = 0
+        lotes_asignados_val = 0
+        porcentaje_asignados = 0
+        quiebres_val = 0
+
+    col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
+
+    with col_kpi1:
+        with st.container(border=True):
+            st.markdown("Pedidos en Lote &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 📄", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#163a5f; margin: 0; padding: 5px 0;'>{num_pdfs_val}</h2>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color:#666; font-size:0.82rem;'>en {num_servicios_val} servicios</span>", unsafe_allow_html=True)
+
+    with col_kpi2:
+        with st.container(border=True):
+            st.markdown("Líneas de Pedido &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 📦", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#163a5f; margin: 0; padding: 5px 0;'>{num_items_val}</h2>", unsafe_allow_html=True)
+            st.markdown("<span style='color:#666; font-size:0.82rem;'>ítems cruzados</span>", unsafe_allow_html=True)
+
+    with col_kpi3:
+        with st.container(border=True):
+            st.markdown("Lotes 100% Asignados &nbsp;&nbsp;&nbsp; ✅", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#008000; margin: 0; padding: 5px 0;'>{lotes_asignados_val} <span style='font-size:1rem; color:#666;'>({porcentaje_asignados}%)</span></h2>", unsafe_allow_html=True)
+            st.markdown("<span style='color:transparent; font-size:0.82rem;'>.</span>", unsafe_allow_html=True)
+
+    with col_kpi4:
+        with st.container(border=True):
+            st.markdown("Quiebres / Sin Stock &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⚠️", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#C00000; margin: 0; padding: 5px 0;'>{quiebres_val}</h2>", unsafe_allow_html=True)
+            st.markdown("<span style='color:#666; font-size:0.82rem;'>requieren gestión</span>", unsafe_allow_html=True)
+
+    # Mostrar sección de descarga si ya hay resultados procesados
+    if 'excel_res' in st.session_state and 'pdf_res' in st.session_state:
+        st.markdown("---")
+        st.markdown("### 📥 Descarga de Consolidados e Informes")
+        col_down1, col_down2 = st.columns(2)
+        
+        with col_down1:
+            st.download_button(
+                label="📊 Descargar Matriz Consolidada (Excel)",
+                data=st.session_state['excel_res'],
+                file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="unique_dl_excel_key",
+                use_container_width=True
+            )
+        
+        with col_down2:
+            st.download_button(
+                label="📄 Descargar Actas Oficiales (PDF)",
+                data=st.session_state['pdf_res'],
+                file_name="Actas_Oficiales_Consolidas.pdf",
+                mime="application/pdf",
+                key="unique_dl_pdf_key",
+                use_container_width=True
+            )
 
 # 3. LOTES & BODEGA
 elif selected_tab == "📊 Lotes & Bodega":
