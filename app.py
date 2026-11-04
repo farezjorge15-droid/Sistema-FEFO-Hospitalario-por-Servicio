@@ -52,22 +52,6 @@ st.markdown("""
         text-align: right;
     }
 
-    /* Estilo del botón de Reiniciar */
-    div[data-testid="stButton"] > button.reset-btn {
-        background-color: #f0f4f8 !important;
-        color: #1f4e78 !important;
-        border: 1px solid #d0dfed !important;
-        border-radius: 20px !important;
-        font-weight: 600 !important;
-        font-size: 0.88rem !important;
-        padding: 6px 18px !important;
-        box-shadow: none !important;
-    }
-    div[data-testid="stButton"] > button.reset-btn:hover {
-        background-color: #e2ebf4 !important;
-        border-color: #1f4e78 !important;
-    }
-
     /* Cabecera Principal */
     .hospital-header {
         background: linear-gradient(135deg, #163a5f 0%, #1f4e78 100%);
@@ -155,7 +139,6 @@ st.markdown("""
 # ==========================================
 # BARRA DE NAVEGACIÓN SUPERIOR (NAVBAR)
 # ==========================================
-# Fila superior con divisiones y botón de reinicio
 col_nav_tabs, col_reset, col_location = st.columns([7, 1.8, 2.2])
 
 with col_reset:
@@ -167,7 +150,7 @@ with col_location:
 
 st.markdown("<hr style='margin-top: -10px; margin-bottom: 10px; border-color: #e1e8f0;'>", unsafe_allow_html=True)
 
-# Pestañas de la barra de navegación superior (según tu imagen)
+# Pestañas superiores organizadas
 tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
     "🏠 Inicio", 
     "📚 Cruce de Lote", 
@@ -720,8 +703,12 @@ btn_procesar = st.sidebar.button("🚀 Ejecutar Procesamiento FEFO", key="unique
 # CONTENIDO DE PESTAÑAS PRINCIPALES
 # ==========================================
 
-# 1. PESTAÑA INICIO
+# 1. PESTAÑA INICIO (AHORA VACÍA Y LIMPIA)
 with tab_inicio:
+    st.write("") # Pantalla de inicio limpia sin información principal
+
+# 2. PESTAÑA CRUCE DE LOTE (CON TODO EL SISTEMA FEFO Y PROCESAMIENTO)
+with tab_cruce:
     st.markdown("""
     <div class="hospital-header">
         <h1>🏥 Sistema de Gestión FEFO & Cruce de Pedidos</h1>
@@ -814,14 +801,6 @@ with tab_inicio:
             st.warning("⚠️ **Requisito incompleto:** Por favor, cargue los tres tipos de archivo solicitados en el menú lateral antes de continuar.")
     else:
         st.info("👈 Cargue los archivos requeridos en el panel lateral y presione **'Ejecutar Procesamiento FEFO'**.")
-
-# 2. PESTAÑA CRUCE DE LOTE
-with tab_cruce:
-    st.markdown("### 📚 Panel de Cruce e Inspección de Lotes")
-    if 'excel_res' in st.session_state:
-        st.success("Los lotes han sido cruzados y procesados. Puede proceder con la descarga desde el panel de Inicio o desde aquí.")
-    else:
-        st.info("Cargue los archivos en la barra lateral y ejecute el proceso para visualizar el cruce de información.")
 
 # 3. PESTAÑA LOTES & BODEGA
 with tab_bodega:
