@@ -39,7 +39,7 @@ st.markdown("""
 
     /* Ocultar margen superior predeterminado */
     .block-container {
-        padding-top: 1rem !important;
+        padding-top: 0.5rem !important;
     }
 
     /* Estilos del texto institucional derecho */
@@ -137,15 +137,9 @@ st.markdown("""
 
 
 # ==========================================
-# INICIALIZACIÓN DE ESTADO DE NAVEGACIÓN
+# BARRA SUPERIOR FIJA (REINICIAR & UBICACIÓN)
 # ==========================================
-if 'active_tab' not in st.session_state:
-    st.session_state['active_tab'] = "Cruce de Lote"
-
-# ==========================================
-# BARRA DE NAVEGACIÓN SUPERIOR (NAVBAR)
-# ==========================================
-col_nav_tabs, col_reset, col_location = st.columns([7, 1.8, 2.2])
+col_nav_dummy, col_reset, col_location = st.columns([7, 1.8, 2.2])
 
 with col_reset:
     if st.button("🔄 Reiniciar", key="btn_reset_page"):
@@ -156,19 +150,7 @@ with col_reset:
 with col_location:
     st.markdown('<div class="header-right-text">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
 
-st.markdown("<hr style='margin-top: -10px; margin-bottom: 10px; border-color: #e1e8f0;'>", unsafe_allow_html=True)
-
-# Radio horizontal para simular pestañas interactivas con control total de estado
-selected_tab = st.radio(
-    "Navegación",
-    ["Inicio", "Cruce de Lote", "Lotes & Bodega", "Actas Oficiales", "Normativa FEFO"],
-    horizontal=True,
-    label_visibility="collapsed",
-    key="nav_radio"
-)
-
-st.session_state['active_tab'] = selected_tab
-st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<hr style='margin-top: -10px; margin-bottom: 5px; border-color: #e1e8f0;'>", unsafe_allow_html=True)
 
 
 # ==========================================
@@ -675,6 +657,18 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 
 # ==========================================
+# PESTAÑAS DE NAVEGACIÓN SUPERIOR (NATIVA)
+# ==========================================
+tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
+    "🏠 Inicio", 
+    "📚 Cruce de Lote", 
+    "📊 Lotes & Bodega", 
+    "📄 Actas Oficiales", 
+    "🛡️ Normativa FEFO"
+])
+
+
+# ==========================================
 # BARRA LATERAL CONDICIONAL (SOLO EN CRUCE DE LOTE)
 # ==========================================
 uploaded_lotes = None
@@ -685,7 +679,8 @@ custom_entre = "GUARDALMACÉN / DESPACHADOR"
 custom_vali = "XIMENA KARINA CABRERA ZENTENO"
 btn_procesar = False
 
-if st.session_state['active_tab'] == "Cruce de Lote":
+# Verificamos si estamos renderizando dentro de la pestaña "Cruce de Lote" (tab_cruce)
+with tab_cruce:
     st.sidebar.markdown('<div class="sidebar-heading">📂 Carga de Archivos</div>', unsafe_allow_html=True)
 
     uploaded_lotes = st.sidebar.file_uploader(
@@ -717,21 +712,18 @@ if st.session_state['active_tab'] == "Cruce de Lote":
 
     st.sidebar.markdown("<br>", unsafe_allow_html=True)
     btn_procesar = st.sidebar.button("🚀 Ejecutar Procesamiento FEFO", key="unique_process_btn_key")
-else:
-    # Barra lateral vacía o limpia en las demás pestañas
-    st.sidebar.empty()
 
 
 # ==========================================
-# RENDERIZADO DE CONTENIDO SEGÚN PESTAÑA ACTIVA
+# CONTENIDO DE CADA PESTAÑA
 # ==========================================
 
-# 1. PESTAÑA INICIO
-if st.session_state['active_tab'] == "Inicio":
+# 1. INICIO
+with tab_inicio:
     st.write("") # Pantalla limpia sin información
 
-# 2. PESTAÑA CRUCE DE LOTE
-elif st.session_state['active_tab'] == "Cruce de Lote":
+# 2. CRUCE DE LOTE
+with tab_cruce:
     st.markdown("""
     <div class="hospital-header">
         <h1>🏥 Sistema de Gestión FEFO & Cruce de Pedidos</h1>
@@ -813,7 +805,7 @@ elif st.session_state['active_tab'] == "Cruce de Lote":
                         st.download_button(
                             label="📄 Descargar Actas Oficiales (PDF)",
                             data=pdf_res,
-                            file_name="Actas_Oficiales_Consolidadas.pdf",
+                            file_name="Actas_Oficiales_Consolidas.pdf",
                             mime="application/pdf",
                             key="unique_dl_pdf_key",
                             use_container_width=True
@@ -825,16 +817,16 @@ elif st.session_state['active_tab'] == "Cruce de Lote":
     else:
         st.info("👈 Cargue los archivos requeridos en el panel lateral y presione **'Ejecutar Procesamiento FEFO'**.")
 
-# 3. PESTAÑA LOTES & BODEGA
-elif st.session_state['active_tab'] == "Lotes & Bodega":
+# 3. LOTES & BODEGA
+with tab_bodega:
     st.markdown("### 📊 Detalle de Archivos de Bodega y Stock")
     if 'excel_res' in st.session_state:
         st.success("Archivos de bodega y lotes procesados correctamente.")
     else:
         st.info("No hay datos procesados actualmente. Realice el cruce en la pestaña **'Cruce de Lote'**.")
 
-# 4. PESTAÑA ACTAS OFICIALES
-elif st.session_state['active_tab'] == "Actas Oficiales":
+# 4. ACTAS OFICIALES
+with tab_actas:
     st.markdown("### 📄 Generación y Descarga de Actas Oficiales")
     if 'pdf_res' in st.session_state:
         st.download_button(
@@ -848,8 +840,8 @@ elif st.session_state['active_tab'] == "Actas Oficiales":
     else:
         st.info("Una vez ejecutado el cruce FEFO, podrá descargar las actas firmadas desde esta sección.")
 
-# 5. PESTAÑA NORMATIVA FEFO
-elif st.session_state['active_tab'] == "Normativa FEFO":
+# 5. NORMATIVA FEFO
+with tab_normativa:
     st.markdown("""
     ### 🛡️ Normativa y Algoritmo FEFO (*First Expired, First Out*)
 
