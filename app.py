@@ -42,22 +42,9 @@ st.markdown("""
         padding-top: 4.2rem !important;
     }
 
-    /* Barra Superior Fija (Sticky Navbar) */
+    /* Ocultar elementos predeterminados de Streamlit */
     .st-emotion-cache-1wmy9hl, header {
         visibility: hidden;
-    }
-    
-    .fixed-navbar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        background-color: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(8px);
-        z-index: 99999;
-        padding: 8px 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        border-bottom: 1px solid #e1e8f0;
     }
 
     /* Estilos del texto institucional derecho */
@@ -118,7 +105,6 @@ st.markdown("""
 # ==========================================
 # BARRA SUPERIOR FIJA & NAVEGACIÓN EN LA MISMA LÍNEA
 # ==========================================
-# Creamos un contenedor superior limpio
 col_nav, col_header_right = st.columns([6.8, 3.2])
 
 with col_nav:
@@ -135,8 +121,14 @@ with col_header_right:
         c_btn, c_txt = st.columns([1.2, 1.8])
         with c_btn:
             if st.button("🔄 Reiniciar", key="btn_reset_page", use_container_width=True):
-                for key in list(st.session_state.keys()):
-                    del st.session_state[key]
+                # Limpiar únicamente los archivos cargados y resultados sin borrar la navegación
+                keys_to_reset = [
+                    'unique_pdfs_key', 'unique_lotes_key', 'unique_unificado_key', 
+                    'excel_res', 'pdf_res', 'df_resultado', 'show_firmantes_config'
+                ]
+                for k in keys_to_reset:
+                    if k in st.session_state:
+                        del st.session_state[k]
                 st.rerun()
         with c_txt:
             st.markdown('<div class="header-right-text">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
