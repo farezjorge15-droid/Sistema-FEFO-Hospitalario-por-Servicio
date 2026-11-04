@@ -124,7 +124,7 @@ with col_header_right:
                 keys_to_reset = [
                     'unique_pdfs_key', 'unique_lotes_key', 'unique_unificado_key', 
                     'excel_res', 'pdf_res', 'df_resultado', 'show_firmantes_config',
-                    'df_lotes_raw', 'df_unif_raw'
+                    'df_lotes_raw', 'df_unif_raw', 'df_lotes_fefo_view'
                 ]
                 for k in keys_to_reset:
                     if k in st.session_state:
@@ -139,7 +139,7 @@ st.markdown("<hr style='margin-top: 2px; margin-bottom: 15px; border-color: #e1e
 
 
 # ==========================================
-# FUNCIONES LÓGICAS (MOTOR FEFO ORIGINAL)
+# FUNCIONES LÓGICAS (MOTOR FEFO ORIGINAL INTACTO)
 # ==========================================
 def cargar_excel_seguro(file_bytes):
     try:
@@ -216,6 +216,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         df_lotes = cargar_excel_seguro(excel_lotes_bytes)
         df_unificado = cargar_excel_seguro(excel_unificado_bytes)
 
+        # Guardar en session_state para la pestaña Lotes & Bodega exactamente como los carga el usuario
         st.session_state['df_lotes_raw'] = df_lotes
         st.session_state['df_unif_raw'] = df_unificado
 
@@ -229,13 +230,14 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         df_lotes_grouped['F. Cad DT'] = pd.to_datetime(df_lotes_grouped['F. Cad'], errors='coerce')
         df_lotes_grouped = df_lotes_grouped.sort_values(by=['clean_name', 'F. Cad DT'], ascending=[True, True])
 
-        stock_disponible_dict = {}
-        stock_restante_tabla = []
+        # Mapeo para recuperar el nombre original del producto en la tabla FEFO
+        map_nombres = df_lotes[['clean_name', 'Producto']].drop_duplicates(subset=['clean_name']).set_index('clean_name')['Producto'].to_dict()
+        df_lotes_grouped['Producto'] = df_lotes_grouped['clean_name'].map(map_nombres)
 
+        stock_disponible_dict = {}
         for _, row in df_lotes_grouped.iterrows():
             key = (row['clean_name'], row['Lote'], row['F. Cad'])
-            val_ex = float(row['Existen']) if pd.notna(row['Existen']) else 0.0
-            stock_disponible_dict[key] = val_ex
+            stock_disponible_dict[key] = float(row['Existen']) if pd.notna(row['Existen']) else 0.0
 
         nombres_servicios_raw = []
         for idx_pdf, (nombre_pdf, pdf_bytes) in enumerate(lista_pdfs):
@@ -486,7 +488,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             inicial_val = float(row_l['Existen']) if pd.notna(row_l['Existen']) else 0.0
             restante_val = stock_disponible_dict.get(key_l, 0.0)
             
-            # Formato fecha
             f_cad_str = row_l['F. Cad DT'].strftime('%d/%m/%Y') if pd.notna(row_l['F. Cad DT']) else str(row_l['F. Cad'])
             
             if restante_val <= 0:
@@ -978,7 +979,7 @@ elif selected_tab == "📚 Cruce de Lote":
     else:
         st.info("📂 Cargue sus archivos PDF, el Excel de Lotes y el Excel Unificado en las tarjetas superiores, y presione **'Ejecutar Cruce Hospitalario en Lote'** para desplegar el contenido detallado por servicios.")
 
-# 3. LOTES & BODEGA (CONFIGURADO TAL Y COMO LO PEDISTE Y MUESTRA LA IMAGEN LOTES 1.PNG)
+# 3. LOTES & BODEGA
 elif selected_tab == "📊 Lotes & Bodega":
     st.markdown("""
     <div class="hospital-header">
@@ -987,7 +988,6 @@ elif selected_tab == "📊 Lotes & Bodega":
     </div>
     """, unsafe_allow_html=True)
 
-    # Sub-pestañas / Botones internos estilo LOTES 1.PNG
     sub_tab_lotes = st.radio(
         "Subpestañas Lotes",
         ["📦 Lotes FEFO", "📈 Stock Maestro Bodega"],
@@ -999,7 +999,6 @@ elif selected_tab == "📊 Lotes & Bodega":
     st.markdown("<br>", unsafe_allow_html=True)
 
     if sub_tab_lotes == "📦 Lotes FEFO":
-        # Buscador superior derecho tal y como en LOTES 1.png
         col_space, col_search_lotes = st.columns([6, 4])
         with col_search_lotes:
             search_lotes_query = st.text_input("Buscar lote o producto", placeholder="🔍 Buscar lote o producto...", label_visibility="collapsed", key="search_lotes_fefo_input")
@@ -1022,7 +1021,6 @@ elif selected_tab == "📊 Lotes & Bodega":
                 hide_index=True
             )
         else:
-            # Si no ha ejecutado cruce pero subió o tiene archivo de lotes
             if 'df_lotes_raw' in st.session_state and st.session_state['df_lotes_raw'] is not None:
                 df_raw_l = st.session_state['df_lotes_raw']
                 temp_list = []
