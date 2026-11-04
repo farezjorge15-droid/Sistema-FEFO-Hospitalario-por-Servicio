@@ -39,17 +39,18 @@ st.markdown("""
 
     /* Ocultar margen superior predeterminado */
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 0.8rem !important;
     }
 
     /* Estilos del texto institucional derecho */
     .header-right-text {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         color: #3f5973;
-        font-size: 0.92rem;
+        font-size: 0.9rem;
         font-weight: 500;
-        margin-top: 6px;
-        text-align: right;
+        display: inline-block;
+        margin-left: 10px;
+        vertical-align: middle;
     }
 
     /* Cabecera Principal */
@@ -97,34 +98,34 @@ st.markdown("""
 
 
 # ==========================================
-# BARRA SUPERIOR (BOTÓN REINICIAR & MSP ECUADOR)
+# BARRA SUPERIOR & NAVEGACIÓN EN LA MISMA LÍNEA (PÁGINA 1_2.PNG)
 # ==========================================
-col_dummy, col_reset, col_location = st.columns([7, 1.8, 2.2])
+col_nav, col_header_right = st.columns([6.8, 3.2])
 
-with col_reset:
-    if st.button("🔄 Reiniciar", key="btn_reset_page"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
+with col_nav:
+    selected_tab = st.radio(
+        "Navegación",
+        ["🏠 Inicio", "📚 Cruce de Lote", "📊 Lotes & Bodega", "📄 Actas Oficiales", "🛡️ Normativa FEFO"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="main_navigation_menu"
+    )
 
-with col_location:
-    st.markdown('<div class="header-right-text">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
+with col_header_right:
+    # Alineación horizontal hacia la derecha
+    if selected_tab == "📚 Cruce de Lote":
+        c_btn, c_txt = st.columns([1.3, 1.7])
+        with c_btn:
+            if st.button("🔄 Reiniciar", key="btn_reset_page", use_container_width=True):
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                st.rerun()
+        with c_txt:
+            st.markdown('<div class="header-right-text" style="margin-top:6px;">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div style="text-align: right;" class="header-right-text">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
 
-st.markdown("<hr style='margin-top: -10px; margin-bottom: 5px; border-color: #e1e8f0;'>", unsafe_allow_html=True)
-
-
-# ==========================================
-# NAVEGACIÓN SUPERIOR (MENÚ HORIZONTAL)
-# ==========================================
-selected_tab = st.radio(
-    "Navegación",
-    ["🏠 Inicio", "📚 Cruce de Lote", "📊 Lotes & Bodega", "📄 Actas Oficiales", "🛡️ Normativa FEFO"],
-    horizontal=True,
-    label_visibility="collapsed",
-    key="main_navigation_menu"
-)
-
-st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<hr style='margin-top: -5px; margin-bottom: 15px; border-color: #e1e8f0;'>", unsafe_allow_html=True)
 
 
 # ==========================================
@@ -896,7 +897,6 @@ elif selected_tab == "📚 Cruce de Lote":
     if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None:
         df_display = st.session_state['df_resultado'].copy()
 
-        # Filtrado por búsqueda
         if search_query:
             q = search_query.upper()
             df_display = df_display[
@@ -906,14 +906,10 @@ elif selected_tab == "📚 Cruce de Lote":
                 df_display['PDF Origen'].str.upper().str.contains(q, na=False)
             ]
 
-        # Filtrado por solo faltantes
         if solo_faltantes:
             df_display = df_display[df_display['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False)]
 
-        # Selector de servicios en pestañas horizontales
         servicios_disponibles = ['TODOS'] + sorted(df_display['Servicio'].unique().tolist())
-        
-        # Conteo de ítems por servicio
         conteo_serv = df_display['Servicio'].value_counts()
         
         selected_serv_tab = st.radio(
@@ -930,14 +926,12 @@ elif selected_tab == "📚 Cruce de Lote":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Mostrar tabla interactiva con formato similar a la imagen
         st.markdown(f"""
         <div style="background-color: #1f4e78; color: white; padding: 10px 14px; border-top-left-radius: 8px; border-top-right-radius: 8px; font-weight: 600; font-size: 0.85rem;">
             TABLA DE CRUCE FEFO Y ASIGNACIÓN DE LOTES POR SERVICIO
         </div>
         """, unsafe_allow_html=True)
 
-        # Renderizado de la tabla en Streamlit
         st.dataframe(
             df_display[['Nro.', 'PDF Origen', 'Servicio', 'Código', 'SKU', 'Dispositivo Médico', 'Cant. Solicitada', 'Cant. Aprobada', 'Lotes y Cantidades a Despachar', 'Fechas de Caducidad', 'Stock Bodega']],
             use_container_width=True,
