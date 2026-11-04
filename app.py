@@ -121,10 +121,10 @@ with col_header_right:
         c_btn, c_txt = st.columns([1.2, 1.8])
         with c_btn:
             if st.button("🔄 Reiniciar", key="btn_reset_page", use_container_width=True):
-                # Limpiar únicamente los archivos cargados y resultados sin borrar la navegación
                 keys_to_reset = [
                     'unique_pdfs_key', 'unique_lotes_key', 'unique_unificado_key', 
-                    'excel_res', 'pdf_res', 'df_resultado', 'show_firmantes_config'
+                    'excel_res', 'pdf_res', 'df_resultado', 'show_firmantes_config',
+                    'df_lotes_raw', 'df_unif_raw'
                 ]
                 for k in keys_to_reset:
                     if k in st.session_state:
@@ -216,6 +216,9 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         df_lotes = cargar_excel_seguro(excel_lotes_bytes)
         df_unificado = cargar_excel_seguro(excel_unificado_bytes)
 
+        st.session_state['df_lotes_raw'] = df_lotes
+        st.session_state['df_unif_raw'] = df_unificado
+
         df_lotes['Producto'] = df_lotes['Producto'].astype(str)
         df_unificado['Producto'] = df_unificado['Producto'].astype(str)
 
@@ -227,9 +230,12 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         df_lotes_grouped = df_lotes_grouped.sort_values(by=['clean_name', 'F. Cad DT'], ascending=[True, True])
 
         stock_disponible_dict = {}
+        stock_restante_tabla = []
+
         for _, row in df_lotes_grouped.iterrows():
             key = (row['clean_name'], row['Lote'], row['F. Cad'])
-            stock_disponible_dict[key] = float(row['Existen']) if pd.notna(row['Existen']) else 0.0
+            val_ex = float(row['Existen']) if pd.notna(row['Existen']) else 0.0
+            stock_disponible_dict[key] = val_ex
 
         nombres_servicios_raw = []
         for idx_pdf, (nombre_pdf, pdf_bytes) in enumerate(lista_pdfs):
@@ -473,6 +479,35 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                 'entregado_por': entregado_por
             })
 
+        # CONSTRUCCIÓN DE LA TABLA LOTES FEFO DETALLADA PARA LA PESTAÑA "LOTES & BODEGA"
+        lista_lotes_fefo_view = []
+        for idx_l, row_l in df_lotes_grouped.iterrows():
+            key_l = (row_l['clean_name'], row_l['Lote'], row_l['F. Cad'])
+            inicial_val = float(row_l['Existen']) if pd.notna(row_l['Existen']) else 0.0
+            restante_val = stock_disponible_dict.get(key_l, 0.0)
+            
+            # Formato fecha
+            f_cad_str = row_l['F. Cad DT'].strftime('%d/%m/%Y') if pd.notna(row_l['F. Cad DT']) else str(row_l['F. Cad'])
+            
+            if restante_val <= 0:
+                estado_din = f"Consumido en Lote ({int(inicial_val)})"
+            else:
+                estado_din = "Disponible"
+
+            lista_lotes_fefo_view.append({
+                '#': idx_l + 1,
+                'PRODUCTO (NORMALIZADO)': str(row_l['Producto']).upper(),
+                'LOTE': str(row_l['Lote']),
+                'FECHA DE CADUCIDAD': f_cad_str,
+                'EXISTENCIAS INICIALES': int(inicial_val),
+                'STOCK RESTANTE POST-LOTE': int(restante_val),
+                'ESTADO DINÁMICO': estado_din,
+                'clean_name': row_l['clean_name']
+            })
+
+        df_lotes_fefo_final = pd.DataFrame(lista_lotes_fefo_view)
+        st.session_state['df_lotes_fefo_view'] = df_lotes_fefo_final
+
         df_final = pd.DataFrame(todos_los_resultados)
         if df_final.empty:
             return None, None, None
@@ -647,7 +682,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 # 1. INICIO
 if selected_tab == "🏠 Inicio":
-    st.write("") # Pantalla limpia sin información
+    st.write("") 
 
 # 2. CRUCE DE LOTE
 elif selected_tab == "📚 Cruce de Lote":
@@ -660,7 +695,6 @@ elif selected_tab == "📚 Cruce de Lote":
 
     st.markdown("### 📂 Carga de Archivos Institucionales")
     
-    # Distribución en 3 columnas horizontales usando contenedores nativos con borde
     col_card1, col_card2, col_card3 = st.columns(3)
 
     with col_card1:
@@ -696,7 +730,6 @@ elif selected_tab == "📚 Cruce de Lote":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Contenedor inferior con el Checkbox y el botón "Ejecutar Cruce Hospitalario en Lote"
     with st.container(border=True):
         col_chk, col_btn = st.columns([2.2, 1.8])
         with col_chk:
@@ -707,9 +740,6 @@ elif selected_tab == "📚 Cruce de Lote":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ==========================================
-    # SECCIÓN: PERSONALIZAR FIRMANTES DE ACTAS
-    # ==========================================
     if 'show_firmantes_config' not in st.session_state:
         st.session_state['show_firmantes_config'] = False
 
@@ -771,16 +801,12 @@ elif selected_tab == "📚 Cruce de Lote":
                 if st.button("Actualizar Actas con estos Firmantes", key="btn_actualizar_firmas_action"):
                     st.success("✅ ¡Firmantes actualizados correctamente para todo el lote!")
 
-    # Asignación segura
     custom_elab = st.session_state.get('unique_elab_key', def_elab)
     custom_entre = st.session_state.get('unique_entre_key', def_entre)
     custom_vali = st.session_state.get('unique_vali_key', def_vali)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ==========================================
-    # PROCESAMIENTO AL HACER CLIC EN EL BOTÓN
-    # ==========================================
     if btn_procesar:
         if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
             with st.spinner("⏳ Procesando cruce de lotes, asignando algoritmos FEFO y generando actas..."):
@@ -813,9 +839,6 @@ elif selected_tab == "📚 Cruce de Lote":
         else:
             st.warning("⚠️ **Requisito incompleto:** Por favor, cargue los tres tipos de archivo en sus respectivas tarjetas antes de ejecutar el proceso.")
 
-    # ==========================================
-    # SECCIÓN: CUADROS DE REPORTES / MÉTRICAS KPI REALES
-    # ==========================================
     if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None:
         df_res = st.session_state['df_resultado']
         num_pdfs_val = df_res['PDF Origen'].nunique()
@@ -862,9 +885,6 @@ elif selected_tab == "📚 Cruce de Lote":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ==========================================
-    # SECCIÓN: BARRA DE BÚSQUEDA, FILTRO Y DESCARGAS
-    # ==========================================
     col_search, col_alert_btn, col_dl_excel, col_dl_pdf = st.columns([3.2, 1.8, 2.5, 2.5])
 
     with col_search:
@@ -901,9 +921,6 @@ elif selected_tab == "📚 Cruce de Lote":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ==========================================
-    # SECCIÓN: VISOR DE SERVICIOS Y CONTENIDO DE CADA PDF
-    # ==========================================
     if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None:
         df_display = st.session_state['df_resultado'].copy()
 
@@ -961,13 +978,101 @@ elif selected_tab == "📚 Cruce de Lote":
     else:
         st.info("📂 Cargue sus archivos PDF, el Excel de Lotes y el Excel Unificado en las tarjetas superiores, y presione **'Ejecutar Cruce Hospitalario en Lote'** para desplegar el contenido detallado por servicios.")
 
-# 3. LOTES & BODEGA
+# 3. LOTES & BODEGA (CONFIGURADO TAL Y COMO LO PEDISTE Y MUESTRA LA IMAGEN LOTES 1.PNG)
 elif selected_tab == "📊 Lotes & Bodega":
-    st.markdown("### 📊 Detalle de Archivos de Bodega y Stock")
-    if 'excel_res' in st.session_state:
-        st.success("Archivos de bodega y lotes procesados correctamente.")
-    else:
-        st.info("No hay datos procesados actualmente. Realice el cruce en la pestaña **'Cruce de Lote'**.")
+    st.markdown("""
+    <div class="hospital-header">
+        <h1>📊 Control General de Lotes & Bodega</h1>
+        <p>Visualización Interactiva de Lotes FEFO y Stock Maestro del Hospital</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Sub-pestañas / Botones internos estilo LOTES 1.PNG
+    sub_tab_lotes = st.radio(
+        "Subpestañas Lotes",
+        ["📦 Lotes FEFO", "📈 Stock Maestro Bodega"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="subtab_lotes_bodega_selector"
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    if sub_tab_lotes == "📦 Lotes FEFO":
+        # Buscador superior derecho tal y como en LOTES 1.png
+        col_space, col_search_lotes = st.columns([6, 4])
+        with col_search_lotes:
+            search_lotes_query = st.text_input("Buscar lote o producto", placeholder="🔍 Buscar lote o producto...", label_visibility="collapsed", key="search_lotes_fefo_input")
+
+        if 'df_lotes_fefo_view' in st.session_state and st.session_state['df_lotes_fefo_view'] is not None:
+            df_lotes_view = st.session_state['df_lotes_fefo_view'].copy()
+            
+            if search_lotes_query:
+                sq = search_lotes_query.upper()
+                df_lotes_view = df_lotes_view[
+                    df_lotes_view['PRODUCTO (NORMALIZADO)'].str.contains(sq, na=False) |
+                    df_lotes_view['LOTE'].str.contains(sq, na=False) |
+                    df_lotes_view['FECHA DE CADUCIDAD'].str.contains(sq, na=False) |
+                    df_lotes_view['ESTADO DINÁMICO'].str.contains(sq, na=False)
+                ]
+
+            st.dataframe(
+                df_lotes_view[['#', 'PRODUCTO (NORMALIZADO)', 'LOTE', 'FECHA DE CADUCIDAD', 'EXISTENCIAS INICIALES', 'STOCK RESTANTE POST-LOTE', 'ESTADO DINÁMICO']],
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            # Si no ha ejecutado cruce pero subió o tiene archivo de lotes
+            if 'df_lotes_raw' in st.session_state and st.session_state['df_lotes_raw'] is not None:
+                df_raw_l = st.session_state['df_lotes_raw']
+                temp_list = []
+                for idx_r, r_row in df_raw_l.iterrows():
+                    f_val = r_row.get('F. Cad', 'S/F')
+                    ex_val = r_row.get('Existen', 0)
+                    temp_list.append({
+                        '#': idx_r + 1,
+                        'PRODUCTO (NORMALIZADO)': str(r_row.get('Producto', '')).upper(),
+                        'LOTE': str(r_row.get('Lote', '')),
+                        'FECHA DE CADUCIDAD': str(f_val),
+                        'EXISTENCIAS INICIALES': int(ex_val) if pd.notna(ex_val) else 0,
+                        'STOCK RESTANTE POST-LOTE': int(ex_val) if pd.notna(ex_val) else 0,
+                        'ESTADO DINÁMICO': 'Disponible'
+                    })
+                df_temp_view = pd.DataFrame(temp_list)
+                
+                if search_lotes_query:
+                    sq = search_lotes_query.upper()
+                    df_temp_view = df_temp_view[
+                        df_temp_view['PRODUCTO (NORMALIZADO)'].str.contains(sq, na=False) |
+                        df_temp_view['LOTE'].str.contains(sq, na=False)
+                    ]
+
+                st.dataframe(
+                    df_temp_view[['#', 'PRODUCTO (NORMALIZADO)', 'LOTE', 'FECHA DE CADUCIDAD', 'EXISTENCIAS INICIALES', 'STOCK RESTANTE POST-LOTE', 'ESTADO DINÁMICO']],
+                    use_container_width=True,
+                    hide_index=True
+                )
+            else:
+                st.info("ℹ️ Para visualizar el detalle de **Lotes FEFO**, cargue el Excel de Lotes y ejecute el cruce en la pestaña **'Cruce de Lote'**.")
+
+    elif sub_tab_lotes == "📈 Stock Maestro Bodega":
+        col_space, col_search_unif = st.columns([6, 4])
+        with col_search_unif:
+            search_unif_query = st.text_input("Buscar producto maestro", placeholder="🔍 Buscar código, SKU o producto...", label_visibility="collapsed", key="search_unif_input")
+
+        if 'df_unif_raw' in st.session_state and st.session_state['df_unif_raw'] is not None:
+            df_u_view = st.session_state['df_unif_raw'].copy()
+            if search_unif_query:
+                uq = search_unif_query.upper()
+                cols_str = [c for c in df_u_view.columns if df_u_view[c].dtype == object]
+                mask = False
+                for c in cols_str:
+                    mask = mask | df_u_view[c].str.upper().str.contains(uq, na=False)
+                df_u_view = df_u_view[mask]
+
+            st.dataframe(df_u_view, use_container_width=True, hide_index=True)
+        else:
+            st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega**, cargue el archivo Excel Unificado en la pestaña **'Cruce de Lote'**.")
 
 # 4. ACTAS OFICIALES
 elif selected_tab == "📄 Actas Oficiales":
