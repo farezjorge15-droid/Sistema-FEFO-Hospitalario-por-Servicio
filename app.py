@@ -137,12 +137,20 @@ st.markdown("""
 
 
 # ==========================================
+# INICIALIZACIÓN DE ESTADO DE NAVEGACIÓN
+# ==========================================
+if 'active_tab' not in st.session_state:
+    st.session_state['active_tab'] = "Cruce de Lote"
+
+# ==========================================
 # BARRA DE NAVEGACIÓN SUPERIOR (NAVBAR)
 # ==========================================
 col_nav_tabs, col_reset, col_location = st.columns([7, 1.8, 2.2])
 
 with col_reset:
     if st.button("🔄 Reiniciar", key="btn_reset_page"):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
         st.rerun()
 
 with col_location:
@@ -150,14 +158,17 @@ with col_location:
 
 st.markdown("<hr style='margin-top: -10px; margin-bottom: 10px; border-color: #e1e8f0;'>", unsafe_allow_html=True)
 
-# Pestañas superiores organizadas
-tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
-    "🏠 Inicio", 
-    "📚 Cruce de Lote", 
-    "📊 Lotes & Bodega", 
-    "📄 Actas Oficiales", 
-    "🛡️ Normativa FEFO"
-])
+# Radio horizontal para simular pestañas interactivas con control total de estado
+selected_tab = st.radio(
+    "Navegación",
+    ["Inicio", "Cruce de Lote", "Lotes & Bodega", "Actas Oficiales", "Normativa FEFO"],
+    horizontal=True,
+    label_visibility="collapsed",
+    key="nav_radio"
+)
+
+st.session_state['active_tab'] = selected_tab
+st.markdown("<br>", unsafe_allow_html=True)
 
 
 # ==========================================
@@ -664,51 +675,63 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 
 # ==========================================
-# BARRA LATERAL (SIDEBAR DE ARCHIVOS)
+# BARRA LATERAL CONDICIONAL (SOLO EN CRUCE DE LOTE)
 # ==========================================
-st.sidebar.markdown('<div class="sidebar-heading">📂 Carga de Archivos</div>', unsafe_allow_html=True)
+uploaded_lotes = None
+uploaded_unificado = None
+uploaded_pdfs = None
+custom_elab = "RESPONSABLE DE SERVICIO"
+custom_entre = "GUARDALMACÉN / DESPACHADOR"
+custom_vali = "XIMENA KARINA CABRERA ZENTENO"
+btn_procesar = False
 
-uploaded_lotes = st.sidebar.file_uploader(
-    "1. Excel de Lotes (Stock con F. Caducidad)", 
-    type=["xlsx", "xls"], 
-    key="unique_lotes_key"
-)
+if st.session_state['active_tab'] == "Cruce de Lote":
+    st.sidebar.markdown('<div class="sidebar-heading">📂 Carga de Archivos</div>', unsafe_allow_html=True)
 
-uploaded_unificado = st.sidebar.file_uploader(
-    "2. Excel Unificado / Stock Bodega", 
-    type=["xlsx", "xls"], 
-    key="unique_unificado_key"
-)
+    uploaded_lotes = st.sidebar.file_uploader(
+        "1. Excel de Lotes (Stock con F. Caducidad)", 
+        type=["xlsx", "xls"], 
+        key="unique_lotes_key"
+    )
 
-uploaded_pdfs = st.sidebar.file_uploader(
-    "3. Pedidos de Servicios (PDFs Múltiples)", 
-    type=["pdf"], 
-    accept_multiple_files=True, 
-    key="unique_pdfs_key"
-)
+    uploaded_unificado = st.sidebar.file_uploader(
+        "2. Excel Unificado / Stock Bodega", 
+        type=["xlsx", "xls"], 
+        key="unique_unificado_key"
+    )
 
-st.sidebar.markdown("<br>", unsafe_allow_html=True)
-st.sidebar.markdown('<div class="sidebar-heading">✍️ Personalización de Actas</div>', unsafe_allow_html=True)
+    uploaded_pdfs = st.sidebar.file_uploader(
+        "3. Pedidos de Servicios (PDFs Múltiples)", 
+        type=["pdf"], 
+        accept_multiple_files=True, 
+        key="unique_pdfs_key"
+    )
 
-with st.sidebar.expander("📝 Configurar Responsables de Firma"):
-    custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
-    custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
-    custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
+    st.sidebar.markdown("<br>", unsafe_allow_html=True)
+    st.sidebar.markdown('<div class="sidebar-heading">✍️ Personalización de Actas</div>', unsafe_allow_html=True)
 
-st.sidebar.markdown("<br>", unsafe_allow_html=True)
-btn_procesar = st.sidebar.button("🚀 Ejecutar Procesamiento FEFO", key="unique_process_btn_key")
+    with st.sidebar.expander("📝 Configurar Responsables de Firma"):
+        custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
+        custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
+        custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
+
+    st.sidebar.markdown("<br>", unsafe_allow_html=True)
+    btn_procesar = st.sidebar.button("🚀 Ejecutar Procesamiento FEFO", key="unique_process_btn_key")
+else:
+    # Barra lateral vacía o limpia en las demás pestañas
+    st.sidebar.empty()
 
 
 # ==========================================
-# CONTENIDO DE PESTAÑAS PRINCIPALES
+# RENDERIZADO DE CONTENIDO SEGÚN PESTAÑA ACTIVA
 # ==========================================
 
-# 1. PESTAÑA INICIO (AHORA VACÍA Y LIMPIA)
-with tab_inicio:
-    st.write("") # Pantalla de inicio limpia sin información principal
+# 1. PESTAÑA INICIO
+if st.session_state['active_tab'] == "Inicio":
+    st.write("") # Pantalla limpia sin información
 
-# 2. PESTAÑA CRUCE DE LOTE (CON TODO EL SISTEMA FEFO Y PROCESAMIENTO)
-with tab_cruce:
+# 2. PESTAÑA CRUCE DE LOTE
+elif st.session_state['active_tab'] == "Cruce de Lote":
     st.markdown("""
     <div class="hospital-header">
         <h1>🏥 Sistema de Gestión FEFO & Cruce de Pedidos</h1>
@@ -803,24 +826,15 @@ with tab_cruce:
         st.info("👈 Cargue los archivos requeridos en el panel lateral y presione **'Ejecutar Procesamiento FEFO'**.")
 
 # 3. PESTAÑA LOTES & BODEGA
-with tab_bodega:
+elif st.session_state['active_tab'] == "Lotes & Bodega":
     st.markdown("### 📊 Detalle de Archivos de Bodega y Stock")
-    if uploaded_lotes or uploaded_unificado or uploaded_pdfs:
-        datos_archivos = []
-        if uploaded_lotes:
-            datos_archivos.append({"Categoría": "Excel de Lotes", "Nombre de Archivo": uploaded_lotes.name, "Tamaño (KB)": round(uploaded_lotes.size/1024, 2)})
-        if uploaded_unificado:
-            datos_archivos.append({"Categoría": "Excel Unificado", "Nombre de Archivo": uploaded_unificado.name, "Tamaño (KB)": round(uploaded_unificado.size/1024, 2)})
-        if uploaded_pdfs:
-            for f in uploaded_pdfs:
-                datos_archivos.append({"Categoría": "Pedido PDF", "Nombre de Archivo": f.name, "Tamaño (KB)": round(f.size/1024, 2)})
-        
-        st.dataframe(pd.DataFrame(datos_archivos), use_container_width=True)
+    if 'excel_res' in st.session_state:
+        st.success("Archivos de bodega y lotes procesados correctamente.")
     else:
-        st.write("No hay archivos subidos actualmente.")
+        st.info("No hay datos procesados actualmente. Realice el cruce en la pestaña **'Cruce de Lote'**.")
 
 # 4. PESTAÑA ACTAS OFICIALES
-with tab_actas:
+elif st.session_state['active_tab'] == "Actas Oficiales":
     st.markdown("### 📄 Generación y Descarga de Actas Oficiales")
     if 'pdf_res' in st.session_state:
         st.download_button(
@@ -835,7 +849,7 @@ with tab_actas:
         st.info("Una vez ejecutado el cruce FEFO, podrá descargar las actas firmadas desde esta sección.")
 
 # 5. PESTAÑA NORMATIVA FEFO
-with tab_normativa:
+elif st.session_state['active_tab'] == "Normativa FEFO":
     st.markdown("""
     ### 🛡️ Normativa y Algoritmo FEFO (*First Expired, First Out*)
 
