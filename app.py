@@ -729,10 +729,11 @@ elif selected_tab == "📚 Cruce de Lote":
             custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
         with c_f3:
             custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
-    else:
-        custom_elab = "RESPONSABLE DE SERVICIO"
-        custom_entre = "GUARDALMACÉN / DESPACHADOR"
-        custom_vali = "XIMENA KARINA CABRERA ZENTENO"
+    
+    # Valores por defecto si el expander no está abierto
+    custom_elab = st.session_state.get("unique_elab_key", "RESPONSABLE DE SERVICIO")
+    custom_entre = st.session_state.get("unique_entre_key", "GUARDALMACÉN / DESPACHADOR")
+    custom_vali = st.session_state.get("unique_vali_key", "XIMENA KARINA CABRERA ZENTENO")
 
     st.markdown("<br>", unsafe_allow_html=True)
     
