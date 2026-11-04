@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# DISEÑO Y ESTILOS CSS (ESTÉTICA INSTITUCIONAL)
+# DISEÑO Y ESTILOS CSS (ESTÉTICA INSTITUCIONAL & NAVBAR FIJA)
 # ==========================================
 st.markdown("""
 <style>
@@ -37,9 +37,27 @@ st.markdown("""
         background-attachment: fixed;
     }
 
-    /* Ocultar margen superior predeterminado */
+    /* Ocultar margen superior predeterminado y dar espacio para la barra fija */
     .block-container {
-        padding-top: 0.8rem !important;
+        padding-top: 4.2rem !important;
+    }
+
+    /* Barra Superior Fija (Sticky Navbar) */
+    .st-emotion-cache-1wmy9hl, header {
+        visibility: hidden;
+    }
+    
+    .fixed-navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        z-index: 99999;
+        padding: 8px 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border-bottom: 1px solid #e1e8f0;
     }
 
     /* Estilos del texto institucional derecho */
@@ -49,8 +67,8 @@ st.markdown("""
         font-size: 0.9rem;
         font-weight: 500;
         display: inline-block;
-        margin-left: 10px;
-        vertical-align: middle;
+        margin-top: 8px;
+        text-align: right;
     }
 
     /* Cabecera Principal */
@@ -98,8 +116,9 @@ st.markdown("""
 
 
 # ==========================================
-# BARRA SUPERIOR & NAVEGACIÓN EN LA MISMA LÍNEA (PÁGINA 1_2.PNG)
+# BARRA SUPERIOR FIJA & NAVEGACIÓN EN LA MISMA LÍNEA
 # ==========================================
+# Creamos un contenedor superior limpio
 col_nav, col_header_right = st.columns([6.8, 3.2])
 
 with col_nav:
@@ -112,20 +131,19 @@ with col_nav:
     )
 
 with col_header_right:
-    # Alineación horizontal hacia la derecha
     if selected_tab == "📚 Cruce de Lote":
-        c_btn, c_txt = st.columns([1.3, 1.7])
+        c_btn, c_txt = st.columns([1.2, 1.8])
         with c_btn:
             if st.button("🔄 Reiniciar", key="btn_reset_page", use_container_width=True):
                 for key in list(st.session_state.keys()):
                     del st.session_state[key]
                 st.rerun()
         with c_txt:
-            st.markdown('<div class="header-right-text" style="margin-top:6px;">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
+            st.markdown('<div class="header-right-text">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
     else:
         st.markdown('<div style="text-align: right;" class="header-right-text">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
 
-st.markdown("<hr style='margin-top: -5px; margin-bottom: 15px; border-color: #e1e8f0;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin-top: 2px; margin-bottom: 15px; border-color: #e1e8f0;'>", unsafe_allow_html=True)
 
 
 # ==========================================
@@ -853,7 +871,7 @@ elif selected_tab == "📚 Cruce de Lote":
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN: BARRA DE BÚSQUEDA, FILTRO Y DESCARGAS (PÁGINA 7.PNG)
+    # SECCIÓN: BARRA DE BÚSQUEDA, FILTRO Y DESCARGAS
     # ==========================================
     col_search, col_alert_btn, col_dl_excel, col_dl_pdf = st.columns([3.2, 1.8, 2.5, 2.5])
 
@@ -892,7 +910,7 @@ elif selected_tab == "📚 Cruce de Lote":
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN: VISOR DE SERVICIOS Y CONTENIDO DE CADA PDF (PÁGINA 7.PNG)
+    # SECCIÓN: VISOR DE SERVICIOS Y CONTENIDO DE CADA PDF
     # ==========================================
     if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None:
         df_display = st.session_state['df_resultado'].copy()
