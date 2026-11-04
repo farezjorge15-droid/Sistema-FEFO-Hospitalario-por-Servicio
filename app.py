@@ -76,9 +76,9 @@ st.markdown("""
         margin-bottom: 0;
     }
 
-    /* Botón Ejecutar Estilizado */
+    /* Botón Ejecutar Estilizado (Cruce Hospitalario en Lote) */
     .stButton > button {
-        background: linear-gradient(135deg, #1f4e78 0%, #007bff 100%);
+        background: linear-gradient(135deg, #1f4e78 0%, #163a5f 100%);
         color: white !important;
         border: none;
         border-radius: 10px;
@@ -638,7 +638,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 if selected_tab == "🏠 Inicio":
     st.write("") # Pantalla limpia sin información
 
-# 2. CRUCE DE LOTE (CON LAS 3 TARJETAS NATIVAS)
+# 2. CRUCE DE LOTE (CON TARJETAS NATIVAS, CHECKBOX Y NUEVO BOTÓN)
 elif selected_tab == "📚 Cruce de Lote":
     st.markdown("""
     <div class="hospital-header">
@@ -685,6 +685,15 @@ elif selected_tab == "📚 Cruce de Lote":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # Contenedor inferior con el Checkbox y el nuevo botón "Ejecutar Cruce Hospitalario en Lote"
+    with st.container(border=True):
+        col_chk, col_btn = st.columns([2.5, 1.5])
+        with col_chk:
+            st.markdown("<br>", unsafe_allow_html=True)
+            chk_descuento = st.checkbox("Descuento acumulativo secuencial de lotes entre pedidos", value=True, key="chk_desc_secuencial")
+        with col_btn:
+            btn_procesar = st.button("🔄 Ejecutar Cruce Hospitalario en Lote ➔", key="unique_process_btn_key")
+
     # Configuración opcional de firmantes
     with st.expander("✍️ Configuración Opcional de Responsables de Firma en Actas"):
         c_f1, c_f2, c_f3 = st.columns(3)
@@ -699,13 +708,6 @@ elif selected_tab == "📚 Cruce de Lote":
     custom_elab = st.session_state.get("unique_elab_key", "RESPONSABLE DE SERVICIO")
     custom_entre = st.session_state.get("unique_entre_key", "GUARDALMACÉN / DESPACHADOR")
     custom_vali = st.session_state.get("unique_vali_key", "XIMENA KARINA CABRERA ZENTENO")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Botón principal de ejecución
-    col_btn_center = st.columns([1, 2, 1])
-    with col_btn_center[1]:
-        btn_procesar = st.button("🚀 Ejecutar Procesamiento FEFO", key="unique_process_btn_key")
 
     st.markdown("---")
 
