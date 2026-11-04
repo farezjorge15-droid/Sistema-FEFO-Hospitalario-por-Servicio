@@ -124,7 +124,7 @@ with col_header_right:
                 keys_to_reset = [
                     'unique_pdfs_key', 'unique_lotes_key', 'unique_unificado_key', 
                     'excel_res', 'pdf_res', 'df_resultado', 'show_firmantes_config',
-                    'df_lotes_raw', 'df_unif_raw', 'df_lotes_fefo_view'
+                    'df_lotes_raw', 'df_unif_raw', 'df_lotes_fefo_view', 'productos_pedidos_set'
                 ]
                 for k in keys_to_reset:
                     if k in st.session_state:
@@ -216,7 +216,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         df_lotes = cargar_excel_seguro(excel_lotes_bytes)
         df_unificado = cargar_excel_seguro(excel_unificado_bytes)
 
-        # Guardar en session_state para la pestaña Lotes & Bodega exactamente como los carga el usuario
         st.session_state['df_lotes_raw'] = df_lotes
         st.session_state['df_unif_raw'] = df_unificado
 
@@ -230,7 +229,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         df_lotes_grouped['F. Cad DT'] = pd.to_datetime(df_lotes_grouped['F. Cad'], errors='coerce')
         df_lotes_grouped = df_lotes_grouped.sort_values(by=['clean_name', 'F. Cad DT'], ascending=[True, True])
 
-        # Mapeo para recuperar el nombre original del producto en la tabla FEFO
         map_nombres = df_lotes[['clean_name', 'Producto']].drop_duplicates(subset=['clean_name']).set_index('clean_name')['Producto'].to_dict()
         df_lotes_grouped['Producto'] = df_lotes_grouped['clean_name'].map(map_nombres)
 
@@ -275,6 +273,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
         todos_los_resultados = []
         metadata_actas = [] 
+        productos_pedidos_set = set()
 
         for idx_pdf, nombre_pdf, pdf_bytes, servicio_nombre, pdf_text in asignaciones_servicios:
             firmantes_encontrados = []
@@ -371,6 +370,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
             for _, pdf_row in df_pdf.iterrows():
                 p_name_raw = pdf_row['clean_name']
+                productos_pedidos_set.add(p_name_raw)
                 cant_pendiente = pdf_row['Cantidades Aprobadas']
                 
                 match_unif, _ = buscar_producto_inteligente(p_name_raw, df_unificado, df_lotes_grouped)
@@ -481,9 +481,14 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                 'entregado_por': entregado_por
             })
 
-        # CONSTRUCCIÓN DE LA TABLA LOTES FEFO DETALLADA PARA LA PESTAÑA "LOTES & BODEGA"
+        st.session_state['productos_pedidos_set'] = productos_pedidos_set
+
+        # CONSTRUCCIÓN DE LA TABLA LOTES FEFO FILTRADA EXCLUSIVAMENTE A LOS LOTES DE LOS PRODUCTOS PEDIDOS
         lista_lotes_fefo_view = []
-        for idx_l, row_l in df_lotes_grouped.iterrows():
+        # Filtramos df_lotes_grouped para que solo contenga los clean_name que están en productos_pedidos_set
+        df_lotes_filtrados = df_lotes_grouped[df_lotes_grouped['clean_name'].isin(productos_pedidos_set)]
+
+        for idx_l, row_l in df_lotes_filtrados.iterrows():
             key_l = (row_l['clean_name'], row_l['Lote'], row_l['F. Cad'])
             inicial_val = float(row_l['Existen']) if pd.notna(row_l['Existen']) else 0.0
             restante_val = stock_disponible_dict.get(key_l, 0.0)
@@ -496,7 +501,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                 estado_din = "Disponible"
 
             lista_lotes_fefo_view.append({
-                '#': idx_l + 1,
+                '#': len(lista_lotes_fefo_view) + 1,
                 'PRODUCTO (NORMALIZADO)': str(row_l['Producto']).upper(),
                 'LOTE': str(row_l['Lote']),
                 'FECHA DE CADUCIDAD': f_cad_str,
@@ -979,7 +984,7 @@ elif selected_tab == "📚 Cruce de Lote":
     else:
         st.info("📂 Cargue sus archivos PDF, el Excel de Lotes y el Excel Unificado en las tarjetas superiores, y presione **'Ejecutar Cruce Hospitalario en Lote'** para desplegar el contenido detallado por servicios.")
 
-# 3. LOTES & BODEGA
+# 3. LOTES & BODEGA (FILTRADO EXCLUSIVAMENTE A LOS PRODUCTOS DE LOS PEDIDOS CARGADOS)
 elif selected_tab == "📊 Lotes & Bodega":
     st.markdown("""
     <div class="hospital-header">
@@ -1021,45 +1026,21 @@ elif selected_tab == "📊 Lotes & Bodega":
                 hide_index=True
             )
         else:
-            if 'df_lotes_raw' in st.session_state and st.session_state['df_lotes_raw'] is not None:
-                df_raw_l = st.session_state['df_lotes_raw']
-                temp_list = []
-                for idx_r, r_row in df_raw_l.iterrows():
-                    f_val = r_row.get('F. Cad', 'S/F')
-                    ex_val = r_row.get('Existen', 0)
-                    temp_list.append({
-                        '#': idx_r + 1,
-                        'PRODUCTO (NORMALIZADO)': str(r_row.get('Producto', '')).upper(),
-                        'LOTE': str(r_row.get('Lote', '')),
-                        'FECHA DE CADUCIDAD': str(f_val),
-                        'EXISTENCIAS INICIALES': int(ex_val) if pd.notna(ex_val) else 0,
-                        'STOCK RESTANTE POST-LOTE': int(ex_val) if pd.notna(ex_val) else 0,
-                        'ESTADO DINÁMICO': 'Disponible'
-                    })
-                df_temp_view = pd.DataFrame(temp_list)
-                
-                if search_lotes_query:
-                    sq = search_lotes_query.upper()
-                    df_temp_view = df_temp_view[
-                        df_temp_view['PRODUCTO (NORMALIZADO)'].str.contains(sq, na=False) |
-                        df_temp_view['LOTE'].str.contains(sq, na=False)
-                    ]
-
-                st.dataframe(
-                    df_temp_view[['#', 'PRODUCTO (NORMALIZADO)', 'LOTE', 'FECHA DE CADUCIDAD', 'EXISTENCIAS INICIALES', 'STOCK RESTANTE POST-LOTE', 'ESTADO DINÁMICO']],
-                    use_container_width=True,
-                    hide_index=True
-                )
-            else:
-                st.info("ℹ️ Para visualizar el detalle de **Lotes FEFO**, cargue el Excel de Lotes y ejecute el cruce en la pestaña **'Cruce de Lote'**.")
+            st.info("ℹ️ Para visualizar el detalle de **Lotes FEFO** de sus pedidos, cargue los archivos y ejecute el cruce en la pestaña **'Cruce de Lote'**.")
 
     elif sub_tab_lotes == "📈 Stock Maestro Bodega":
         col_space, col_search_unif = st.columns([6, 4])
         with col_search_unif:
             search_unif_query = st.text_input("Buscar producto maestro", placeholder="🔍 Buscar código, SKU o producto...", label_visibility="collapsed", key="search_unif_input")
 
-        if 'df_unif_raw' in st.session_state and st.session_state['df_unif_raw'] is not None:
+        if 'df_unif_raw' in st.session_state and st.session_state['df_unif_raw'] is not None and 'productos_pedidos_set' in st.session_state:
             df_u_view = st.session_state['df_unif_raw'].copy()
+            
+            # Filtrar el stock maestro únicamente a los productos que están en los pedidos de servicios cargados
+            df_u_view['clean_name'] = df_u_view['Producto'].apply(clean_exact)
+            df_u_view = df_u_view[df_u_view['clean_name'].isin(st.session_state['productos_pedidos_set'])]
+            df_u_view = df_u_view.drop(columns=['clean_name'])
+
             if search_unif_query:
                 uq = search_unif_query.upper()
                 cols_str = [c for c in df_u_view.columns if df_u_view[c].dtype == object]
@@ -1070,7 +1051,7 @@ elif selected_tab == "📊 Lotes & Bodega":
 
             st.dataframe(df_u_view, use_container_width=True, hide_index=True)
         else:
-            st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega**, cargue el archivo Excel Unificado en la pestaña **'Cruce de Lote'**.")
+            st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega** filtrado por sus pedidos, ejecute primero el cruce en la pestaña **'Cruce de Lote'**.")
 
 # 4. ACTAS OFICIALES
 elif selected_tab == "📄 Actas Oficiales":
