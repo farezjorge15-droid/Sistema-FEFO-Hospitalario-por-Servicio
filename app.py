@@ -76,35 +76,6 @@ st.markdown("""
         margin-bottom: 0;
     }
 
-    /* Tarjetas de Carga Estilo "Página 2.png" */
-    .upload-card-blue {
-        background: rgba(255, 255, 255, 0.95);
-        border: 1.5px solid #b3d7ff;
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.08);
-        margin-bottom: 15px;
-        min-height: 280px;
-    }
-    .upload-card-green {
-        background: rgba(255, 255, 255, 0.95);
-        border: 1.5px solid #b8eac8;
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.08);
-        margin-bottom: 15px;
-        min-height: 280px;
-    }
-    .upload-card-purple {
-        background: rgba(255, 255, 255, 0.95);
-        border: 1.5px solid #d4bfff;
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(111, 66, 38, 0.08);
-        margin-bottom: 15px;
-        min-height: 280px;
-    }
-
     /* Botón Ejecutar Estilizado */
     .stButton > button {
         background: linear-gradient(135deg, #1f4e78 0%, #007bff 100%);
@@ -667,7 +638,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 if selected_tab == "🏠 Inicio":
     st.write("") # Pantalla limpia sin información
 
-# 2. CRUCE DE LOTE (CON LAS 3 TARJETAS HORIZONTALES)
+# 2. CRUCE DE LOTE (CON LAS 3 TARJETAS NATIVAS)
 elif selected_tab == "📚 Cruce de Lote":
     st.markdown("""
     <div class="hospital-header">
@@ -678,45 +649,39 @@ elif selected_tab == "📚 Cruce de Lote":
 
     st.markdown("### 📂 Carga de Archivos Institucionales")
     
-    # Distribución en 3 columnas horizontales con tarjetas de colores
+    # Distribución en 3 columnas horizontales usando contenedores nativos con borde
     col_card1, col_card2, col_card3 = st.columns(3)
 
     with col_card1:
-        st.markdown('<div class="upload-card-blue">', unsafe_allow_html=True)
-        st.markdown("📄 **1. Pedidos en PDF (Hasta 30+)**")
-        st.markdown("<span style='font-size:0.85rem; color:#555;'>Solicitudes de despacho con servicios (Emergencia, UCI, etc.) y firmas electrónicas.</span>", unsafe_allow_html=True)
-        uploaded_pdfs = st.file_uploader(
-            "Cargar PDFs de Pedidos", 
-            type=["pdf"], 
-            accept_multiple_files=True, 
-            key="unique_pdfs_key",
-            label_visibility="collapsed"
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("📄 **1. Pedidos en PDF (Hasta 30+)**")
+            st.markdown("<span style='font-size:0.82rem; color:#555;'>Solicitudes de despacho con servicios y firmas electrónicas.</span>", unsafe_allow_html=True)
+            uploaded_pdfs = st.file_uploader(
+                "Cargar PDFs de Pedidos", 
+                type=["pdf"], 
+                accept_multiple_files=True, 
+                key="unique_pdfs_key"
+            )
 
     with col_card2:
-        st.markdown('<div class="upload-card-green">', unsafe_allow_html=True)
-        st.markdown("📊 **2. Excel de Lotes (FEFO)**")
-        st.markdown("<span style='font-size:0.85rem; color:#555;'>Columnas requeridas: Producto, Lote, F. Cad, Existen.</span>", unsafe_allow_html=True)
-        uploaded_lotes = st.file_uploader(
-            "Cargar Excel de Lotes", 
-            type=["xlsx", "xls"], 
-            key="unique_lotes_key",
-            label_visibility="collapsed"
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("📊 **2. Excel de Lotes (FEFO)**")
+            st.markdown("<span style='font-size:0.82rem; color:#555;'>Columnas: Producto, Lote, F. Cad, Existen.</span>", unsafe_allow_html=True)
+            uploaded_lotes = st.file_uploader(
+                "Cargar Excel de Lotes", 
+                type=["xlsx", "xls"], 
+                key="unique_lotes_key"
+            )
 
     with col_card3:
-        st.markdown('<div class="upload-card-purple">', unsafe_allow_html=True)
-        st.markdown("📈 **3. Excel Unificado / Stock Bodega**")
-        st.markdown("<span style='font-size:0.85rem; color:#555;'>Columnas requeridas: Producto, Código, SKU, Stock Bodega.</span>", unsafe_allow_html=True)
-        uploaded_unificado = st.file_uploader(
-            "Cargar Excel Unificado", 
-            type=["xlsx", "xls"], 
-            key="unique_unificado_key",
-            label_visibility="collapsed"
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("📈 **3. Excel Unificado / Stock**")
+            st.markdown("<span style='font-size:0.82rem; color:#555;'>Columnas: Producto, Código, SKU, Stock Bodega.</span>", unsafe_allow_html=True)
+            uploaded_unificado = st.file_uploader(
+                "Cargar Excel Unificado", 
+                type=["xlsx", "xls"], 
+                key="unique_unificado_key"
+            )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
