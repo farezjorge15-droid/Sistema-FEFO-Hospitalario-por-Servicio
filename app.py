@@ -24,101 +24,104 @@ st.set_page_config(
 )
 
 # ==========================================
-# INYECCIÓN DE ESTILOS CSS PERSONALIZADOS (FONDO DE PANTALLA)
+# DISEÑO Y ESTILOS CSS (DISEÑO HOSPITALARIO MODERNO)
 # ==========================================
 st.markdown("""
 <style>
-    /* Fondo de pantalla con la imagen del hospital y degradado desvanecido */
+    /* Fondo con la imagen institucional y degradado de lectura */
     .stApp {
-        background: linear-gradient(to right, rgba(255, 255, 255, 0.92) 35%, rgba(255, 255, 255, 0.35) 75%), 
+        background: linear-gradient(to right, rgba(255, 255, 255, 0.94) 36%, rgba(255, 255, 255, 0.45) 75%), 
                     url("https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }
 
-    /* Header principal */
-    .main-header {
-        background: linear-gradient(135deg, rgba(31, 78, 120, 0.95) 0%, rgba(0, 123, 255, 0.95) 100%);
-        padding: 24px;
+    /* Cabecera Principal */
+    .hospital-header {
+        background: linear-gradient(135deg, #163a5f 0%, #1f4e78 100%);
+        padding: 26px 30px;
         border-radius: 12px;
         color: white;
         margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+        border-left: 6px solid #007bff;
     }
-    .main-header h1 {
-        color: #FFFFFF !important;
+    .hospital-header h1 {
+        color: #ffffff !important;
         font-weight: 700;
-        font-size: 1.9rem;
+        font-size: 1.85rem;
         margin: 0;
     }
-    .main-header p {
-        color: #D9E8F5;
+    .hospital-header p {
+        color: #e0effe;
         font-size: 0.95rem;
-        margin-top: 5px;
+        margin-top: 6px;
         margin-bottom: 0;
     }
 
-    /* Tarjetas de métricas/resumen con fondo translúcido */
-    .metric-card {
-        background-color: rgba(255, 255, 255, 0.9);
-        border-left: 5px solid #1F4E78;
+    /* Tarjetas de estado / métricas */
+    .status-card {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid #dcdcdc;
+        border-left: 4px solid #1f4e78;
         padding: 16px;
         border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         margin-bottom: 15px;
-        backdrop-filter: blur(5px);
+        backdrop-filter: blur(4px);
     }
-    .metric-card h4 {
-        color: #555555;
-        font-size: 0.85rem;
-        margin: 0 0 5px 0;
+    .status-card h4 {
+        color: #444444;
+        font-size: 0.8rem;
+        margin: 0 0 6px 0;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-    .metric-card .value {
-        color: #1F4E78;
-        font-size: 1.4rem;
+    .status-card .val {
+        color: #1f4e78;
+        font-size: 1.25rem;
         font-weight: 700;
     }
 
-    /* Modificación de la barra lateral */
+    /* Panel Lateral (Sidebar) */
     [data-testid="stSidebar"] {
-        background-color: rgba(235, 243, 250, 0.95);
-        backdrop-filter: blur(8px);
-        padding-top: 10px;
+        background-color: rgba(238, 244, 250, 0.96);
+        backdrop-filter: blur(10px);
+        border-right: 1px solid #d0e1f9;
+        padding-top: 15px;
     }
-    .sidebar-title {
+    .sidebar-heading {
         font-weight: 700;
-        color: #1F4E78;
-        font-size: 1.1rem;
-        margin-bottom: 10px;
-        border-bottom: 2px solid #1F4E78;
-        padding-bottom: 5px;
+        color: #1f4e78;
+        font-size: 1.05rem;
+        margin-bottom: 12px;
+        border-bottom: 2px solid #1f4e78;
+        padding-bottom: 6px;
     }
 
-    /* Botones primarios */
+    /* Botones Interactivos */
     .stButton > button {
-        background: linear-gradient(135deg, #1F4E78 0%, #007BFF 100%);
+        background: linear-gradient(135deg, #1f4e78 0%, #007bff 100%);
         color: white !important;
         border: none;
         border-radius: 8px;
         font-weight: 600;
-        padding: 10px 24px;
+        padding: 10px 20px;
         transition: all 0.3s ease;
         width: 100%;
         box-shadow: 0 3px 6px rgba(0,0,0,0.1);
     }
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 5px 12px rgba(0,0,0,0.18);
     }
 </style>
 """, unsafe_allow_html=True)
 
 
 # ==========================================
-# FUNCIONES LÓGICAS (SISTEMA BASE FEFO)
+# FUNCIONES LÓGICAS (MOTOR FEFO ORIGINAL)
 # ==========================================
 def cargar_excel_seguro(file_bytes):
     try:
@@ -282,7 +285,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                         validado_por = firmantes_custom.get('validado_por', validado_por)
                         entregado_por = firmantes_custom.get('entregado_por', entregado_por)
 
-            # Extracción robusta para PDFs normales y firmados electrónicamente (_signed.pdf)
             idx_tabla = pdf_text.find("Nro.")
             if idx_tabla == -1:
                 idx_tabla = pdf_text.find("N°")
@@ -308,7 +310,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                     })
                     clean_blob = clean_blob.replace(m.group(0), "", 1)
                 else:
-                    # Respaldo secundario flexible para PDFs firmados con variaciones en formato
                     pattern_alt = rf'(?:^|\s){i}\s+(.+?)\s+(\d+)\s+(\d+)'
                     m_alt = re.search(pattern_alt, clean_blob)
                     if m_alt and i > 2:
@@ -623,19 +624,17 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 
 # ==========================================
-# INTERFAZ GRÁFICA (HEADER PRINCIPAL)
+# INTERFAZ GRÁFICA (DISEÑO VISUAL Y ESTRUCTURA)
 # ==========================================
 st.markdown("""
-<div class="main-header">
+<div class="hospital-header">
     <h1>🏥 Sistema de Gestión FEFO & Cruce de Pedidos</h1>
     <p>Hospital Provincial General Docente Vicente Corral Moscoso | Control Automatizado de Inventarios y Dispensación</p>
 </div>
 """, unsafe_allow_html=True)
 
-# ==========================================
 # BARRA LATERAL (SIDEBAR)
-# ==========================================
-st.sidebar.markdown('<div class="sidebar-title">📂 Carga de Archivos</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div class="sidebar-heading">📂 Carga de Archivos</div>', unsafe_allow_html=True)
 
 uploaded_lotes = st.sidebar.file_uploader(
     "1. Excel de Lotes (Stock con F. Caducidad)", 
@@ -657,7 +656,7 @@ uploaded_pdfs = st.sidebar.file_uploader(
 )
 
 st.sidebar.markdown("<br>", unsafe_allow_html=True)
-st.sidebar.markdown('<div class="sidebar-title">✍️ Personalización de Actas</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div class="sidebar-heading">✍️ Personalización de Actas</div>', unsafe_allow_html=True)
 
 with st.sidebar.expander("📝 Configurar Responsables de Firma"):
     custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
@@ -668,9 +667,7 @@ st.sidebar.markdown("<br>", unsafe_allow_html=True)
 btn_procesar = st.sidebar.button("🚀 Ejecutar Procesamiento FEFO", key="unique_process_btn_key")
 
 
-# ==========================================
 # CUERPO PRINCIPAL & PESTAÑAS
-# ==========================================
 tab_main, tab_details, tab_help = st.tabs(["⚡ Procesador & Descargas", "📊 Resumen de Carga", "ℹ️ Guía & Ayuda"])
 
 with tab_main:
@@ -678,26 +675,26 @@ with tab_main:
     
     with col1:
         st.markdown(f"""
-        <div class="metric-card">
+        <div class="status-card">
             <h4>1. Excel Lotes</h4>
-            <div class="value">{'✅ Carga lista' if uploaded_lotes else '❌ Pendiente'}</div>
+            <div class="val">{'✅ Listo' if uploaded_lotes else '❌ Pendiente'}</div>
         </div>
         """, unsafe_allow_html=True)
         
     with col2:
         st.markdown(f"""
-        <div class="metric-card">
+        <div class="status-card">
             <h4>2. Excel Unificado</h4>
-            <div class="value">{'✅ Carga lista' if uploaded_unificado else '❌ Pendiente'}</div>
+            <div class="val">{'✅ Listo' if uploaded_unificado else '❌ Pendiente'}</div>
         </div>
         """, unsafe_allow_html=True)
 
     with col3:
         cant_pdfs = len(uploaded_pdfs) if uploaded_pdfs else 0
         st.markdown(f"""
-        <div class="metric-card">
+        <div class="status-card">
             <h4>3. Pedidos PDF</h4>
-            <div class="value">{f'📄 {cant_pdfs} cargados' if cant_pdfs > 0 else '❌ Pendiente'}</div>
+            <div class="val">{f'📄 {cant_pdfs} cargados' if cant_pdfs > 0 else '❌ Pendiente'}</div>
         </div>
         """, unsafe_allow_html=True)
 
