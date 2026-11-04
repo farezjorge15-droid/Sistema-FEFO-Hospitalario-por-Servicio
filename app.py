@@ -20,11 +20,11 @@ st.set_page_config(
     page_title="Sistema FEFO | Hospital Vicente Corral Moscoso",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # ==========================================
-# DISEÑO Y ESTILOS CSS (NAVBAR & INTERFAZ)
+# DISEÑO Y ESTILOS CSS (ESTÉTICA DE TARJETAS)
 # ==========================================
 st.markdown("""
 <style>
@@ -52,12 +52,6 @@ st.markdown("""
         text-align: right;
     }
 
-    /* Estilo personalizado para el menú horizontal (Pestañas superiores) */
-    div.row-widget.stRadio > div {
-        flex-direction: row;
-        gap: 15px;
-    }
-
     /* Cabecera Principal */
     .hospital-header {
         background: linear-gradient(135deg, #163a5f 0%, #1f4e78 100%);
@@ -82,61 +76,50 @@ st.markdown("""
         margin-bottom: 0;
     }
 
-    /* Tarjetas de Estado */
-    .status-card {
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid #dcdcdc;
-        border-left: 4px solid #1f4e78;
-        padding: 16px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    /* Tarjetas de Carga Estilo "Página 2.png" */
+    .upload-card-blue {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1.5px solid #b3d7ff;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.08);
         margin-bottom: 15px;
-        backdrop-filter: blur(4px);
+        min-height: 280px;
     }
-    .status-card h4 {
-        color: #444444;
-        font-size: 0.8rem;
-        margin: 0 0 6px 0;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+    .upload-card-green {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1.5px solid #b8eac8;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.08);
+        margin-bottom: 15px;
+        min-height: 280px;
     }
-    .status-card .val {
-        color: #1f4e78;
-        font-size: 1.25rem;
-        font-weight: 700;
-    }
-
-    /* Panel Lateral (Sidebar) */
-    [data-testid="stSidebar"] {
-        background-color: rgba(238, 244, 250, 0.96);
-        backdrop-filter: blur(10px);
-        border-right: 1px solid #d0e1f9;
-        padding-top: 15px;
-    }
-    .sidebar-heading {
-        font-weight: 700;
-        color: #1f4e78;
-        font-size: 1.05rem;
-        margin-bottom: 12px;
-        border-bottom: 2px solid #1f4e78;
-        padding-bottom: 6px;
+    .upload-card-purple {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1.5px solid #d4bfff;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(111, 66, 38, 0.08);
+        margin-bottom: 15px;
+        min-height: 280px;
     }
 
-    /* Botón Ejecutar en Sidebar */
+    /* Botón Ejecutar Estilizado */
     .stButton > button {
         background: linear-gradient(135deg, #1f4e78 0%, #007bff 100%);
         color: white !important;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         font-weight: 600;
-        padding: 10px 20px;
+        padding: 12px 24px;
         transition: all 0.3s ease;
         width: 100%;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 12px rgba(0,0,0,0.18);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.22);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -677,55 +660,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 
 # ==========================================
-# GESTIÓN CONDICIONAL DE LA BARRA LATERAL (SIDEBAR)
-# ==========================================
-uploaded_lotes = None
-uploaded_unificado = None
-uploaded_pdfs = None
-custom_elab = "RESPONSABLE DE SERVICIO"
-custom_entre = "GUARDALMACÉN / DESPACHADOR"
-custom_vali = "XIMENA KARINA CABRERA ZENTENO"
-btn_procesar = False
-
-# La barra lateral solo se dibuja y acepta archivos si estamos en la pestaña "Cruce de Lote"
-if selected_tab == "📚 Cruce de Lote":
-    st.sidebar.markdown('<div class="sidebar-heading">📂 Carga de Archivos</div>', unsafe_allow_html=True)
-
-    uploaded_lotes = st.sidebar.file_uploader(
-        "1. Excel de Lotes (Stock con F. Caducidad)", 
-        type=["xlsx", "xls"], 
-        key="unique_lotes_key"
-    )
-
-    uploaded_unificado = st.sidebar.file_uploader(
-        "2. Excel Unificado / Stock Bodega", 
-        type=["xlsx", "xls"], 
-        key="unique_unificado_key"
-    )
-
-    uploaded_pdfs = st.sidebar.file_uploader(
-        "3. Pedidos de Servicios (PDFs Múltiples)", 
-        type=["pdf"], 
-        accept_multiple_files=True, 
-        key="unique_pdfs_key"
-    )
-
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-    st.sidebar.markdown('<div class="sidebar-heading">✍️ Personalización de Actas</div>', unsafe_allow_html=True)
-
-    with st.sidebar.expander("📝 Configurar Responsables de Firma"):
-        custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
-        custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
-        custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
-
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-    btn_procesar = st.sidebar.button("🚀 Ejecutar Procesamiento FEFO", key="unique_process_btn_key")
-else:
-    # En cualquier otra pestaña, vaciamos/limpiamos la barra lateral para que no aparezca nada
-    st.sidebar.empty()
-
-
-# ==========================================
 # RENDERIZADO DE CONTENIDO SEGÚN LA PESTAÑA ACTIVA
 # ==========================================
 
@@ -733,7 +667,7 @@ else:
 if selected_tab == "🏠 Inicio":
     st.write("") # Pantalla limpia sin información
 
-# 2. CRUCE DE LOTE
+# 2. CRUCE DE LOTE (CON LAS 3 TARJETAS HORIZONTALES)
 elif selected_tab == "📚 Cruce de Lote":
     st.markdown("""
     <div class="hospital-header">
@@ -742,33 +676,70 @@ elif selected_tab == "📚 Cruce de Lote":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### 📋 Resumen del Estado de Carga")
-    col1, col2, col3 = st.columns(3)
+    st.markdown("### 📂 Carga de Archivos Institucionales")
     
-    with col1:
-        st.markdown(f"""
-        <div class="status-card">
-            <h4>1. Excel Lotes</h4>
-            <div class="val">{'✅ Listo' if uploaded_lotes else '❌ Pendiente'}</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with col2:
-        st.markdown(f"""
-        <div class="status-card">
-            <h4>2. Excel Unificado</h4>
-            <div class="val">{'✅ Listo' if uploaded_unificado else '❌ Pendiente'}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    # Distribución en 3 columnas horizontales con tarjetas de colores
+    col_card1, col_card2, col_card3 = st.columns(3)
 
-    with col3:
-        cant_pdfs = len(uploaded_pdfs) if uploaded_pdfs else 0
-        st.markdown(f"""
-        <div class="status-card">
-            <h4>3. Pedidos PDF</h4>
-            <div class="val">{f'📄 {cant_pdfs} cargados' if cant_pdfs > 0 else '❌ Pendiente'}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    with col_card1:
+        st.markdown('<div class="upload-card-blue">', unsafe_allow_html=True)
+        st.markdown("📄 **1. Pedidos en PDF (Hasta 30+)**")
+        st.markdown("<span style='font-size:0.85rem; color:#555;'>Solicitudes de despacho con servicios (Emergencia, UCI, etc.) y firmas electrónicas.</span>", unsafe_allow_html=True)
+        uploaded_pdfs = st.file_uploader(
+            "Cargar PDFs de Pedidos", 
+            type=["pdf"], 
+            accept_multiple_files=True, 
+            key="unique_pdfs_key",
+            label_visibility="collapsed"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_card2:
+        st.markdown('<div class="upload-card-green">', unsafe_allow_html=True)
+        st.markdown("📊 **2. Excel de Lotes (FEFO)**")
+        st.markdown("<span style='font-size:0.85rem; color:#555;'>Columnas requeridas: Producto, Lote, F. Cad, Existen.</span>", unsafe_allow_html=True)
+        uploaded_lotes = st.file_uploader(
+            "Cargar Excel de Lotes", 
+            type=["xlsx", "xls"], 
+            key="unique_lotes_key",
+            label_visibility="collapsed"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_card3:
+        st.markdown('<div class="upload-card-purple">', unsafe_allow_html=True)
+        st.markdown("📈 **3. Excel Unificado / Stock Bodega**")
+        st.markdown("<span style='font-size:0.85rem; color:#555;'>Columnas requeridas: Producto, Código, SKU, Stock Bodega.</span>", unsafe_allow_html=True)
+        uploaded_unificado = st.file_uploader(
+            "Cargar Excel Unificado", 
+            type=["xlsx", "xls"], 
+            key="unique_unificado_key",
+            label_visibility="collapsed"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Configuración opcional de firmantes
+    with st.expander("✍️ Configuración Opcional de Responsables de Firma en Actas"):
+        c_f1, c_f2, c_f3 = st.columns(3)
+        with c_f1:
+            custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
+        with c_f2:
+            custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
+        with c_f3:
+            custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
+    else:
+        custom_elab = "RESPONSABLE DE SERVICIO"
+        custom_entre = "GUARDALMACÉN / DESPACHADOR"
+        custom_vali = "XIMENA KARINA CABRERA ZENTENO"
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Botón principal de ejecución
+    col_btn_center = st.columns([1, 2, 1])
+    with col_btn_center[1]:
+        btn_procesar = st.button("🚀 Ejecutar Procesamiento FEFO", key="unique_process_btn_key")
 
     st.markdown("---")
 
@@ -824,9 +795,7 @@ elif selected_tab == "📚 Cruce de Lote":
                 else:
                     st.error("🚨 No se pudieron generar los resultados. Asegúrese de que las estructuras internas de las tablas de los Excel sean correctas.")
         else:
-            st.warning("⚠️ **Requisito incompleto:** Por favor, cargue los tres tipos de archivo solicitados en el menú lateral antes de continuar.")
-    else:
-        st.info("👈 Cargue los archivos requeridos en el panel lateral y presione **'Ejecutar Procesamiento FEFO'**.")
+            st.warning("⚠️ **Requisito incompleto:** Por favor, cargue los tres tipos de archivo en sus respectivas tarjetas antes de ejecutar el proceso.")
 
 # 3. LOTES & BODEGA
 elif selected_tab == "📊 Lotes & Bodega":
@@ -843,7 +812,7 @@ elif selected_tab == "📄 Actas Oficiales":
         st.download_button(
             label="📄 Descargar Actas Consolidadas (PDF)",
             data=st.session_state['pdf_res'],
-            file_name="Actas_Oficiales_Consolidadas.pdf",
+            file_name="Actas_Oficiales_Consolidas.pdf",
             mime="application/pdf",
             key="tab_dl_pdf_key",
             use_container_width=True
