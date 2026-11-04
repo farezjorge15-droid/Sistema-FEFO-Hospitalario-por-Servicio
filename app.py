@@ -24,11 +24,11 @@ st.set_page_config(
 )
 
 # ==========================================
-# DISEÑO Y ESTILOS CSS (DISEÑO HOSPITALARIO MODERNO)
+# DISEÑO Y ESTILOS CSS (NAVBAR & INTERFAZ)
 # ==========================================
 st.markdown("""
 <style>
-    /* Fondo con la imagen institucional y degradado de lectura */
+    /* Fondo con imagen institucional */
     .stApp {
         background: linear-gradient(to right, rgba(255, 255, 255, 0.94) 36%, rgba(255, 255, 255, 0.45) 75%), 
                     url("https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752");
@@ -37,12 +37,44 @@ st.markdown("""
         background-attachment: fixed;
     }
 
+    /* Ocultar margen superior predeterminado */
+    .block-container {
+        padding-top: 1rem !important;
+    }
+
+    /* Estilos del texto institucional derecho */
+    .header-right-text {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #3f5973;
+        font-size: 0.92rem;
+        font-weight: 500;
+        margin-top: 6px;
+        text-align: right;
+    }
+
+    /* Estilo del botón de Reiniciar */
+    div[data-testid="stButton"] > button.reset-btn {
+        background-color: #f0f4f8 !important;
+        color: #1f4e78 !important;
+        border: 1px solid #d0dfed !important;
+        border-radius: 20px !important;
+        font-weight: 600 !important;
+        font-size: 0.88rem !important;
+        padding: 6px 18px !important;
+        box-shadow: none !important;
+    }
+    div[data-testid="stButton"] > button.reset-btn:hover {
+        background-color: #e2ebf4 !important;
+        border-color: #1f4e78 !important;
+    }
+
     /* Cabecera Principal */
     .hospital-header {
         background: linear-gradient(135deg, #163a5f 0%, #1f4e78 100%);
-        padding: 26px 30px;
+        padding: 24px 28px;
         border-radius: 12px;
         color: white;
+        margin-top: 10px;
         margin-bottom: 25px;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
         border-left: 6px solid #007bff;
@@ -60,7 +92,7 @@ st.markdown("""
         margin-bottom: 0;
     }
 
-    /* Tarjetas de estado / métricas */
+    /* Tarjetas de Estado */
     .status-card {
         background: rgba(255, 255, 255, 0.92);
         border: 1px solid #dcdcdc;
@@ -100,7 +132,7 @@ st.markdown("""
         padding-bottom: 6px;
     }
 
-    /* Botones Interactivos */
+    /* Botón Ejecutar en Sidebar */
     .stButton > button {
         background: linear-gradient(135deg, #1f4e78 0%, #007bff 100%);
         color: white !important;
@@ -118,6 +150,31 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+
+# ==========================================
+# BARRA DE NAVEGACIÓN SUPERIOR (NAVBAR)
+# ==========================================
+# Fila superior con divisiones y botón de reinicio
+col_nav_tabs, col_reset, col_location = st.columns([7, 1.8, 2.2])
+
+with col_reset:
+    if st.button("🔄 Reiniciar", key="btn_reset_page"):
+        st.rerun()
+
+with col_location:
+    st.markdown('<div class="header-right-text">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
+
+st.markdown("<hr style='margin-top: -10px; margin-bottom: 10px; border-color: #e1e8f0;'>", unsafe_allow_html=True)
+
+# Pestañas de la barra de navegación superior (según tu imagen)
+tab_inicio, tab_cruce, tab_bodega, tab_actas, tab_normativa = st.tabs([
+    "🏠 Inicio", 
+    "📚 Cruce de Lote", 
+    "📊 Lotes & Bodega", 
+    "📄 Actas Oficiales", 
+    "🛡️ Normativa FEFO"
+])
 
 
 # ==========================================
@@ -624,16 +681,8 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 
 # ==========================================
-# INTERFAZ GRÁFICA (DISEÑO VISUAL Y ESTRUCTURA)
+# BARRA LATERAL (SIDEBAR DE ARCHIVOS)
 # ==========================================
-st.markdown("""
-<div class="hospital-header">
-    <h1>🏥 Sistema de Gestión FEFO & Cruce de Pedidos</h1>
-    <p>Hospital Provincial General Docente Vicente Corral Moscoso | Control Automatizado de Inventarios y Dispensación</p>
-</div>
-""", unsafe_allow_html=True)
-
-# BARRA LATERAL (SIDEBAR)
 st.sidebar.markdown('<div class="sidebar-heading">📂 Carga de Archivos</div>', unsafe_allow_html=True)
 
 uploaded_lotes = st.sidebar.file_uploader(
@@ -667,10 +716,20 @@ st.sidebar.markdown("<br>", unsafe_allow_html=True)
 btn_procesar = st.sidebar.button("🚀 Ejecutar Procesamiento FEFO", key="unique_process_btn_key")
 
 
-# CUERPO PRINCIPAL & PESTAÑAS
-tab_main, tab_details, tab_help = st.tabs(["⚡ Procesador & Descargas", "📊 Resumen de Carga", "ℹ️ Guía & Ayuda"])
+# ==========================================
+# CONTENIDO DE PESTAÑAS PRINCIPALES
+# ==========================================
 
-with tab_main:
+# 1. PESTAÑA INICIO
+with tab_inicio:
+    st.markdown("""
+    <div class="hospital-header">
+        <h1>🏥 Sistema de Gestión FEFO & Cruce de Pedidos</h1>
+        <p>Hospital Provincial General Docente Vicente Corral Moscoso | Control Automatizado de Inventarios y Dispensación</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("### 📋 Resumen del Estado de Carga")
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -723,10 +782,11 @@ with tab_main:
                 )
 
                 if excel_res and pdf_res:
+                    st.session_state['excel_res'] = excel_res
+                    st.session_state['pdf_res'] = pdf_res
                     st.success("🎉 **¡Procesamiento finalizado con éxito!** Se han asignado los lotes óptimos FEFO y generado las actas.")
                     
                     st.markdown("### 📥 Descarga de Consolidados e Informes")
-                    
                     col_down1, col_down2 = st.columns(2)
                     
                     with col_down1:
@@ -755,8 +815,17 @@ with tab_main:
     else:
         st.info("👈 Cargue los archivos requeridos en el panel lateral y presione **'Ejecutar Procesamiento FEFO'**.")
 
-with tab_details:
-    st.markdown("### 📋 Archivos Seleccionados para el Proceso")
+# 2. PESTAÑA CRUCE DE LOTE
+with tab_cruce:
+    st.markdown("### 📚 Panel de Cruce e Inspección de Lotes")
+    if 'excel_res' in st.session_state:
+        st.success("Los lotes han sido cruzados y procesados. Puede proceder con la descarga desde el panel de Inicio o desde aquí.")
+    else:
+        st.info("Cargue los archivos en la barra lateral y ejecute el proceso para visualizar el cruce de información.")
+
+# 3. PESTAÑA LOTES & BODEGA
+with tab_bodega:
+    st.markdown("### 📊 Detalle de Archivos de Bodega y Stock")
     if uploaded_lotes or uploaded_unificado or uploaded_pdfs:
         datos_archivos = []
         if uploaded_lotes:
@@ -769,19 +838,31 @@ with tab_details:
         
         st.dataframe(pd.DataFrame(datos_archivos), use_container_width=True)
     else:
-        st.write("Aún no ha subido ningún archivo.")
+        st.write("No hay archivos subidos actualmente.")
 
-with tab_help:
+# 4. PESTAÑA ACTAS OFICIALES
+with tab_actas:
+    st.markdown("### 📄 Generación y Descarga de Actas Oficiales")
+    if 'pdf_res' in st.session_state:
+        st.download_button(
+            label="📄 Descargar Actas Consolidadas (PDF)",
+            data=st.session_state['pdf_res'],
+            file_name="Actas_Oficiales_Consolidadas.pdf",
+            mime="application/pdf",
+            key="tab_dl_pdf_key",
+            use_container_width=True
+        )
+    else:
+        st.info("Una vez ejecutado el cruce FEFO, podrá descargar las actas firmadas desde esta sección.")
+
+# 5. PESTAÑA NORMATIVA FEFO
+with tab_normativa:
     st.markdown("""
-    ### ℹ️ Acerca de esta herramienta
+    ### 🛡️ Normativa y Algoritmo FEFO (*First Expired, First Out*)
 
-    Este sistema automatiza el **despacho FEFO (*First Expired, First Out / Primero en Caducar, Primero en Salir*)** para farmacia y bodega médica hospitalaria.
-
-    #### 🔄 Flujo de Trabajo:
-    1. **Asignación Automática**: Selecciona automáticamente los lotes más próximos a vencer para atender los pedidos de los servicios.
-    2. **Control Acumulado**: Resta progresivamente las existencias a medida que procesa múltiples PDFs de pedidos en lote.
-    3. **Detección de Faltantes**: Marca con alertas rojas aquellos insumos con stock insuficientes o sin lote disponible.
-    4. **Generación de Formatos**:
-       - **Matriz Excel**: Formato resumido por columnas para bodega.
-       - **Acta PDF**: Documento oficial formateado para impresión con firmas de respaldo.
+    El algoritmo de asignación hospitalaria opera bajo los siguientes lineamientos:
+    
+    1. **Prioridad por Caducidad**: Los lotes con fecha de vencimiento más próxima se despachan primero.
+    2. **Descuento Dinámico**: El stock de bodega se actualiza y descuenta progresivamente tras procesar cada PDF de pedido.
+    3. **Detección de Insumos Críticos**: Alertas visuales destacadas si el stock total o por lote es insuficiente.
     """)
