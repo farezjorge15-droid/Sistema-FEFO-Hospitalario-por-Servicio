@@ -811,7 +811,6 @@ elif selected_tab == "📚 Cruce de Lote":
         num_servicios_val = df_res['Servicio'].nunique()
         num_items_val = len(df_res)
         
-        # Calcular asignados 100% (sin quiebres de stock o faltantes)
         sin_quiebres = df_res[~df_res['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False)]
         lotes_asignados_val = len(sin_quiebres)
         porcentaje_asignados = int((lotes_asignados_val / num_items_val) * 100) if num_items_val > 0 else 0
@@ -850,31 +849,113 @@ elif selected_tab == "📚 Cruce de Lote":
             st.markdown(f"<h2 style='color:#C00000; margin: 0; padding: 5px 0;'>{quiebres_val}</h2>", unsafe_allow_html=True)
             st.markdown("<span style='color:#666; font-size:0.82rem;'>requieren gestión</span>", unsafe_allow_html=True)
 
-    # Mostrar sección de descarga si ya hay resultados procesados
-    if 'excel_res' in st.session_state and 'pdf_res' in st.session_state:
-        st.markdown("---")
-        st.markdown("### 📥 Descarga de Consolidados e Informes")
-        col_down1, col_down2 = st.columns(2)
-        
-        with col_down1:
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ==========================================
+    # SECCIÓN: BARRA DE BÚSQUEDA, FILTRO Y DESCARGAS (PÁGINA 7.PNG)
+    # ==========================================
+    col_search, col_alert_btn, col_dl_excel, col_dl_pdf = st.columns([3.2, 1.8, 2.5, 2.5])
+
+    with col_search:
+        search_query = st.text_input("Búsqueda", placeholder="🔍 Buscar por dispositivo, código, lote o PDF...", label_visibility="collapsed")
+
+    with col_alert_btn:
+        solo_faltantes = st.toggle("⚠️ Solo Faltantes / Alertas", value=False)
+
+    with col_dl_excel:
+        if 'excel_res' in st.session_state:
             st.download_button(
-                label="📊 Descargar Matriz Consolidada (Excel)",
+                label="📊 Descargar Excel (.xlsx)",
                 data=st.session_state['excel_res'],
                 file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="unique_dl_excel_key",
+                key="btn_dl_excel_top",
                 use_container_width=True
             )
-        
-        with col_down2:
+        else:
+            st.button("📊 Descargar Excel (.xlsx)", disabled=True, use_container_width=True, key="btn_dl_excel_dis")
+
+    with col_dl_pdf:
+        if 'pdf_res' in st.session_state:
             st.download_button(
-                label="📄 Descargar Actas Oficiales (PDF)",
+                label="📄 Descargar Actas Oficiales PDF",
                 data=st.session_state['pdf_res'],
                 file_name="Actas_Oficiales_Consolidas.pdf",
                 mime="application/pdf",
-                key="unique_dl_pdf_key",
+                key="btn_dl_pdf_top",
                 use_container_width=True
             )
+        else:
+            st.button("📄 Descargar Actas Oficiales PDF", disabled=True, use_container_width=True, key="btn_dl_pdf_dis")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ==========================================
+    # SECCIÓN: VISOR DE SERVICIOS Y CONTENIDO DE CADA PDF (PÁGINA 7.PNG)
+    # ==========================================
+    if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None:
+        df_display = st.session_state['df_resultado'].copy()
+
+        # Filtrado por búsqueda
+        if search_query:
+            q = search_query.upper()
+            df_display = df_display[
+                df_display['Dispositivo Médico'].str.upper().str.contains(q, na=False) |
+                df_display['Código'].str.upper().str.contains(q, na=False) |
+                df_display['Lotes y Cantidades a Despachar'].str.upper().str.contains(q, na=False) |
+                df_display['PDF Origen'].str.upper().str.contains(q, na=False)
+            ]
+
+        # Filtrado por solo faltantes
+        if solo_faltantes:
+            df_display = df_display[df_display['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False)]
+
+        # Selector de servicios en pestañas horizontales
+        servicios_disponibles = ['TODOS'] + sorted(df_display['Servicio'].unique().tolist())
+        
+        # Conteo de ítems por servicio
+        conteo_serv = df_display['Servicio'].value_counts()
+        
+        selected_serv_tab = st.radio(
+            "Servicios",
+            options=servicios_disponibles,
+            format_func=lambda x: f"TODOS ({len(df_display)})" if x == 'TODOS' else f"{x} ({conteo_serv.get(x, 0)})",
+            horizontal=True,
+            label_visibility="collapsed",
+            key="service_tabs_selector"
+        )
+
+        if selected_serv_tab != 'TODOS':
+            df_display = df_display[df_display['Servicio'] == selected_serv_tab]
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Mostrar tabla interactiva con formato similar a la imagen
+        st.markdown(f"""
+        <div style="background-color: #1f4e78; color: white; padding: 10px 14px; border-top-left-radius: 8px; border-top-right-radius: 8px; font-weight: 600; font-size: 0.85rem;">
+            TABLA DE CRUCE FEFO Y ASIGNACIÓN DE LOTES POR SERVICIO
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Renderizado de la tabla en Streamlit
+        st.dataframe(
+            df_display[['Nro.', 'PDF Origen', 'Servicio', 'Código', 'SKU', 'Dispositivo Médico', 'Cant. Solicitada', 'Cant. Aprobada', 'Lotes y Cantidades a Despachar', 'Fechas de Caducidad', 'Stock Bodega']],
+            use_container_width=True,
+            hide_index=True
+        )
+
+        st.markdown(f"""
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 4px; font-size: 0.85rem; color: #555;">
+            <div>Mostrando <b>{len(df_display)}</b> de <b>{num_items_val}</b> ítems evaluados</div>
+            <div style="display: flex; gap: 15px;">
+                <span><span style="display:inline-block; width:10px; height:10px; background-color:#FCE4D6; border:1px solid #C00000; border-radius:2px;"></span> Alerta de Stock Cero / Insuficiente</span>
+                <span><span style="display:inline-block; width:10px; height:10px; background-color:#ffffff; border:1px solid #ccc; border-radius:2px;"></span> Stock Conforme FEFO</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    else:
+        st.info("📂 Cargue sus archivos PDF, el Excel de Lotes y el Excel Unificado en las tarjetas superiores, y presione **'Ejecutar Cruce Hospitalario en Lote'** para desplegar el contenido detallado por servicios.")
 
 # 3. LOTES & BODEGA
 elif selected_tab == "📊 Lotes & Bodega":
