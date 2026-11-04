@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# DISEÑO Y ESTILOS CSS (ESTÉTICA DE TARJETAS)
+# DISEÑO Y ESTILOS CSS (ESTÉTICA INSTITUCIONAL)
 # ==========================================
 st.markdown("""
 <style>
@@ -76,7 +76,7 @@ st.markdown("""
         margin-bottom: 0;
     }
 
-    /* Botón Ejecutar Estilizado (Cruce Hospitalario en Lote) */
+    /* Botón Ejecutar Estilizado */
     .stButton > button {
         background: linear-gradient(135deg, #1f4e78 0%, #163a5f 100%);
         color: white !important;
@@ -638,7 +638,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 if selected_tab == "🏠 Inicio":
     st.write("") # Pantalla limpia sin información
 
-# 2. CRUCE DE LOTE (CON TARJETAS NATIVAS, CHECKBOX Y NUEVO BOTÓN)
+# 2. CRUCE DE LOTE
 elif selected_tab == "📚 Cruce de Lote":
     st.markdown("""
     <div class="hospital-header">
@@ -685,29 +685,86 @@ elif selected_tab == "📚 Cruce de Lote":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Contenedor inferior con el Checkbox y el nuevo botón "Ejecutar Cruce Hospitalario en Lote"
+    # Contenedor inferior con el Checkbox y el botón "Ejecutar Cruce Hospitalario en Lote"
     with st.container(border=True):
-        col_chk, col_btn = st.columns([2.5, 1.5])
+        col_chk, col_btn = st.columns([2.2, 1.8])
         with col_chk:
             st.markdown("<br>", unsafe_allow_html=True)
             chk_descuento = st.checkbox("Descuento acumulativo secuencial de lotes entre pedidos", value=True, key="chk_desc_secuencial")
         with col_btn:
             btn_procesar = st.button("🔄 Ejecutar Cruce Hospitalario en Lote ➔", key="unique_process_btn_key")
 
-    # Configuración opcional de firmantes
-    with st.expander("✍️ Configuración Opcional de Responsables de Firma en Actas"):
-        c_f1, c_f2, c_f3 = st.columns(3)
-        with c_f1:
-            custom_elab = st.text_input("Elaboró / Recibido", "RESPONSABLE DE SERVICIO", key="unique_elab_key")
-        with c_f2:
-            custom_entre = st.text_input("Entregado Bodega", "GUARDALMACÉN / DESPACHADOR", key="unique_entre_key")
-        with c_f3:
-            custom_vali = st.text_input("Validó / Autorizó", "XIMENA KARINA CABRERA ZENTENO", key="unique_vali_key")
-    
-    # Valores por defecto si el expander no está abierto
-    custom_elab = st.session_state.get("unique_elab_key", "RESPONSABLE DE SERVICIO")
-    custom_entre = st.session_state.get("unique_entre_key", "GUARDALMACÉN / DESPACHADOR")
-    custom_vali = st.session_state.get("unique_vali_key", "XIMENA KARINA CABRERA ZENTENO")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ==========================================
+    # SECCIÓN: PERSONALIZAR FIRMANTES DE ACTAS (IMÁGENES 4 Y 5)
+    # ==========================================
+    if 'show_firmantes_config' not in st.session_state:
+        st.session_state['show_firmantes_config'] = False
+
+    with st.container(border=True):
+        col_f_title, col_f_btn = st.columns([8, 2])
+        
+        # Valores actuales en sesión o por defecto
+        def_elab = st.session_state.get('unique_elab_key', "RESPONSABLE DE SERVICIO")
+        def_entre = st.session_state.get('unique_entre_key', "GUARDALMACÉN / DESPACHADOR")
+        def_vali = st.session_state.get('unique_vali_key', "XIMENA KARINA CABRERA ZENTENO")
+
+        with col_f_title:
+            st.markdown("🖋️ **Personalizar Firmantes de Actas** &nbsp;&nbsp; <span style='background-color:#e2ebf4; color:#1f4e78; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:600;'>Activo para todo el lote</span>", unsafe_allow_html=True)
+            if not st.session_state['show_firmantes_config']:
+                st.markdown(f"<span style='color:#555; font-size:0.85rem;'>Elaboró: <b>{def_elab}</b> &nbsp;·&nbsp; Entregó: <b>{def_entre}</b> &nbsp;·&nbsp; Validó: <b>{def_vali}</b></span>", unsafe_allow_html=True)
+
+        with col_f_btn:
+            st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+            if st.session_state['show_firmantes_config']:
+                if st.button("Ocultar ajustes ▴", key="btn_toggle_firmantes"):
+                    st.session_state['show_firmantes_config'] = False
+                    st.rerun()
+            else:
+                if st.button("Configurar ▾", key="btn_toggle_firmantes"):
+                    st.session_state['show_firmantes_config'] = True
+                    st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Panel desplegable al hacer clic en Configurar (Imagen 5.png)
+        if st.session_state['show_firmantes_config']:
+            st.markdown("<hr style='margin: 10px 0; border-color: #eaeaea;'>", unsafe_allow_html=True)
+            
+            col_desc, col_rest = st.columns([7, 3])
+            with col_desc:
+                st.markdown("<span style='color:#555; font-size:0.85rem;'>Define los nombres y cargos de los tres firmantes que figurarán en el acta oficial de dispensación.</span>", unsafe_allow_html=True)
+            with col_rest:
+                if st.button("🔄 Restaurar Predeterminados", key="btn_restaurar_firmas"):
+                    st.session_state['unique_elab_key'] = "RESPONSABLE DE SERVICIO"
+                    st.session_state['unique_entre_key'] = "GUARDALMACÉN / DESPACHADOR"
+                    st.session_state['unique_vali_key'] = "XIMENA KARINA CABRERA ZENTENO"
+                    st.rerun()
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            c_f1, c_f2, c_f3 = st.columns(3)
+            with c_f1:
+                custom_elab = st.text_input("1. Elaboró / Recibido", def_elab, key="unique_elab_key")
+                st.markdown("<span style='color:#777; font-size:0.75rem;'>Líder de turno / Responsable de enfermería</span>", unsafe_allow_html=True)
+            with c_f2:
+                custom_entre = st.text_input("2. Entregado Bodega", def_entre, key="unique_entre_key")
+                st.markdown("<span style='color:#777; font-size:0.75rem;'>Guardalmacén de Farmacia / Bodega Central</span>", unsafe_allow_html=True)
+            with c_f3:
+                custom_vali = st.text_input("3. Validó / Autorizó", def_vali, key="unique_vali_key")
+                st.markdown("<span style='color:#777; font-size:0.75rem;'>Dra. Cabrera &nbsp;·&nbsp; Dr. Deleg Sari</span>", unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            col_chk_force, col_btn_act = st.columns([6, 4])
+            with col_chk_force:
+                st.checkbox("Forzar estos firmantes en todas las actas (sobrescribe los extraídos del PDF)", value=True, key="chk_forzar_firmas")
+            with col_btn_act:
+                if st.button("Actualizar Actas con estos Firmantes", key="btn_actualizar_firmas_action"):
+                    st.success("✅ ¡Firmantes actualizados correctamente para todo el lote!")
+    else:
+        custom_elab = def_elab
+        custom_entre = def_entre
+        custom_vali = def_vali
 
     st.markdown("---")
 
