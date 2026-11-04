@@ -697,7 +697,7 @@ elif selected_tab == "📚 Cruce de Lote":
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ==========================================
-    # SECCIÓN: PERSONALIZAR FIRMANTES DE ACTAS (IMÁGENES 4 Y 5)
+    # SECCIÓN: PERSONALIZAR FIRMANTES DE ACTAS
     # ==========================================
     if 'show_firmantes_config' not in st.session_state:
         st.session_state['show_firmantes_config'] = False
@@ -727,7 +727,7 @@ elif selected_tab == "📚 Cruce de Lote":
                     st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # Panel desplegable al hacer clic en Configurar (Imagen 5.png)
+        # Panel desplegable al hacer clic en Configurar
         if st.session_state['show_firmantes_config']:
             st.markdown("<hr style='margin: 10px 0; border-color: #eaeaea;'>", unsafe_allow_html=True)
             
@@ -761,10 +761,11 @@ elif selected_tab == "📚 Cruce de Lote":
             with col_btn_act:
                 if st.button("Actualizar Actas con estos Firmantes", key="btn_actualizar_firmas_action"):
                     st.success("✅ ¡Firmantes actualizados correctamente para todo el lote!")
-    else:
-        custom_elab = def_elab
-        custom_entre = def_entre
-        custom_vali = def_vali
+
+    # Asignación segura fuera del bloque condicional para evitar errores de sintaxis
+    custom_elab = st.session_state.get('unique_elab_key', def_elab)
+    custom_entre = st.session_state.get('unique_entre_key', def_entre)
+    custom_vali = st.session_state.get('unique_vali_key', def_vali)
 
     st.markdown("---")
 
