@@ -1337,11 +1337,36 @@ elif selected_tab == "📄 Actas Oficiales":
 # 5. NORMATIVA FEFO
 elif selected_tab == "🛡️ Normativa FEFO":
     st.markdown("""
-    ### 🛡️ Normativa y Algoritmo FEFO (*First Expired, First Out*)
+    <div class="hospital-header">
+        <h1>🛡️ Marco Normativo y Legal - Gestión FEFO & Bodega MSP</h1>
+        <p>Lineamientos de Cumplimiento Obligatorio para la Recepción, Almacenamiento, Distribución y Control de Dispositivos Médicos y Medicamentos</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    El algoritmo de asignación hospitalaria opera bajo los siguientes lineamientos:
-    
-    1. **Prioridad por Caducidad**: Los lotes con fecha de vencimiento más próxima se despachan primero.
-    2. **Descuento Dinámico**: El stock de bodega se actualiza y descuenta progresivamente tras procesar cada PDF de pedido.
-    3. **Detección de Insumos Críticos**: Alertas visuales destacadas si el stock total o por lote es insuficiente.
-    """)
+    with st.container(border=True):
+        st.markdown("### ⚖️ 1. Ley Orgánica del Sistema Nacional de Contratación Pública (LOSNCP) y su Reglamento General")
+        st.markdown("""
+        * **Ejecución y Control de Contratos:** Todo bien recibido en el Hospital (adquirido mediante procesos de contratación pública) debe cumplir estrictamente con las especificaciones técnicas, cantidades, plazos y obligaciones estipuladas en el contrato y las órdenes de compra.
+        * **Responsabilidad en la Recepción:** Las actas de entrega-recepción (parciales o definitivas) generan obligaciones legales y administrativas sobre la custodia y administración de los bienes públicos, precautelando los intereses de la institución.
+        * **Trazabilidad:** Garantizar que los insumos provengan de proveedores debidamente adjudicados y legalmente contratados por el hospital.
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown("### 📦 2. Buenas Prácticas de Almacenamiento, Distribución y Transporte (BPADT / BPA / BPD / BPT)")
+        st.markdown("""
+        * **Control Estricto de Fechas de Vencimiento (Algoritmo FEFO):** Obligatoriedad de priorizar la salida y rotación de los insumos y medicamentos con fechas de caducidad más próximas (*First Expired, First Out*), evitando pérdidas por caducidad en percha o bodega.
+        * **Almacenamiento y Conservación:** Los productos deben almacenarse bajo condiciones ambientales controladas (temperatura, humedad y luz), respetando las exigencias del fabricante y normativas sanitarias vigentes.
+        * **Trazabilidad de Lotes:** Registro riguroso de números de lote desde el ingreso al inventario general hasta su dispensación y entrega final a los servicios clínicos, asegurando una respuesta inmediata ante alertas sanitarias o retiros de mercado.
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown("### 🔍 3. Mitigación de Riesgos y Control de Caducidades en el MSP")
+        st.markdown("""
+        * **Alertas Tempranas:** Monitoreo activo y reportes oportunos de saldos con riesgo de caducidad para su redistribución o gestión administrativa antes de su vencimiento.
+        * **Gestión de Quiebres y Stock:** Identificación inmediata de desabastecimientos o quiebres de stock para planificar requerimientos emergentes sin vulnerar la normativa de contratación.
+        * **Responsabilidad Compartida:** Coordinación continua entre el servicio solicitante (quien genera el pedido clínico) y la Bodega / Guardalmacén (quien despacha mediante actas firmadas digitalmente).
+        """, unsafe_allow_html=True)
