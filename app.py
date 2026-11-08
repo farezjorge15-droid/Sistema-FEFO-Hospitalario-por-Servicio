@@ -759,6 +759,80 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 
 # ==========================================
+# DIÁLOGO DE VISTA PREVIA DE ACTA (MODAL TIPO ACTAS 2.PNG)
+# ==========================================
+@st.dialog("Vista Previa de Acta Oficial de Dispensación", width="large")
+def mostrar_modal_acta(meta, df_acta_item):
+    st.markdown(f"<span style='color:#555; font-size:0.85rem;'>Hospital Provincial General Docente Vicente Corral Moscoso &nbsp;·&nbsp; Archivo: <b>{meta['nombre_pdf']}</b></span>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Cabecera superior interna con botones tal como actas 2.png
+    col_dummy, col_edit_f, col_dl_pdf, col_print = st.columns([1.5, 2.5, 2.8, 2.2])
+    
+    pdf_bytes_acta = generar_pdf_individual_acta(meta, df_acta_item)
+
+    with col_edit_f:
+        if st.button("✏️ Editar Firmantes", key=f"modal_edit_{meta['nombre_pdf']}"):
+            st.info("Para editar los firmantes globales, utilice la sección 'Personalizar Firmantes de Actas' en la pestaña Cruce de Lote.")
+    with col_dl_pdf:
+        st.download_button(
+            label="📥 Descargar PDF",
+            data=pdf_bytes_acta,
+            file_name=f"Acta_{meta['nombre_pdf'].replace('.pdf', '')}.pdf",
+            mime="application/pdf",
+            key=f"modal_dl_{meta['nombre_pdf']}",
+            use_container_width=True
+        )
+    with col_print:
+        if st.button("🖨️ Imprimir", key=f"modal_print_{meta['nombre_pdf']}"):
+            st.toast("Abriendo diálogo de impresión del acta...")
+
+    st.markdown("<hr style='margin: 15px 0; border-color: #ddd;'>", unsafe_allow_html=True)
+
+    # Contenido del acta dentro del modal
+    st.markdown("<div style='text-align: center; font-family: Helvetica, sans-serif;'>", unsafe_allow_html=True)
+    st.markdown("<span style='font-size:0.8rem; color:#555; font-weight:600;'>MINISTERIO DE SALUD PÚBLICA DEL ECUADOR</span>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:#163a5f; margin: 4px 0;'>HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO</h3>", unsafe_allow_html=True)
+    st.markdown("<span style='font-size:0.85rem; font-weight:bold; color:#333;'>ACTA OFICIAL DE DISPENSACIÓN Y CRUCE DE STOCK (FEFO)</span>", unsafe_allow_html=True)
+    st.markdown(f"<br><span style='font-size:0.75rem; color:#777;'>Archivo de Origen: {meta['nombre_pdf']}</span>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    col_m_serv, col_m_emi = st.columns([6, 4])
+    with col_m_serv:
+        st.markdown(f"**SERVICIO:** <span style='color:#1f4e78;'>{meta['servicio']}</span>", unsafe_allow_html=True)
+    with col_m_emi:
+        st.markdown(f"**EMISIÓN:** {datetime.datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Tabla adaptada para visualización clara
+    df_tabla_modal = df_acta_item[['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Aprobada', 'Lotes y Cantidades a Despachar', 'Fechas de Caducidad', 'Stock Bodega']].copy()
+    df_tabla_modal.columns = ['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Ap.', 'Lotes & Cantidades a Despachar', 'Fechas Caducidad', 'Stock']
+
+    st.dataframe(df_tabla_modal, use_container_width=True, hide_index=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Firmas en el modal
+    col_s1, col_s2, col_s3 = st.columns(3)
+    with col_s1:
+        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ELABORÓ / RECIBIDO:</b><br>{meta['elaborado_por']}</div>", unsafe_allow_html=True)
+    with col_s2:
+        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ENTREGADO BODEGA:</b><br>{meta['entregado_por']}</div>", unsafe_allow_html=True)
+    with col_s3:
+        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>VALIDÓ / AUTORIZÓ:</b><br>{meta['validado_por']}</div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(f"<span style='font-size:0.8rem; color:#666;'>{len(df_acta_item)} ítems en este pedido</span>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("Cerrar Vista Previa", key=f"close_modal_{meta['nombre_pdf']}", use_container_width=True):
+        st.rerun()
+
+
+# ==========================================
 # RENDERIZADO DE CONTENIDO SEGÚN LA PESTAÑA ACTIVA
 # ==========================================
 
@@ -1127,7 +1201,7 @@ elif selected_tab == "📊 Lotes & Bodega":
         else:
             st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega** filtrado por sus pedidos, ejecute primero el cruce en la pestaña **'Cruce de Lote'**.")
 
-# 4. ACTAS OFICIALES (DISEÑO DE TARJETAS IDÉNTICO A ACTAS 1.PNG)
+# 4. ACTAS OFICIALES (DISEÑO DE TARJETAS CON MODAL DE VISTA PREVIA TIPO ACTAS 2.PNG)
 elif selected_tab == "📄 Actas Oficiales":
     col_t_left, col_t_right = st.columns([7, 3])
     with col_t_left:
@@ -1190,16 +1264,10 @@ elif selected_tab == "📄 Actas Oficiales":
                 # Botones inferiores de la tarjeta (Ver Acta y Descargar)
                 col_btn_view, col_btn_dl = st.columns([8, 2])
                 with col_btn_view:
-                    pdf_bytes_individual = generar_pdf_individual_acta(meta, df_acta_item)
-                    st.download_button(
-                        label="👁️ Ver Acta",
-                        data=pdf_bytes_individual,
-                        file_name=f"Acta_{pdf_orig.replace('.pdf', '')}.pdf",
-                        mime="application/pdf",
-                        key=f"btn_view_{pdf_orig}",
-                        use_container_width=True
-                    )
+                    if st.button("👁️ Ver Acta", key=f"btn_view_modal_{pdf_orig}", use_container_width=True):
+                        mostrar_modal_acta(meta, df_acta_item)
                 with col_btn_dl:
+                    pdf_bytes_individual = generar_pdf_individual_acta(meta, df_acta_item)
                     st.download_button(
                         label="📥",
                         data=pdf_bytes_individual,
