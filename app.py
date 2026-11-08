@@ -28,9 +28,9 @@ st.set_page_config(
 # ==========================================
 st.markdown("""
 <style>
-    /* Fondo con imagen institucional nítida en la izquierda y degradado hacia blanco en la derecha */
+    /* Fondo: Difuminado suave (~50%) en la izquierda y nítido a todo color en la derecha */
     .stApp {
-        background: linear-gradient(to right, rgba(255, 255, 255, 0.2) 35%, rgba(255, 255, 255, 0.95) 65%, rgba(255, 255, 255, 1) 100%), 
+        background: linear-gradient(to right, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.40) 45%, rgba(255, 255, 255, 0.05) 75%, rgba(255, 255, 255, 0) 100%), 
                     url("https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752");
         background-size: cover;
         background-position: center;
