@@ -772,7 +772,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 
 # ==========================================
-# DIÁLOGO DE VISTA PREVIA DE ACTA (MODAL CON EDICIÓN INDIVIDUAL DE FIRMANTES)
+# DIÁLOGO DE VISTA PREVIA DE ACTA (MODAL FLUIDO SIN CIERRE ABRUPTO)
 # ==========================================
 @st.dialog("Vista Previa de Acta Oficial de Dispensación", width="large")
 def mostrar_modal_acta(meta, df_acta_item):
@@ -794,7 +794,6 @@ def mostrar_modal_acta(meta, df_acta_item):
     with col_edit_f:
         if st.button("✏️ Editar Firmantes", key=f"modal_edit_btn_{pdf_key}", use_container_width=True):
             st.session_state[edit_state_key] = not st.session_state[edit_state_key]
-            st.rerun()
     with col_dl_pdf:
         st.download_button(
             label="📥 Descargar PDF",
@@ -808,12 +807,12 @@ def mostrar_modal_acta(meta, df_acta_item):
         if st.button("🖨️ Imprimir", key=f"modal_print_{pdf_key}", use_container_width=True):
             st.toast("Abriendo diálogo de impresión del acta...")
 
-    # Panel desplegable exclusivo para editar los firmantes de esta acta
+    # Panel desplegable exclusivo para editar los firmantes de esta acta de forma fluida
     if st.session_state[edit_state_key]:
         st.markdown("<br>", unsafe_allow_html=True)
         with st.container(border=True):
             st.markdown(f"**Editando Firmantes para este documento:** <span style='font-family:monospace; color:#1f4e78;'>{pdf_key}</span>", unsafe_allow_html=True)
-            st.markdown("<span style='font-size:0.8rem; color:#555;'>Los cambios aplicarán **únicamente** a esta acta al guardar.</span>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.8rem; color:#555;'>Los cambios aplicarán <b>únicamente</b> a esta acta al hacer clic en Guardar.</span>", unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
 
             in_elab_key = f"input_elab_{pdf_key}"
@@ -837,11 +836,9 @@ def mostrar_modal_acta(meta, df_acta_item):
                     }
                     st.session_state[edit_state_key] = False
                     st.success("✅ ¡Firmantes actualizados con éxito para esta acta!")
-                    st.rerun()
             with col_cancel:
                 if st.button("Cancelar", key=f"cancel_ind_{pdf_key}", use_container_width=True):
                     st.session_state[edit_state_key] = False
-                    st.rerun()
 
     st.markdown("<hr style='margin: 15px 0; border-color: #ddd;'>", unsafe_allow_html=True)
 
@@ -871,7 +868,7 @@ def mostrar_modal_acta(meta, df_acta_item):
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Firmas actualizadas en tiempo real en la vista previa
+    # Firmas actualizadas en tiempo real en la vista previa del modal
     firmantes_actuales = obtener_firmantes_acta(meta)
     col_s1, col_s2, col_s3 = st.columns(3)
     with col_s1:
@@ -1234,7 +1231,7 @@ elif selected_tab == "📊 Lotes & Bodega":
         else:
             st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega** filtrado por sus pedidos, ejecute primero el cruce en la pestaña **'Cruce de Lote'**.")
 
-# 4. ACTAS OFICIALES (TARJETAS Y MODAL INDIVIDUALIZADO)
+# 4. ACTAS OFICIALES (TARJETAS Y MODAL INDIVIDUALIZADO SIN CIERRE)
 elif selected_tab == "📄 Actas Oficiales":
     col_t_left, col_t_right = st.columns([7, 3])
     with col_t_left:
