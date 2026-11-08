@@ -1117,11 +1117,9 @@ elif selected_tab == "📊 Lotes & Bodega":
 
 # 4. ACTAS OFICIALES (TARJETAS EN CUADRÍCULA DE 3 COLUMNAS Y VISTA PREVIA DEDICADA)
 elif selected_tab == "📄 Actas Oficiales":
-    # Inicializar el estado de la vista previa activa si no existe
     if 'vista_acta_activa' not in st.session_state:
         st.session_state['vista_acta_activa'] = None
 
-    # Si hay un acta seleccionada para ver, mostramos su panel completo de vista previa y edición
     if st.session_state['vista_acta_activa'] is not None:
         meta_v = st.session_state['vista_acta_activa']
         pdf_key = meta_v['nombre_pdf']
@@ -1132,7 +1130,6 @@ elif selected_tab == "📄 Actas Oficiales":
         if edit_state_key not in st.session_state:
             st.session_state[edit_state_key] = False
 
-        # Botón para regresar al listado de tarjetas
         if st.button("⬅️ Volver a la lista de Actas Oficiales", key="btn_volver_lista"):
             st.session_state['vista_acta_activa'] = None
             st.rerun()
@@ -1140,7 +1137,6 @@ elif selected_tab == "📄 Actas Oficiales":
         st.markdown("<br>", unsafe_allow_html=True)
 
         with st.container(border=True):
-            # Barra superior de acciones dentro de la vista previa
             col_info_v, col_edit_v, col_dl_v, col_print_v, col_close_v = st.columns([3.5, 2.2, 2.2, 1.6, 1.5])
             
             firmantes_actuales = obtener_firmantes_acta(meta_v)
@@ -1168,7 +1164,6 @@ elif selected_tab == "📄 Actas Oficiales":
                     st.session_state['vista_acta_activa'] = None
                     st.rerun()
 
-            # Panel desplegable exclusivo para editar los firmantes de esta acta
             if st.session_state[edit_state_key]:
                 st.markdown("<br>", unsafe_allow_html=True)
                 with st.container(border=True):
@@ -1199,7 +1194,6 @@ elif selected_tab == "📄 Actas Oficiales":
 
             st.markdown("<hr style='margin: 20px 0; border-color: #ddd;'>", unsafe_allow_html=True)
 
-            # Cabecera institucional del documento
             st.markdown("<div style='text-align: center; font-family: Helvetica, sans-serif;'>", unsafe_allow_html=True)
             st.markdown("<span style='font-size:0.8rem; color:#555; font-weight:600;'>MINISTERIO DE SALUD PÚBLICA DEL ECUADOR</span>", unsafe_allow_html=True)
             st.markdown("<h3 style='color:#163a5f; margin: 4px 0;'>HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO</h3>", unsafe_allow_html=True)
@@ -1217,7 +1211,6 @@ elif selected_tab == "📄 Actas Oficiales":
 
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # Tabla de ítems
             df_tabla_modal = df_acta_item[['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Aprobada', 'Lotes y Cantidades a Despachar', 'Fechas de Caducidad', 'Stock Bodega']].copy()
             df_tabla_modal.columns = ['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Ap.', 'Lotes & Cantidades a Despachar', 'Fechas Caducidad', 'Stock']
 
@@ -1225,7 +1218,6 @@ elif selected_tab == "📄 Actas Oficiales":
 
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # Firmas actualizadas en tiempo real
             firmantes_actuales = obtener_firmantes_acta(meta_v)
             col_s1, col_s2, col_s3 = st.columns(3)
             with col_s1:
@@ -1239,7 +1231,6 @@ elif selected_tab == "📄 Actas Oficiales":
             st.markdown(f"<span style='font-size:0.8rem; color:#666;'>{len(df_acta_item)} ítems en este pedido</span>", unsafe_allow_html=True)
 
     else:
-        # Listado de tarjetas de actas oficiales organizadas en cuadrícula de 3 columnas
         col_t_left, col_t_right = st.columns([7, 3])
         with col_t_left:
             st.markdown("### Actas Oficiales de Dispensación y Cruce de Stock")
@@ -1248,7 +1239,6 @@ elif selected_tab == "📄 Actas Oficiales":
             if 'pdf_res' in st.session_state:
                 st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
                 
-                # Generación del PDF consolidado masivo con firmas actualizadas
                 if 'metadata_actas_store' in st.session_state and 'df_resultado' in st.session_state:
                     pdf_bytes_masivo = generar_pdf_consolidado_actualizado(
                         st.session_state['metadata_actas_store'], 
@@ -1275,7 +1265,6 @@ elif selected_tab == "📄 Actas Oficiales":
             df_res_actas = st.session_state['df_resultado']
             metadata_list = st.session_state['metadata_actas_store']
 
-            # Organizar las tarjetas en filas de 3 columnas
             for i in range(0, len(metadata_list), 3):
                 cols = st.columns(3)
                 for j in range(3):
@@ -1343,30 +1332,110 @@ elif selected_tab == "🛡️ Normativa FEFO":
     </div>
     """, unsafe_allow_html=True)
 
+    # Inicializar estado para mostrar u ocultar el contenido completo de cada normativa
+    for k_reg in ['reg_1', 'reg_2', 'reg_3', 'reg_4', 'reg_5']:
+        if k_reg not in st.session_state:
+            st.session_state[k_reg] = False
+
+    # 1. LOSNCP
     with st.container(border=True):
         st.markdown("### ⚖️ 1. Ley Orgánica del Sistema Nacional de Contratación Pública (LOSNCP) y su Reglamento General")
         st.markdown("""
-        * **Ejecución y Control de Contratos:** Todo bien recibido en el Hospital (adquirido mediante procesos de contratación pública) debe cumplir estrictamente con las especificaciones técnicas, cantidades, plazos y obligaciones estipuladas en el contrato y las órdenes de compra.
-        * **Responsabilidad en la Recepción:** Las actas de entrega-recepción (parciales o definitivas) generan obligaciones legales y administrativas sobre la custodia y administración de los bienes públicos, precautelando los intereses de la institución.
-        * **Trazabilidad:** Garantizar que los insumos provengan de proveedores debidamente adjudicados y legalmente contratados por el hospital.
+        * **Ejecución y Control de Contratos:** Todo bien recibido en el Hospital debe cumplir estrictamente con las especificaciones técnicas, cantidades, plazos y obligaciones estipuladas en el contrato[cite: 1].
+        * **Responsabilidad en la Recepción:** Las actas de entrega-recepción generan obligaciones legales y administrativas sobre la custodia y administración de los bienes públicos[cite: 1].
+        * **Trazabilidad:** Garantizar que los insumos provengan de proveedores debidamente adjudicados y legalmente contratados[cite: 1].
         """, unsafe_allow_html=True)
+        
+        if st.button("📖 Leer / Revisar Reglamento Completo (LOSNCP)", key="btn_toggle_reg_1"):
+            st.session_state['reg_1'] = not st.session_state['reg_1']
+            
+        if st.session_state['reg_1']:
+            st.info("""
+            **📄 Texto de Consulta Completa: Ley Orgánica del Sistema Nacional de Contratación Pública (LOSNCP)**
+            * **Artículo 6 (Definiciones clave):** Delimitación de bienes, obras y servicios normalizados y no normalizados, así como las fases de contratación pública.
+            * **Artículo 70 (Obligaciones del Administrador del Contrato):** Vigilar el cabal y oportuno cumplimiento de las cláusulas contractuales, plazos y especificaciones técnicas.
+            * **Artículo 74 (De las Actas de Recepción):** Requisito indispensable para la liquidación de obligaciones contractuales de bienes y suministros adquiridos para instituciones de salud pública.
+            """)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # 2. BPA / BPD / BPT
     with st.container(border=True):
-        st.markdown("### 📦 2. Buenas Prácticas de Almacenamiento, Distribución y Transporte (BPADT / BPA / BPD / BPT)")
+        st.markdown("### 📦 2. Almacenamiento, Distribución y Transporte (BPA / BPD / BPT)")
         st.markdown("""
-        * **Control Estricto de Fechas de Vencimiento (Algoritmo FEFO):** Obligatoriedad de priorizar la salida y rotación de los insumos y medicamentos con fechas de caducidad más próximas (*First Expired, First Out*), evitando pérdidas por caducidad en percha o bodega.
-        * **Almacenamiento y Conservación:** Los productos deben almacenarse bajo condiciones ambientales controladas (temperatura, humedad y luz), respetando las exigencias del fabricante y normativas sanitarias vigentes.
-        * **Trazabilidad de Lotes:** Registro riguroso de números de lote desde el ingreso al inventario general hasta su dispensación y entrega final a los servicios clínicos, asegurando una respuesta inmediata ante alertas sanitarias o retiros de mercado.
+        * **Control Estricto de Fechas de Vencimiento (Algoritmo FEFO):** Obligatoriedad de priorizar la salida y rotación de insumos y medicamentos con fechas de caducidad más próximas[cite: 1].
+        * **Condiciones Ambientales:** Almacenamiento bajo parámetros controlados de temperatura, humedad y luz según especificaciones del fabricante[cite: 1].
+        * **Trazabilidad de Lotes:** Registro riguroso de números de lote desde el ingreso hasta su dispensación y entrega final a los servicios clínicos[cite: 1].
         """, unsafe_allow_html=True)
+        
+        if st.button("📖 Leer / Revisar Reglamento Completo (BPA / BPD / BPT)", key="btn_toggle_reg_2"):
+            st.session_state['reg_2'] = not st.session_state['reg_2']
+            
+        if st.session_state['reg_2']:
+            st.info("""
+            **📄 Texto de Consulta Completa: Normas de Almacenamiento, Distribución y Transporte (BPA / BPD / BPT)**
+            * **Infraestructura e Instalaciones:** Zonas claramente diferenciadas para recepción, cuarentena, almacenamiento general, productos rechazados y despachos.
+            * **Control de Stock y Cadenas de Frío:** Monitoreo y registro diario de temperatura en áreas de cadena de frío y medicamentos termolábiles.
+            * **Seguridad y Saneamiento:** Protocolos formales de limpieza, control de plagas y acceso restringido al personal autorizado en bodegas farmacéuticas.
+            """)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # 3. BPADT
     with st.container(border=True):
-        st.markdown("### 🔍 3. Mitigación de Riesgos y Control de Caducidades en el MSP")
+        st.markdown("### 🚚 3. Buenas Prácticas de Almacenamiento, Distribución y Transporte (BPADT)")
         st.markdown("""
-        * **Alertas Tempranas:** Monitoreo activo y reportes oportunos de saldos con riesgo de caducidad para su redistribución o gestión administrativa antes de su vencimiento.
-        * **Gestión de Quiebres y Stock:** Identificación inmediata de desabastecimientos o quiebres de stock para planificar requerimientos emergentes sin vulnerar la normativa de contratación.
-        * **Responsabilidad Compartida:** Coordinación continua entre el servicio solicitante (quien genera el pedido clínico) y la Bodega / Guardalmacén (quien despacha mediante actas firmadas digitalmente).
+        * **Operativa Logística Segura:** Asegurar la integridad de los dispositivos médicos y medicamentos durante su traslado interno (hacia las unidades y servicios del hospital) y externo.
+        * **Prevención de Deterioro:** Uso de embalajes adecuados que eviten roturas, exposición a la humedad o alteraciones físico-químicas de los productos sanitarios.
         """, unsafe_allow_html=True)
+        
+        if st.button("📖 Leer / Revisar Reglamento Completo (BPADT)", key="btn_toggle_reg_3"):
+            st.session_state['reg_3'] = not st.session_state['reg_3']
+            
+        if st.session_state['reg_3']:
+            st.info("""
+            **📄 Texto de Consulta Completa: Buenas Prácticas de Almacenamiento, Distribución y Transporte (BPADT)**
+            * **Requisitos del Transporte:** Vehículos y contenedores equipados para mantener las especificaciones técnicas de los productos durante su despacho.
+            * **Documentación de Resguardo:** Guías de remisión y actas de entrega firmadas que respalden la cantidad y lote exacto transportado.
+            """)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 4. Reglamento de Canjes de Medicamentos (Acuerdo Ministerial No. 00015-2019)
+    with st.container(border=True):
+        st.markdown("### 🔄 4. Reglamento de Canjes de Medicamentos, Acuerdo Ministerial No. 00015-2019")
+        st.markdown("""
+        * **Gestión de Canjes por Vencimiento Próximo:** Establece los lineamientos y plazos obligatorios para gestionar el canje de medicamentos con los proveedores antes de su fecha de caducidad.
+        * **Mitigación de Pérdidas:** Obligación de reportar y ejecutar los procesos normados de sustitución con el proveedor adjudicado para precautelar los recursos públicos del hospital.
+        """, unsafe_allow_html=True)
+        
+        if st.button("📖 Leer / Revisar Reglamento Completo (Acuerdo Ministerial No. 00015-2019)", key="btn_toggle_reg_4"):
+            st.session_state['reg_4'] = not st.session_state['reg_4']
+            
+        if st.session_state['reg_4']:
+            st.info("""
+            **📄 Texto de Consulta Completa: Acuerdo Ministerial No. 00015-2019 (Canjes de Medicamentos)**
+            * **Objeto y Ámbito:** Regula los procedimientos técnicos y administrativos para el canje de medicamentos en las entidades del Sistema Nacional de Salud.
+            * **Plazos de Notificación:** Obligación de notificar al proveedor con el margen de anticipación establecido en la normativa y contratos para proceder con el canje por proximidad de caducidad.
+            * **Obligaciones del Proveedor:** Deber de aceptar el canje bajo los términos contractuales vigentes sin perjuicio para la institución.
+            """)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 5. Regulación y Control Sanitario General
+    with st.container(border=True):
+        st.markdown("### 🛡️ 5. Regulación y Control Sanitario General")
+        st.markdown("""
+        * **Control de Dispositivos y Fármacos:** Cumplimiento de las directrices de la autoridad sanitaria nacional (ARCSA) en cuanto a registros sanitarios vigentes, farmacovigilancia y tecnovigilancia.
+        * **Gestión de Alertas:** Retiro inmediato de productos observados, falsificados o con alertas sanitarias oficiales dentro del inventario del hospital.
+        """, unsafe_allow_html=True)
+        
+        if st.button("📖 Leer / Revisar Reglamento Completo (Control Sanitario General)", key="btn_toggle_reg_5"):
+            st.session_state['reg_5'] = not st.session_state['reg_5']
+            
+        if st.session_state['reg_5']:
+            st.info("""
+            **📄 Texto de Consulta Completa: Regulación y Control Sanitario General**
+            * **Vigilancia Post-registro:** Obligación del establecimiento de reportar eventos adversos, incidentes con dispositivos médicos y no conformidades de calidad.
+            * **Trazabilidad y Calidad:** Garantizar que todo insumo dispensado posea respaldo normativo y control sanitario activo en el territorio ecuatoriano.
+            """)
