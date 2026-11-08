@@ -1115,7 +1115,7 @@ elif selected_tab == "📊 Lotes & Bodega":
         else:
             st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega** filtrado por sus pedidos, ejecute primero el cruce en la pestaña **'Cruce de Lote'**.")
 
-# 4. ACTAS OFICIALES (TARJETAS Y VISTA PREVIA DEDICADA EN PANTALLA)
+# 4. ACTAS OFICIALES (TARJETAS EN CUADRÍCULA DE 3 COLUMNAS Y VISTA PREVIA DEDICADA)
 elif selected_tab == "📄 Actas Oficiales":
     # Inicializar el estado de la vista previa activa si no existe
     if 'vista_acta_activa' not in st.session_state:
@@ -1239,7 +1239,7 @@ elif selected_tab == "📄 Actas Oficiales":
             st.markdown(f"<span style='font-size:0.8rem; color:#666;'>{len(df_acta_item)} ítems en este pedido</span>", unsafe_allow_html=True)
 
     else:
-        # Listado de tarjetas de actas oficiales
+        # Listado de tarjetas de actas oficiales organizadas en cuadrícula de 3 columnas
         col_t_left, col_t_right = st.columns([7, 3])
         with col_t_left:
             st.markdown("### Actas Oficiales de Dispensación y Cruce de Stock")
@@ -1275,56 +1275,62 @@ elif selected_tab == "📄 Actas Oficiales":
             df_res_actas = st.session_state['df_resultado']
             metadata_list = st.session_state['metadata_actas_store']
 
-            for meta in metadata_list:
-                pdf_orig = meta['nombre_pdf']
-                serv_name = meta['servicio']
-                df_acta_item = df_res_actas[df_res_actas['PDF Origen'] == pdf_orig]
-                
-                num_items_acta = len(df_acta_item)
-                has_quiebres = df_acta_item['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False).any()
-                firmantes_card = obtener_firmantes_acta(meta)
+            # Organizar las tarjetas en filas de 3 columnas
+            for i in range(0, len(metadata_list), 3):
+                cols = st.columns(3)
+                for j in range(3):
+                    if i + j < len(metadata_list):
+                        meta = metadata_list[i + j]
+                        pdf_orig = meta['nombre_pdf']
+                        serv_name = meta['servicio']
+                        df_acta_item = df_res_actas[df_res_actas['PDF Origen'] == pdf_orig]
+                        
+                        num_items_acta = len(df_acta_item)
+                        has_quiebres = df_acta_item['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False).any()
+                        firmantes_card = obtener_firmantes_acta(meta)
 
-                with st.container(border=True):
-                    col_badge, col_status = st.columns([8, 2])
-                    with col_badge:
-                        st.markdown(f"<span style='background-color:#f1f3f5; color:#495057; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600; border:1px solid #dee2e6;'>{num_items_acta} ítems</span>", unsafe_allow_html=True)
-                    with col_status:
-                        if has_quiebres:
-                            st.markdown("<div style='text-align: right;'><span style='background-color:#f8d7da; color:#842029; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600;'>Con Quiebres</span></div>", unsafe_allow_html=True)
-                        else:
-                            st.markdown("<div style='text-align: right;'><span style='background-color:#d1e7dd; color:#0f5132; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600;'>Conforme</span></div>", unsafe_allow_html=True)
+                        with cols[j]:
+                            with st.container(border=True):
+                                col_badge, col_status = st.columns([7, 3])
+                                with col_badge:
+                                    st.markdown(f"<span style='background-color:#f1f3f5; color:#495057; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:600; border:1px solid #dee2e6;'>{num_items_acta} ítems</span>", unsafe_allow_html=True)
+                                with col_status:
+                                    if has_quiebres:
+                                        st.markdown("<div style='text-align: right;'><span style='background-color:#f8d7da; color:#842029; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:600;'>Con Quiebres</span></div>", unsafe_allow_html=True)
+                                    else:
+                                        st.markdown("<div style='text-align: right;'><span style='background-color:#d1e7dd; color:#0f5132; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:600;'>Conforme</span></div>", unsafe_allow_html=True)
 
-                    st.markdown(f"<h4 style='color:#163a5f; margin: 8px 0 2px 0;'>{serv_name}</h4>", unsafe_allow_html=True)
-                    st.markdown(f"<span style='color:#6c757d; font-size:0.82rem; font-family:monospace;'>{pdf_orig}</span>", unsafe_allow_html=True)
+                                st.markdown(f"<h5 style='color:#163a5f; margin: 8px 0 2px 0; font-size:0.95rem;'>{serv_name}</h5>", unsafe_allow_html=True)
+                                st.markdown(f"<span style='color:#6c757d; font-size:0.75rem; font-family:monospace; word-break:break-all;'>{pdf_orig}</span>", unsafe_allow_html=True)
 
-                    st.markdown("<hr style='margin: 10px 0; border-color: #eaeaea;'>", unsafe_allow_html=True)
+                                st.markdown("<hr style='margin: 8px 0; border-color: #eaeaea;'>", unsafe_allow_html=True)
 
-                    st.markdown(f"""
-                    <div style='font-size:0.85rem; color:#333; line-height: 1.6;'>
-                        <b>Elaboró:</b> {firmantes_card['elaborado_por']}<br>
-                        <b>Entregó:</b> {firmantes_card['entregado_por']}<br>
-                        <b>Autorizó:</b> {firmantes_card['validado_por']}
-                    </div>
-                    """, unsafe_allow_html=True)
+                                st.markdown(f"""
+                                <div style='font-size:0.78rem; color:#333; line-height: 1.5;'>
+                                    <b>Elaboró:</b> {firmantes_card['elaborado_por']}<br>
+                                    <b>Entregó:</b> {firmantes_card['entregado_por']}<br>
+                                    <b>Autorizó:</b> {firmantes_card['validado_por']}
+                                </div>
+                                """, unsafe_allow_html=True)
 
-                    st.markdown("<br>", unsafe_allow_html=True)
+                                st.markdown("<br>", unsafe_allow_html=True)
 
-                    col_btn_view, col_btn_dl = st.columns([8, 2])
-                    with col_btn_view:
-                        if st.button("👁️ Ver Acta", key=f"btn_view_panel_{pdf_orig}", use_container_width=True):
-                            st.session_state['vista_acta_activa'] = meta
-                            st.session_state[f"editing_firmantes_{pdf_orig}"] = False
-                            st.rerun()
-                    with col_btn_dl:
-                        pdf_bytes_individual = generar_pdf_individual_acta(meta, df_acta_item)
-                        st.download_button(
-                            label="📥",
-                            data=pdf_bytes_individual,
-                            file_name=f"Acta_{pdf_orig.replace('.pdf', '')}.pdf",
-                            mime="application/pdf",
-                            key=f"btn_dl_{pdf_orig}",
-                            use_container_width=True
-                        )
+                                col_btn_view, col_btn_dl = st.columns([7, 3])
+                                with col_btn_view:
+                                    if st.button("👁️ Ver Acta", key=f"btn_view_panel_{pdf_orig}_{i+j}", use_container_width=True):
+                                        st.session_state['vista_acta_activa'] = meta
+                                        st.session_state[f"editing_firmantes_{pdf_orig}"] = False
+                                        st.rerun()
+                                with col_btn_dl:
+                                    pdf_bytes_individual = generar_pdf_individual_acta(meta, df_acta_item)
+                                    st.download_button(
+                                        label="📥",
+                                        data=pdf_bytes_individual,
+                                        file_name=f"Acta_{pdf_orig.replace('.pdf', '')}.pdf",
+                                        mime="application/pdf",
+                                        key=f"btn_dl_{pdf_orig}_{i+j}",
+                                        use_container_width=True
+                                    )
         else:
             st.info("📂 Cargue sus archivos y ejecute el cruce hospitalario en la pestaña **'Cruce de Lote'** para generar y visualizar las tarjetas de las Actas Oficiales.")
 
