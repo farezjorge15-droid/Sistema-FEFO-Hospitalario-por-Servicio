@@ -47,15 +47,16 @@ st.markdown("""
         visibility: hidden;
     }
 
-    /* Efecto de Escritura Animada (Typewriter Effect) */
-    @keyframes typing {
-        from { width: 0; }
-        to { width: 100%; }
-    }
-
-    @keyframes blink-caret {
-        from, to { border-color: transparent; }
-        50% { border-color: #1f4e78; }
+    /* Animación de Revelación Progresiva sin cursor parpadeante */
+    @keyframes revealText {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .typewriter-title {
@@ -63,11 +64,18 @@ st.markdown("""
         font-weight: 700;
         font-size: 3rem;
         margin-bottom: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        border-right: 4px solid #1f4e78;
-        width: 0;
-        animation: typing 1.8s steps(14, end) forwards, blink-caret 0.75s step-end infinite;
+        opacity: 0;
+        animation: revealText 1.2s ease-out forwards;
+    }
+
+    .typewriter-hospital {
+        color: #163a5f;
+        font-weight: 800;
+        font-size: 3.8rem;
+        margin-top: 10px;
+        line-height: 1.15;
+        opacity: 0;
+        animation: revealText 1.5s ease-out 0.4s forwards;
     }
 
     /* Estilos del texto institucional derecho */
@@ -808,7 +816,7 @@ if selected_tab == "🏠 Inicio":
         st.markdown("""
         <div style="text-align: left; padding: 10px 0;">
             <h1 class="typewriter-title">¡Bienvenido!</h1>
-            <h1 style="color: #163a5f; font-weight: 800; font-size: 3.8rem; margin-top: 10px; line-height: 1.15;">Hospital Provincial General Docente Vicente Corral Moscoso</h1>
+            <h1 class="typewriter-hospital">Hospital Provincial General Docente Vicente Corral Moscoso</h1>
         </div>
         """, unsafe_allow_html=True)
 
