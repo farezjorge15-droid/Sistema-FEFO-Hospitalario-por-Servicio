@@ -124,7 +124,7 @@ with col_header_right:
                 keys_to_reset = [
                     'unique_pdfs_key', 'unique_lotes_key', 'unique_unificado_key', 
                     'excel_res', 'pdf_res', 'df_resultado', 'show_firmantes_config',
-                    'df_lotes_raw', 'df_unif_raw', 'df_lotes_fefo_view', 'productos_pedidos_set', 'metadata_actas_store', 'firmantes_individuales_store'
+                    'df_lotes_raw', 'df_unif_raw', 'df_lotes_fefo_view', 'productos_pedidos_set', 'metadata_actas_store', 'firmantes_individuales_store', 'vista_acta_activa'
                 ]
                 for k in keys_to_reset:
                     if k in st.session_state:
@@ -772,125 +772,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 
 # ==========================================
-# DIÁLOGO DE VISTA PREVIA DE ACTA (MODAL CERRADO POR DEFECTO)
-# ==========================================
-@st.dialog("Vista Previa de Acta Oficial de Dispensación", width="large")
-def mostrar_modal_acta(meta, df_acta_item):
-    pdf_key = meta['nombre_pdf']
-    edit_state_key = f"editing_firmantes_{pdf_key}"
-    
-    # Asegurar que inicie cerrado por defecto
-    if edit_state_key not in st.session_state:
-        st.session_state[edit_state_key] = False
-
-    st.markdown(f"<span style='color:#555; font-size:0.85rem;'>Hospital Provincial General Docente Vicente Corral Moscoso &nbsp;·&nbsp; Archivo: <b>{pdf_key}</b></span>", unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Botones superiores en el modal
-    col_dummy, col_edit_f, col_dl_pdf, col_print = st.columns([1.2, 2.8, 2.8, 2.2])
-    
-    firmantes_actuales = obtener_firmantes_acta(meta)
-    pdf_bytes_acta = generar_pdf_individual_acta(meta, df_acta_item)
-
-    with col_edit_f:
-        if st.button("✏️ Editar Firmantes", key=f"modal_edit_btn_{pdf_key}", use_container_width=True):
-            st.session_state[edit_state_key] = not st.session_state[edit_state_key]
-            st.rerun()
-    with col_dl_pdf:
-        st.download_button(
-            label="📥 Descargar PDF",
-            data=pdf_bytes_acta,
-            file_name=f"Acta_{pdf_key.replace('.pdf', '')}.pdf",
-            mime="application/pdf",
-            key=f"modal_dl_{pdf_key}",
-            use_container_width=True
-        )
-    with col_print:
-        if st.button("🖨️ Imprimir", key=f"modal_print_{pdf_key}", use_container_width=True):
-            st.toast("Abriendo diálogo de impresión del acta...")
-
-    # Panel de edición de firmantes (solo se muestra si st.session_state[edit_state_key] es True)
-    if st.session_state[edit_state_key]:
-        st.markdown("<br>", unsafe_allow_html=True)
-        with st.container(border=True):
-            st.markdown(f"**Editando Firmantes para este documento:** <span style='font-family:monospace; color:#1f4e78;'>{pdf_key}</span>", unsafe_allow_html=True)
-            st.markdown("<span style='font-size:0.8rem; color:#555;'>Los cambios aplicarán <b>únicamente</b> a esta acta al hacer clic en Guardar.</span>", unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            in_elab_key = f"input_elab_{pdf_key}"
-            in_entre_key = f"input_entre_{pdf_key}"
-            in_vali_key = f"input_vali_{pdf_key}"
-
-            nuevo_elab = st.text_input("1. Elaboró / Recibido", firmantes_actuales['elaborado_por'], key=in_elab_key)
-            nuevo_entre = st.text_input("2. Entregado Bodega", firmantes_actuales['entregado_por'], key=in_entre_key)
-            nuevo_vali = st.text_input("3. Validó / Autorizó", firmantes_actuales['validado_por'], key=in_vali_key)
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            col_save, col_cancel = st.columns(2)
-            with col_save:
-                if st.button("💾 Guardar Cambios de esta Acta", key=f"save_ind_{pdf_key}", use_container_width=True):
-                    if 'firmantes_individuales_store' not in st.session_state:
-                        st.session_state['firmantes_individuales_store'] = {}
-                    st.session_state['firmantes_individuales_store'][pdf_key] = {
-                        'elaborado_por': nuevo_elab,
-                        'entregado_por': nuevo_entre,
-                        'validado_por': nuevo_vali
-                    }
-                    st.session_state[edit_state_key] = False
-                    st.success("✅ ¡Firmantes actualizados con éxito para esta acta!")
-                    st.rerun()
-            with col_cancel:
-                if st.button("Cancelar", key=f"cancel_ind_{pdf_key}", use_container_width=True):
-                    st.session_state[edit_state_key] = False
-                    st.rerun()
-
-    st.markdown("<hr style='margin: 15px 0; border-color: #ddd;'>", unsafe_allow_html=True)
-
-    # Cabecera interna del documento del acta
-    st.markdown("<div style='text-align: center; font-family: Helvetica, sans-serif;'>", unsafe_allow_html=True)
-    st.markdown("<span style='font-size:0.8rem; color:#555; font-weight:600;'>MINISTERIO DE SALUD PÚBLICA DEL ECUADOR</span>", unsafe_allow_html=True)
-    st.markdown("<h3 style='color:#163a5f; margin: 4px 0;'>HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO</h3>", unsafe_allow_html=True)
-    st.markdown("<span style='font-size:0.85rem; font-weight:bold; color:#333;'>ACTA OFICIAL DE DISPENSACIÓN Y CRUCE DE STOCK (FEFO)</span>", unsafe_allow_html=True)
-    st.markdown(f"<br><span style='font-size:0.75rem; color:#777;'>Archivo de Origen: {pdf_key}</span>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    col_m_serv, col_m_emi = st.columns([6, 4])
-    with col_m_serv:
-        st.markdown(f"**SERVICIO:** <span style='color:#1f4e78;'>{meta['servicio']}</span>", unsafe_allow_html=True)
-    with col_m_emi:
-        st.markdown(f"**EMISIÓN:** {datetime.datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}", unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Tabla adaptada para visualización clara
-    df_tabla_modal = df_acta_item[['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Aprobada', 'Lotes y Cantidades a Despachar', 'Fechas de Caducidad', 'Stock Bodega']].copy()
-    df_tabla_modal.columns = ['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Ap.', 'Lotes & Cantidades a Despachar', 'Fechas Caducidad', 'Stock']
-
-    st.dataframe(df_tabla_modal, use_container_width=True, hide_index=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Firmas actualizadas en tiempo real en la vista previa del modal
-    firmantes_actuales = obtener_firmantes_acta(meta)
-    col_s1, col_s2, col_s3 = st.columns(3)
-    with col_s1:
-        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ELABORÓ / RECIBIDO:</b><br>{firmantes_actuales['elaborado_por']}</div>", unsafe_allow_html=True)
-    with col_s2:
-        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ENTREGADO BODEGA:</b><br>{firmantes_actuales['entregado_por']}</div>", unsafe_allow_html=True)
-    with col_s3:
-        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>VALIDÓ / AUTORIZÓ:</b><br>{firmantes_actuales['validado_por']}</div>", unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown(f"<span style='font-size:0.8rem; color:#666;'>{len(df_acta_item)} ítems en este pedido</span>", unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("Cerrar Vista Previa", key=f"close_modal_{pdf_key}", use_container_width=True):
-        st.rerun()
-
-
-# ==========================================
 # RENDERIZADO DE CONTENIDO SEGÚN LA PESTAÑA ACTIVA
 # ==========================================
 
@@ -1235,85 +1116,208 @@ elif selected_tab == "📊 Lotes & Bodega":
         else:
             st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega** filtrado por sus pedidos, ejecute primero el cruce en la pestaña **'Cruce de Lote'**.")
 
-# 4. ACTAS OFICIALES (TARJETAS Y MODAL CERRADO POR DEFECTO)
+# 4. ACTAS OFICIALES (TARJETAS Y VISTA PREVIA DEDICADA EN PANTALLA)
 elif selected_tab == "📄 Actas Oficiales":
-    col_t_left, col_t_right = st.columns([7, 3])
-    with col_t_left:
-        st.markdown("### Actas Oficiales de Dispensación y Cruce de Stock")
-        st.markdown("<span style='color:#555; font-size:0.9rem;'>Cada pedido procesado cuenta con su acta institucional con firmas de responsabilidad listas para imprimir o archivar.</span>", unsafe_allow_html=True)
-    with col_t_right:
-        if 'pdf_res' in st.session_state:
-            st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
-            st.download_button(
-                label="⬇️ Descargar Todas las Actas (.pdf)",
-                data=st.session_state['pdf_res'],
-                file_name="Actas_Oficiales_Consolidas.pdf",
-                mime="application/pdf",
-                key="btn_dl_all_actas_top",
-                use_container_width=True
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
-        else:
-            st.button("⬇️ Descargar Todas las Actas (.pdf)", disabled=True, use_container_width=True, key="btn_dl_all_dis")
+    # Inicializar el estado de la vista previa activa si no existe
+    if 'vista_acta_activa' not in st.session_state:
+        st.session_state['vista_acta_activa'] = None
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None and 'metadata_actas_store' in st.session_state:
+    # Si hay un acta seleccionada para ver, mostramos su panel completo de vista previa y edición
+    if st.session_state['vista_acta_activa'] is not None:
+        meta_v = st.session_state['vista_acta_activa']
+        pdf_key = meta_v['nombre_pdf']
         df_res_actas = st.session_state['df_resultado']
-        metadata_list = st.session_state['metadata_actas_store']
+        df_acta_item = df_res_actas[df_res_actas['PDF Origen'] == pdf_key]
 
-        for meta in metadata_list:
-            pdf_orig = meta['nombre_pdf']
-            serv_name = meta['servicio']
-            df_acta_item = df_res_actas[df_res_actas['PDF Origen'] == pdf_orig]
+        edit_state_key = f"editing_firmantes_{pdf_key}"
+        if edit_state_key not in st.session_state:
+            st.session_state[edit_state_key] = False
+
+        # Botón para regresar al listado de tarjetas
+        if st.button("⬅️ Volver a la lista de Actas Oficiales", key="btn_volver_lista"):
+            st.session_state['vista_acta_activa'] = None
+            st.rerun()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        with st.container(border=True):
+            # Barra superior de acciones dentro de la vista previa
+            col_info_v, col_edit_v, col_dl_v, col_print_v, col_close_v = st.columns([3.5, 2.2, 2.2, 1.6, 1.5])
             
-            num_items_acta = len(df_acta_item)
-            has_quiebres = df_acta_item['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False).any()
-            firmantes_card = obtener_firmantes_acta(meta)
+            firmantes_actuales = obtener_firmantes_acta(meta_v)
+            pdf_bytes_acta = generar_pdf_individual_acta(meta_v, df_acta_item)
 
-            with st.container(border=True):
-                col_badge, col_status = st.columns([8, 2])
-                with col_badge:
-                    st.markdown(f"<span style='background-color:#f1f3f5; color:#495057; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600; border:1px solid #dee2e6;'>{num_items_acta} ítems</span>", unsafe_allow_html=True)
-                with col_status:
-                    if has_quiebres:
-                        st.markdown("<div style='text-align: right;'><span style='background-color:#f8d7da; color:#842029; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600;'>Con Quiebres</span></div>", unsafe_allow_html=True)
-                    else:
-                        st.markdown("<div style='text-align: right;'><span style='background-color:#d1e7dd; color:#0f5132; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600;'>Conforme</span></div>", unsafe_allow_html=True)
+            with col_info_v:
+                st.markdown(f"**Vista Previa:** <span style='font-size:0.82rem; font-family:monospace;'>{pdf_key}</span>", unsafe_allow_html=True)
+            with col_edit_v:
+                if st.button("✏️ Editar Firmantes", key=f"panel_edit_{pdf_key}", use_container_width=True):
+                    st.session_state[edit_state_key] = not st.session_state[edit_state_key]
+            with col_dl_v:
+                st.download_button(
+                    label="📥 Descargar PDF",
+                    data=pdf_bytes_acta,
+                    file_name=f"Acta_{pdf_key.replace('.pdf', '')}.pdf",
+                    mime="application/pdf",
+                    key=f"panel_dl_{pdf_key}",
+                    use_container_width=True
+                )
+            with col_print_v:
+                if st.button("🖨️ Imprimir", key=f"panel_print_{pdf_key}", use_container_width=True):
+                    st.toast("Abriendo diálogo de impresión...")
+            with col_close_v:
+                if st.button("❌ Cerrar", key=f"panel_close_{pdf_key}", use_container_width=True):
+                    st.session_state['vista_acta_activa'] = None
+                    st.rerun()
 
-                st.markdown(f"<h4 style='color:#163a5f; margin: 8px 0 2px 0;'>{serv_name}</h4>", unsafe_allow_html=True)
-                st.markdown(f"<span style='color:#6c757d; font-size:0.82rem; font-family:monospace;'>{pdf_orig}</span>", unsafe_allow_html=True)
-
-                st.markdown("<hr style='margin: 10px 0; border-color: #eaeaea;'>", unsafe_allow_html=True)
-
-                st.markdown(f"""
-                <div style='font-size:0.85rem; color:#333; line-height: 1.6;'>
-                    <b>Elaboró:</b> {firmantes_card['elaborado_por']}<br>
-                    <b>Entregó:</b> {firmantes_card['entregado_por']}<br>
-                    <b>Autorizó:</b> {firmantes_card['validado_por']}
-                </div>
-                """, unsafe_allow_html=True)
-
+            # Panel desplegable exclusivo para editar los firmantes de esta acta
+            if st.session_state[edit_state_key]:
                 st.markdown("<br>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown(f"**Editando Firmantes para este documento:** <span style='font-family:monospace; color:#1f4e78;'>{pdf_key}</span>", unsafe_allow_html=True)
+                    st.markdown("<span style='font-size:0.8rem; color:#555;'>Los cambios aplicarán <b>únicamente</b> a esta acta.</span>", unsafe_allow_html=True)
+                    st.markdown("<br>", unsafe_allow_html=True)
 
-                col_btn_view, col_btn_dl = st.columns([8, 2])
-                with col_btn_view:
-                    if st.button("👁️ Ver Acta", key=f"btn_view_modal_{pdf_orig}", use_container_width=True):
-                        # Al abrir el modal por primera vez, garantizamos que el estado de edición esté en False
-                        st.session_state[f"editing_firmantes_{pdf_orig}"] = False
-                        mostrar_modal_acta(meta, df_acta_item)
-                with col_btn_dl:
-                    pdf_bytes_individual = generar_pdf_individual_acta(meta, df_acta_item)
-                    st.download_button(
-                        label="📥",
-                        data=pdf_bytes_individual,
-                        file_name=f"Acta_{pdf_orig.replace('.pdf', '')}.pdf",
-                        mime="application/pdf",
-                        key=f"btn_dl_{pdf_orig}",
-                        use_container_width=True
-                    )
+                    nuevo_elab = st.text_input("1. Elaboró / Recibido", firmantes_actuales['elaborado_por'], key=f"in_elab_{pdf_key}")
+                    nuevo_entre = st.text_input("2. Entregado Bodega", firmantes_actuales['entregado_por'], key=f"in_entre_{pdf_key}")
+                    nuevo_vali = st.text_input("3. Validó / Autorizó", firmantes_actuales['validado_por'], key=f"in_vali_{pdf_key}")
+
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    col_save_btn, col_cancel_btn = st.columns(2)
+                    with col_save_btn:
+                        if st.button("💾 Guardar Cambios de esta Acta", key=f"save_ind_{pdf_key}", use_container_width=True):
+                            if 'firmantes_individuales_store' not in st.session_state:
+                                st.session_state['firmantes_individuales_store'] = {}
+                            st.session_state['firmantes_individuales_store'][pdf_key] = {
+                                'elaborado_por': nuevo_elab,
+                                'entregado_por': nuevo_entre,
+                                'validado_por': nuevo_vali
+                            }
+                            st.session_state[edit_state_key] = False
+                            st.success("✅ ¡Firmantes actualizados con éxito para esta acta!")
+                    with col_cancel_btn:
+                        if st.button("Cancelar", key=f"cancel_ind_{pdf_key}", use_container_width=True):
+                            st.session_state[edit_state_key] = False
+
+            st.markdown("<hr style='margin: 20px 0; border-color: #ddd;'>", unsafe_allow_html=True)
+
+            # Cabecera institucional del documento
+            st.markdown("<div style='text-align: center; font-family: Helvetica, sans-serif;'>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.8rem; color:#555; font-weight:600;'>MINISTERIO DE SALUD PÚBLICA DEL ECUADOR</span>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color:#163a5f; margin: 4px 0;'>HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO</h3>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.85rem; font-weight:bold; color:#333;'>ACTA OFICIAL DE DISPENSACIÓN Y CRUCE DE STOCK (FEFO)</span>", unsafe_allow_html=True)
+            st.markdown(f"<br><span style='font-size:0.75rem; color:#777;'>Archivo de Origen: {pdf_key}</span>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            col_m_serv, col_m_emi = st.columns([6, 4])
+            with col_m_serv:
+                st.markdown(f"**SERVICIO:** <span style='color:#1f4e78;'>{meta_v['servicio']}</span>", unsafe_allow_html=True)
+            with col_m_emi:
+                st.markdown(f"**EMISIÓN:** {datetime.datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}", unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Tabla de ítems
+            df_tabla_modal = df_acta_item[['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Aprobada', 'Lotes y Cantidades a Despachar', 'Fechas de Caducidad', 'Stock Bodega']].copy()
+            df_tabla_modal.columns = ['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Ap.', 'Lotes & Cantidades a Despachar', 'Fechas Caducidad', 'Stock']
+
+            st.dataframe(df_tabla_modal, use_container_width=True, hide_index=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Firmas actualizadas en tiempo real
+            firmantes_actuales = obtener_firmantes_acta(meta_v)
+            col_s1, col_s2, col_s3 = st.columns(3)
+            with col_s1:
+                st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ELABORÓ / RECIBIDO:</b><br>{firmantes_actuales['elaborado_por']}</div>", unsafe_allow_html=True)
+            with col_s2:
+                st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ENTREGADO BODEGA:</b><br>{firmantes_actuales['entregado_por']}</div>", unsafe_allow_html=True)
+            with col_s3:
+                st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>VALIDÓ / AUTORIZÓ:</b><br>{firmantes_actuales['validado_por']}</div>", unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(f"<span style='font-size:0.8rem; color:#666;'>{len(df_acta_item)} ítems en este pedido</span>", unsafe_allow_html=True)
+
     else:
-        st.info("📂 Cargue sus archivos y ejecute el cruce hospitalario en la pestaña **'Cruce de Lote'** para generar y visualizar las tarjetas de las Actas Oficiales.")
+        # Listado de tarjetas de actas oficiales
+        col_t_left, col_t_right = st.columns([7, 3])
+        with col_t_left:
+            st.markdown("### Actas Oficiales de Dispensación y Cruce de Stock")
+            st.markdown("<span style='color:#555; font-size:0.9rem;'>Cada pedido procesado cuenta con su acta institucional con firmas de responsabilidad listas para imprimir o archivar.</span>", unsafe_allow_html=True)
+        with col_t_right:
+            if 'pdf_res' in st.session_state:
+                st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+                st.download_button(
+                    label="⬇️ Descargar Todas las Actas (.pdf)",
+                    data=st.session_state['pdf_res'],
+                    file_name="Actas_Oficiales_Consolidas.pdf",
+                    mime="application/pdf",
+                    key="btn_dl_all_actas_top",
+                    use_container_width=True
+                )
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.button("⬇️ Descargar Todas las Actas (.pdf)", disabled=True, use_container_width=True, key="btn_dl_all_dis")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None and 'metadata_actas_store' in st.session_state:
+            df_res_actas = st.session_state['df_resultado']
+            metadata_list = st.session_state['metadata_actas_store']
+
+            for meta in metadata_list:
+                pdf_orig = meta['nombre_pdf']
+                serv_name = meta['servicio']
+                df_acta_item = df_res_actas[df_res_actas['PDF Origen'] == pdf_orig]
+                
+                num_items_acta = len(df_acta_item)
+                has_quiebres = df_acta_item['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False).any()
+                firmantes_card = obtener_firmantes_acta(meta)
+
+                with st.container(border=True):
+                    col_badge, col_status = st.columns([8, 2])
+                    with col_badge:
+                        st.markdown(f"<span style='background-color:#f1f3f5; color:#495057; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600; border:1px solid #dee2e6;'>{num_items_acta} ítems</span>", unsafe_allow_html=True)
+                    with col_status:
+                        if has_quiebres:
+                            st.markdown("<div style='text-align: right;'><span style='background-color:#f8d7da; color:#842029; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600;'>Con Quiebres</span></div>", unsafe_allow_html=True)
+                        else:
+                            st.markdown("<div style='text-align: right;'><span style='background-color:#d1e7dd; color:#0f5132; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600;'>Conforme</span></div>", unsafe_allow_html=True)
+
+                    st.markdown(f"<h4 style='color:#163a5f; margin: 8px 0 2px 0;'>{serv_name}</h4>", unsafe_allow_html=True)
+                    st.markdown(f"<span style='color:#6c757d; font-size:0.82rem; font-family:monospace;'>{pdf_orig}</span>", unsafe_allow_html=True)
+
+                    st.markdown("<hr style='margin: 10px 0; border-color: #eaeaea;'>", unsafe_allow_html=True)
+
+                    st.markdown(f"""
+                    <div style='font-size:0.85rem; color:#333; line-height: 1.6;'>
+                        <b>Elaboró:</b> {firmantes_card['elaborado_por']}<br>
+                        <b>Entregó:</b> {firmantes_card['entregado_por']}<br>
+                        <b>Autorizó:</b> {firmantes_card['validado_por']}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    st.markdown("<br>", unsafe_allow_html=True)
+
+                    col_btn_view, col_btn_dl = st.columns([8, 2])
+                    with col_btn_view:
+                        if st.button("👁️ Ver Acta", key=f"btn_view_panel_{pdf_orig}", use_container_width=True):
+                            st.session_state['vista_acta_activa'] = meta
+                            st.session_state[f"editing_firmantes_{pdf_orig}"] = False
+                            st.rerun()
+                    with col_btn_dl:
+                        pdf_bytes_individual = generar_pdf_individual_acta(meta, df_acta_item)
+                        st.download_button(
+                            label="📥",
+                            data=pdf_bytes_individual,
+                            file_name=f"Acta_{pdf_orig.replace('.pdf', '')}.pdf",
+                            mime="application/pdf",
+                            key=f"btn_dl_{pdf_orig}",
+                            use_container_width=True
+                        )
+        else:
+            st.info("📂 Cargue sus archivos y ejecute el cruce hospitalario en la pestaña **'Cruce de Lote'** para generar y visualizar las tarjetas de las Actas Oficiales.")
 
 # 5. NORMATIVA FEFO
 elif selected_tab == "🛡️ Normativa FEFO":
