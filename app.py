@@ -1414,7 +1414,7 @@ elif selected_tab == "🛡️ Normativa FEFO":
         st.link_button(
             "📄 Abrir PDF Oficial: Reglamento de BPADT para Establecimientos Farmacéuticos (ARCSA)", 
             "https://www.controlsanitario.gob.ec/wp-content/uploads/downloads/2014/09/A-4872-Reglamento-de-BPADT-para-Establecimientos-Farmac%C3%A9uticos.pdf",
-            use_command_width=True if 'use_command_width' in globals() else use_container_width=True
+            use_container_width=True
         )
 
     st.markdown("<br>", unsafe_allow_html=True)
