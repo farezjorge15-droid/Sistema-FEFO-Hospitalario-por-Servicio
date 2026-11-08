@@ -124,7 +124,7 @@ with col_header_right:
                 keys_to_reset = [
                     'unique_pdfs_key', 'unique_lotes_key', 'unique_unificado_key', 
                     'excel_res', 'pdf_res', 'df_resultado', 'show_firmantes_config',
-                    'df_lotes_raw', 'df_unif_raw', 'df_lotes_fefo_view', 'productos_pedidos_set'
+                    'df_lotes_raw', 'df_unif_raw', 'df_lotes_fefo_view', 'productos_pedidos_set', 'metadata_actas_store'
                 ]
                 for k in keys_to_reset:
                     if k in st.session_state:
@@ -210,6 +210,82 @@ def consolidar_lotes_texto(texto_lotes_crudo):
             resultado_final.append(lote)
             
     return " / ".join(resultado_final)
+
+def generar_pdf_individual_acta(meta, df_acta_actual):
+    output_pdf = io.BytesIO()
+    doc = SimpleDocTemplate(output_pdf, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
+    elements = []
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=10, alignment=1, textColor=colors.HexColor('#1F4E78'))
+    subtitle_style = ParagraphStyle('SubStyle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=7.5, alignment=1, textColor=colors.darkgray)
+    meta_style = ParagraphStyle('MetaStyle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=8, alignment=0, textColor=colors.black)
+    cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontName='Helvetica', fontSize=7)
+    cell_center = ParagraphStyle('CellCenter', parent=styles['Normal'], fontName='Helvetica', fontSize=7, alignment=1)
+    cell_red = ParagraphStyle('CellRed', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=7, textColor=colors.HexColor('#C00000'))
+    cell_red_center = ParagraphStyle('CellRedCenter', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=7, textColor=colors.HexColor('#C00000'), alignment=1)
+    sig_style = ParagraphStyle('SigStyle', parent=styles['Normal'], fontName='Helvetica', fontSize=6.5, alignment=1)
+
+    elements.append(Paragraph("HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO", title_style))
+    elements.append(Paragraph(f"ACTA OFICIAL DE DISPENSACIÓN Y CRUCE DE STOCK (FEFO) - Archivo: {meta['nombre_pdf']}", subtitle_style))
+    elements.append(Spacer(1, 4))
+
+    elements.append(Paragraph(f"<b>SERVICIO:</b> {meta['servicio']} &nbsp;&nbsp;|&nbsp;&nbsp; <b>EMISIÓN:</b> {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", meta_style))
+    elements.append(Spacer(1, 4))
+
+    table_data = [['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Ap.', 'Lotes y Cantidades a Despachar', 'Fechas Caducidad', 'Stock']]
+    
+    for _, row in df_acta_actual.iterrows():
+        is_red = row['Alerta_Rojo'] or (row['Stock Bodega'] <= 0)
+        c_style = cell_red if is_red else cell_style
+        c_style_ctr = cell_red_center if is_red else cell_center
+        
+        table_data.append([
+            str(row['Nro.']),
+            Paragraph(str(row['Código']), c_style_ctr),
+            Paragraph(str(row['Dispositivo Médico']), c_style),
+            str(int(row['Cant. Aprobada'])),
+            Paragraph(str(row['Lotes y Cantidades a Despachar']), c_style),
+            Paragraph(str(row['Fechas de Caducidad']), c_style),
+            Paragraph(f"{row['Stock Bodega']:,.0f}", c_style_ctr)
+        ])
+
+    t = Table(table_data, colWidths=[22, 50, 180, 38, 150, 75, 45])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1F4E78')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 7.5),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0,0), (-1,0), 3),
+        ('TOPPADDING', (0,0), (-1,0), 3),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.lightgrey),
+    ]))
+    
+    elements.append(t)
+    elements.append(Spacer(1, 10))
+
+    firma_data = [
+        [
+            Paragraph(f"<b>ELABORÓ / RECIBIDO:</b><br/><br/><br/>_________________________________<br/><b>{meta['elaborado_por']}</b>", sig_style),
+            Paragraph(f"<b>ENTREGADO BODEGA:</b><br/><br/><br/>_________________________________<br/><b>{meta['entregado_por']}</b>", sig_style),
+            Paragraph(f"<b>VALIDÓ / AUTORIZÓ:</b><br/><br/><br/>_________________________________<br/><b>{meta['validado_por']}</b>", sig_style)
+        ]
+    ]
+    
+    t_firmas = Table(firma_data, colWidths=[185, 185, 185])
+    t_firmas.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('LEFTPADDING', (0,0), (-1,-1), 4),
+        ('RIGHTPADDING', (0,0), (-1,-1), 4),
+    ]))
+
+    elements.append(t_firmas)
+    doc.build(elements)
+    output_pdf.seek(0)
+    return output_pdf.getvalue()
 
 def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unificado_bytes, firmantes_custom=None):
     try:
@@ -482,10 +558,10 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             })
 
         st.session_state['productos_pedidos_set'] = productos_pedidos_set
+        st.session_state['metadata_actas_store'] = metadata_actas
 
-        # CONSTRUCCIÓN DE LA TABLA LOTES FEFO FILTRADA EXCLUSIVAMENTE A LOS LOTES DE LOS PRODUCTOS PEDIDOS
+        # CONSTRUCCIÓN DE LA TABLA LOTES FEFO FILTRADA
         lista_lotes_fefo_view = []
-        # Filtramos df_lotes_grouped para que solo contenga los clean_name que están en productos_pedidos_set
         df_lotes_filtrados = df_lotes_grouped[df_lotes_grouped['clean_name'].isin(productos_pedidos_set)]
 
         for idx_l, row_l in df_lotes_filtrados.iterrows():
@@ -591,7 +667,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         wb.save(output_excel)
         output_excel.seek(0)
 
-        # PDF ACTAS
+        # PDF ACTAS COMPLETO
         output_pdf = io.BytesIO()
         doc = SimpleDocTemplate(output_pdf, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
         elements = []
@@ -984,7 +1060,7 @@ elif selected_tab == "📚 Cruce de Lote":
     else:
         st.info("📂 Cargue sus archivos PDF, el Excel de Lotes y el Excel Unificado en las tarjetas superiores, y presione **'Ejecutar Cruce Hospitalario en Lote'** para desplegar el contenido detallado por servicios.")
 
-# 3. LOTES & BODEGA (FILTRADO EXCLUSIVAMENTE A LOS PRODUCTOS DE LOS PEDIDOS CARGADOS)
+# 3. LOTES & BODEGA
 elif selected_tab == "📊 Lotes & Bodega":
     st.markdown("""
     <div class="hospital-header">
@@ -1035,8 +1111,6 @@ elif selected_tab == "📊 Lotes & Bodega":
 
         if 'df_unif_raw' in st.session_state and st.session_state['df_unif_raw'] is not None and 'productos_pedidos_set' in st.session_state:
             df_u_view = st.session_state['df_unif_raw'].copy()
-            
-            # Filtrar el stock maestro únicamente a los productos que están en los pedidos de servicios cargados
             df_u_view['clean_name'] = df_u_view['Producto'].apply(clean_exact)
             df_u_view = df_u_view[df_u_view['clean_name'].isin(st.session_state['productos_pedidos_set'])]
             df_u_view = df_u_view.drop(columns=['clean_name'])
@@ -1053,20 +1127,89 @@ elif selected_tab == "📊 Lotes & Bodega":
         else:
             st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega** filtrado por sus pedidos, ejecute primero el cruce en la pestaña **'Cruce de Lote'**.")
 
-# 4. ACTAS OFICIALES
+# 4. ACTAS OFICIALES (DISEÑO DE TARJETAS IDÉNTICO A ACTAS 1.PNG)
 elif selected_tab == "📄 Actas Oficiales":
-    st.markdown("### 📄 Generación y Descarga de Actas Oficiales")
-    if 'pdf_res' in st.session_state:
-        st.download_button(
-            label="📄 Descargar Actas Consolidadas (PDF)",
-            data=st.session_state['pdf_res'],
-            file_name="Actas_Oficiales_Consolidas.pdf",
-            mime="application/pdf",
-            key="tab_dl_pdf_key",
-            use_container_width=True
-        )
+    col_t_left, col_t_right = st.columns([7, 3])
+    with col_t_left:
+        st.markdown("### Actas Oficiales de Dispensación y Cruce de Stock")
+        st.markdown("<span style='color:#555; font-size:0.9rem;'>Cada pedido procesado cuenta con su acta institucional con firmas de responsabilidad listas para imprimir o archivar.</span>", unsafe_allow_html=True)
+    with col_t_right:
+        if 'pdf_res' in st.session_state:
+            st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+            st.download_button(
+                label="⬇️ Descargar Todas las Actas (.pdf)",
+                data=st.session_state['pdf_res'],
+                file_name="Actas_Oficiales_Consolidas.pdf",
+                mime="application/pdf",
+                key="btn_dl_all_actas_top",
+                use_container_width=True
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.button("⬇️ Descargar Todas las Actas (.pdf)", disabled=True, use_container_width=True, key="btn_dl_all_dis")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None and 'metadata_actas_store' in st.session_state:
+        df_res_actas = st.session_state['df_resultado']
+        metadata_list = st.session_state['metadata_actas_store']
+
+        for meta in metadata_list:
+            pdf_orig = meta['nombre_pdf']
+            serv_name = meta['servicio']
+            df_acta_item = df_res_actas[df_res_actas['PDF Origen'] == pdf_orig]
+            
+            num_items_acta = len(df_acta_item)
+            has_quiebres = df_acta_item['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False).any()
+
+            with st.container(border=True):
+                col_badge, col_status = st.columns([8, 2])
+                with col_badge:
+                    st.markdown(f"<span style='background-color:#f1f3f5; color:#495057; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600; border:1px solid #dee2e6;'>{num_items_acta} ítems</span>", unsafe_allow_html=True)
+                with col_status:
+                    if has_quiebres:
+                        st.markdown("<div style='text-align: right;'><span style='background-color:#f8d7da; color:#842029; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600;'>Con Quiebres</span></div>", unsafe_allow_html=True)
+                    else:
+                        st.markdown("<div style='text-align: right;'><span style='background-color:#d1e7dd; color:#0f5132; padding:2px 10px; border-radius:6px; font-size:0.75rem; font-weight:600;'>Conforme</span></div>", unsafe_allow_html=True)
+
+                st.markdown(f"<h4 style='color:#163a5f; margin: 8px 0 2px 0;'>{serv_name}</h4>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color:#6c757d; font-size:0.82rem; font-family:monospace;'>{pdf_orig}</span>", unsafe_allow_html=True)
+
+                st.markdown("<hr style='margin: 10px 0; border-color: #eaeaea;'>", unsafe_allow_html=True)
+
+                st.markdown(f"""
+                <div style='font-size:0.85rem; color:#333; line-height: 1.6;'>
+                    <b>Elaboró:</b> {meta['elaborado_por']}<br>
+                    <b>Entregó:</b> {meta['entregado_por']}<br>
+                    <b>Autorizó:</b> {meta['validado_por']}
+                </div>
+                """, unsafe_allow_html=True)
+
+                st.markdown("<br>", unsafe_allow_html=True)
+
+                # Botones inferiores de la tarjeta (Ver Acta y Descargar)
+                col_btn_view, col_btn_dl = st.columns([8, 2])
+                with col_btn_view:
+                    pdf_bytes_individual = generar_pdf_individual_acta(meta, df_acta_item)
+                    st.download_button(
+                        label="👁️ Ver Acta",
+                        data=pdf_bytes_individual,
+                        file_name=f"Acta_{pdf_orig.replace('.pdf', '')}.pdf",
+                        mime="application/pdf",
+                        key=f"btn_view_{pdf_orig}",
+                        use_container_width=True
+                    )
+                with col_btn_dl:
+                    st.download_button(
+                        label="📥",
+                        data=pdf_bytes_individual,
+                        file_name=f"Acta_{pdf_orig.replace('.pdf', '')}.pdf",
+                        mime="application/pdf",
+                        key=f"btn_dl_{pdf_orig}",
+                        use_container_width=True
+                    )
     else:
-        st.info("Una vez ejecutado el cruce FEFO, podrá descargar las actas firmadas desde esta sección.")
+        st.info("📂 Cargue sus archivos y ejecute el cruce hospitalario en la pestaña **'Cruce de Lote'** para generar y visualizar las tarjetas de las Actas Oficiales.")
 
 # 5. NORMATIVA FEFO
 elif selected_tab == "🛡️ Normativa FEFO":
