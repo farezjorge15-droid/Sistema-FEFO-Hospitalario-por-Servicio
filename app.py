@@ -784,8 +784,8 @@ if selected_tab == "🏠 Inicio":
     with col_izq:
         st.markdown("""
         <div style="text-align: left; padding: 10px 0;">
-            <h1 style="color: #1f4e78; font-weight: 700; font-size: 2.8rem; margin-bottom: 0;">¡Bienvenido!</h1>
-            <h1 style="color: #163a5f; font-weight: 800; font-size: 2.5rem; margin-top: 10px; line-height: 1.2;">Hospital Provincial General Docente Vicente Corral Moscoso</h1>
+            <h1 style="color: #1f4e78; font-weight: 700; font-size: 3rem; margin-bottom: 0;">¡Bienvenido!</h1>
+            <h1 style="color: #163a5f; font-weight: 800; font-size: 3.8rem; margin-top: 10px; line-height: 1.15;">Hospital Provincial General Docente Vicente Corral Moscoso</h1>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1392,7 +1392,7 @@ elif selected_tab == "🛡️ Normativa FEFO":
     with st.container(border=True):
         st.markdown("### 🏥 4. Manual de Recepción, Almacenamiento, Distribución y Transporte (Acuerdo 00050-2022)")
         st.markdown("""
-        * **Manual Técnico Unificado (3er Suplemento R.O. 29):** Manual sustitutivo oficial del MSP para la recepción, almacenamiento, distribution y transporte en las entidades del Sistema Nacional de Salud.
+        * **Manual Técnico Unificado (3er Suplemento R.O. 29):** Manual sustitutivo oficial del MSP para la recepción, almacenamiento, distribución y transporte en las entidades del Sistema Nacional de Salud.
         """, unsafe_allow_html=True)
         
         st.link_button(
