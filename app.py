@@ -1323,112 +1323,69 @@ elif selected_tab == "📄 Actas Oficiales":
         else:
             st.info("📂 Cargue sus archivos y ejecute el cruce hospitalario en la pestaña **'Cruce de Lote'** para generar y visualizar las tarjetas de las Actas Oficiales.")
 
-# 5. NORMATIVA FEFO (REPOSITORIO DE ENLACES WEB DIRECTOS A DOCUMENTOS OFICIALES)
+# 5. NORMATIVA FEFO (CON ENLACES DIRECTOS A LOS ARCHIVOS PDF OFICIALES)
 elif selected_tab == "🛡️ Normativa FEFO":
     st.markdown("""
     <div class="hospital-header">
         <h1>🛡️ Repositorio Normativo y Legal - Gestión FEFO & Bodega MSP</h1>
-        <p>Documentación Oficial y Marcos Legales para Recepción, Almacenamiento, Distribución y Control de Medicamentos y Dispositivos Médicos</p>
+        <p>Acceso Directo a los Documentos Oficiales en PDF Publicados para Contratación, BPADT, Canjes y Red Pública RPIS</p>
     </div>
     """, unsafe_allow_html=True)
 
     # BLOQUE 1: CONTRATACIÓN PÚBLICA
     with st.container(border=True):
-        st.markdown("### ⚖️ 1. Contratación Pública (LOSNCP y Reglamento)")
+        st.markdown("### ⚖️ 1. Ley Orgánica del Sistema Nacional de Contratación Pública (LOSNCP)")
         st.markdown("""
-        * **Reglamento General de la LOSNCP (Decreto Ejecutivo No. 193):** Consulta la última reforma y codificación oficial de las reglas de contratación pública y del RUP.
-        * **Reglamento Alterno (UTPL / Procuraduría):** Repositorio externo indexado del Decreto 193 para lectura y consulta jurídica.
+        * **Reglamento General de la LOSNCP:** Documento oficial publicado por el SERCOP con las reglas de contratación pública, ejecución contractual y recepción de bienes.
         """, unsafe_allow_html=True)
         
-        c_link1, c_link2 = st.columns(2)
-        with c_link1:
-            st.link_button(
-                "🔗 Repositorio SERCOP - Reglamento LOSNCP", 
-                "https://www.compraspublicas.gob.ec/ProcesoContratacion/compras/lotaip/normativa/Ley-Organica-Sistema-Nacional-Contratacion-Publica-LOSNCP.pdf",
-                use_container_width=True
-            )
-        with c_link2:
-            st.link_button(
-                "🔗 Portal UTPL / Procuraduría - Normativa Contratación", 
-                "https://www.utpl.edu.ec/",
-                use_container_width=True
-            )
+        st.link_button(
+            "📄 Abrir PDF Oficial: Reglamento General de la LOSNCP (SERCOP)", 
+            "https://portal.compraspublicas.gob.ec/sercop/wp-content/uploads/2026/03/RGLOSNCP.pdf",
+            use_container_width=True
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     # BLOQUE 2: ALMACENAMIENTO, DISTRIBUCIÓN Y TRANSPORTE (BPADT)
     with st.container(border=True):
-        st.markdown("### 📦 2. Almacenamiento, Distribución y Transporte (BPADT)")
+        st.markdown("### 📦 2. Buenas Prácticas de Almacenamiento, Distribución y Transporte (BPADT)")
         st.markdown("""
-        * **Normativa BPADT (Acuerdo 4872):** Exigencias obligatorias dictadas por la ARCSA para establecimientos farmacéuticos y de dispositivos médicos.
-        * **Instructivo de Certificación ARCSA:** Términos de inspección, verificación y subsanaciones de las BPADT.
-        * **Trámite de Certificación (Gob.ec):** Guía de pasos legales para tramitar u obtener la certificación BPADT ante la autoridad nacional.
+        * **Reglamento de BPADT (Acuerdo 4872 - ARCSA):** Normativa oficial completa dictada por la ARCSA para la conservación, almacenamiento y rotación FEFO en establecimientos farmacéuticos.
         """, unsafe_allow_html=True)
         
-        c_bp1, c_bp2, c_bp3 = st.columns(3)
-        with c_bp1:
-            st.link_button(
-                "🔗 ARCSA - Reglamento BPADT (Acuerdo 4872)", 
-                "https://www.controlsanitario.gob.ec/",
-                use_container_width=True
-            )
-        with c_bp2:
-            st.link_button(
-                "🔗 ARCSA - Instructivo Externo Descarga Directa", 
-                "https://www.controlsanitario.gob.ec/",
-                use_container_width=True
-            )
-        with c_bp3:
-            st.link_button(
-                "🔗 Gob.ec - Trámite ARCSA BPADT", 
-                "https://www.gob.ec/",
-                use_container_width=True
-            )
+        st.link_button(
+            "📄 Abrir PDF Oficial: Reglamento de BPADT para Establecimientos Farmacéuticos (ARCSA)", 
+            "https://www.controlsanitario.gob.ec/wp-content/uploads/downloads/2014/09/A-4872-Reglamento-de-BPADT-para-Establecimientos-Farmac%C3%A9uticos.pdf",
+            use_container_width=True
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     # BLOQUE 3: REGLAMENTO DE CANJES DE MEDICAMENTOS
     with st.container(border=True):
-        st.markdown("### 🔄 3. Reglamento de Canjes de Medicamentos")
+        st.markdown("### 🔄 3. Reglamento de Canjes de Medicamentos (Acuerdo Ministerial No. 00015-2019)")
         st.markdown("""
-        * **Reglamento de Canje (Acuerdo Ministerial No. 00015-2019):** Plazos normados (60 días) para la recepción y canje de medicamentos próximos a caducar en la Red Pública.
-        * **Base Legal Global de Medicamentos:** Instructivos y normativas complementarias de la Dirección Nacional de Medicamentos del Ministerio de Salud Pública.
+        * **Acuerdo Ministerial No. 00015-2019:** Documento oficial emitido por el Ministerio de Salud Pública regulando los plazos y procedimientos formales para el canje de medicamentos próximos a caducar.
         """, unsafe_allow_html=True)
         
-        c_cj1, c_cj2 = st.columns(2)
-        with c_cj1:
-            st.link_button(
-                "🔗 Portal MSP - Acuerdo 00015-2019 Canjes", 
-                "https://www.salud.gob.ec/",
-                use_container_width=True
-            )
-        with c_cj2:
-            st.link_button(
-                "🔗 Dirección Nac. de Medicamentos - Base Legal MSP", 
-                "https://www.salud.gob.ec/",
-                use_container_width=True
-            )
+        st.link_button(
+            "📄 Abrir PDF Oficial: Reglamento de Canjes (Acuerdo Ministerial 00015-2019 MSP)", 
+            "https://www.salud.gob.ec/wp-content/uploads/2026/03/AC-00015-2019-AGOSTO-16_Reglamento-de-canje_compressed.pdf",
+            use_container_width=True
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     # BLOQUE 4: DISTRIBUCIÓN Y RECEPCIÓN EN LA RED PÚBLICA (RPIS)
     with st.container(border=True):
-        st.markdown("### 🏥 4. Distribución y Recepción en la Red Pública (RPIS)")
+        st.markdown("### 🏥 4. Manual de Recepción, Almacenamiento, Distribución y Transporte (Acuerdo 00050-2022)")
         st.markdown("""
-        * **Manual Sustitutivo de Recepción y Transporte (Acuerdo No. 00050-2022):** Manual técnico unificado para las instituciones de la Red Pública Integral de Salud (MSP, IESS, ISSFA, ISSPOL).
-        * **Anexo Técnico del Acuerdo 00050-2022:** Flujogramas obligatorios de áreas de almacenamiento y protocolos de cadena de frío.
+        * **Manual Técnico Unificado (3er Suplemento R.O. 29):** Manual sustitutivo oficial del MSP para la recepción, almacenamiento, distribución y transporte en las entidades del Sistema Nacional de Salud.
         """, unsafe_allow_html=True)
         
-        c_rp1, c_rp2 = st.columns(2)
-        with c_rp1:
-            st.link_button(
-                "🔗 Portal MSP - Manual de Recepción (Acuerdo 00050-2022)", 
-                "https://www.salud.gob.ec/",
-                use_container_width=True
-            )
-        with c_rp2:
-            st.link_button(
-                "🔗 Intranet MSP - Anexo Técnico 00050-2022", 
-                "https://www.salud.gob.ec/",
-                use_container_width=True
-            )
+        st.link_button(
+            "📄 Abrir PDF Oficial: Manual de Recepción, Almacenamiento, Distribución y Transporte (MSP)", 
+            "https://www.salud.gob.ec/wp-content/uploads/2022/03/Manual-recep-almacenam-distribuc-y-transp.3er.-supl.-R.O.-29-25-03-2022.-publicacion-web.pdf",
+            use_container_width=True
+        )
