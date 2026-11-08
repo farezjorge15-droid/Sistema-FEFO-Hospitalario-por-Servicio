@@ -124,7 +124,7 @@ with col_header_right:
                 keys_to_reset = [
                     'unique_pdfs_key', 'unique_lotes_key', 'unique_unificado_key', 
                     'excel_res', 'pdf_res', 'df_resultado', 'show_firmantes_config',
-                    'df_lotes_raw', 'df_unif_raw', 'df_lotes_fefo_view', 'productos_pedidos_set', 'metadata_actas_store'
+                    'df_lotes_raw', 'df_unif_raw', 'df_lotes_fefo_view', 'productos_pedidos_set', 'metadata_actas_store', 'firmantes_individuales_store'
                 ]
                 for k in keys_to_reset:
                     if k in st.session_state:
@@ -211,7 +211,18 @@ def consolidar_lotes_texto(texto_lotes_crudo):
             
     return " / ".join(resultado_final)
 
+def obtener_firmantes_acta(meta):
+    pdf_key = meta['nombre_pdf']
+    if 'firmantes_individuales_store' in st.session_state and pdf_key in st.session_state['firmantes_individuales_store']:
+        return st.session_state['firmantes_individuales_store'][pdf_key]
+    return {
+        'elaborado_por': meta['elaborado_por'],
+        'entregado_por': meta['entregado_por'],
+        'validado_por': meta['validado_por']
+    }
+
 def generar_pdf_individual_acta(meta, df_acta_actual):
+    firmantes = obtener_firmantes_acta(meta)
     output_pdf = io.BytesIO()
     doc = SimpleDocTemplate(output_pdf, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
     elements = []
@@ -268,9 +279,9 @@ def generar_pdf_individual_acta(meta, df_acta_actual):
 
     firma_data = [
         [
-            Paragraph(f"<b>ELABORÓ / RECIBIDO:</b><br/><br/><br/>_________________________________<br/><b>{meta['elaborado_por']}</b>", sig_style),
-            Paragraph(f"<b>ENTREGADO BODEGA:</b><br/><br/><br/>_________________________________<br/><b>{meta['entregado_por']}</b>", sig_style),
-            Paragraph(f"<b>VALIDÓ / AUTORIZÓ:</b><br/><br/><br/>_________________________________<br/><b>{meta['validado_por']}</b>", sig_style)
+            Paragraph(f"<b>ELABORÓ / RECIBIDO:</b><br/><br/><br/>_________________________________<br/><b>{firmantes['elaborado_por']}</b>", sig_style),
+            Paragraph(f"<b>ENTREGADO BODEGA:</b><br/><br/><br/>_________________________________<br/><b>{firmantes['entregado_por']}</b>", sig_style),
+            Paragraph(f"<b>VALIDÓ / AUTORIZÓ:</b><br/><br/><br/>_________________________________<br/><b>{firmantes['validado_por']}</b>", sig_style)
         ]
     ]
     
@@ -688,6 +699,8 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             if df_acta_actual.empty:
                 continue
 
+            firmantes_acta = obtener_firmantes_acta(meta)
+
             elements.append(Paragraph("HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO", title_style))
             elements.append(Paragraph(f"ACTA OFICIAL DE DISPENSACIÓN Y CRUCE DE STOCK (FEFO) - Archivo: {p_name_actual}", subtitle_style))
             elements.append(Spacer(1, 4))
@@ -730,9 +743,9 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
             firma_data = [
                 [
-                    Paragraph(f"<b>ELABORÓ / RECIBIDO:</b><br/><br/><br/>_________________________________<br/><b>{meta['elaborado_por']}</b>", sig_style),
-                    Paragraph(f"<b>ENTREGADO BODEGA:</b><br/><br/><br/>_________________________________<br/><b>{meta['entregado_por']}</b>", sig_style),
-                    Paragraph(f"<b>VALIDÓ / AUTORIZÓ:</b><br/><br/><br/>_________________________________<br/><b>{meta['validado_por']}</b>", sig_style)
+                    Paragraph(f"<b>ELABORÓ / RECIBIDO:</b><br/><br/><br/>_________________________________<br/><b>{firmantes_acta['elaborado_por']}</b>", sig_style),
+                    Paragraph(f"<b>ENTREGADO BODEGA:</b><br/><br/><br/>_________________________________<br/><b>{firmantes_acta['entregado_por']}</b>", sig_style),
+                    Paragraph(f"<b>VALIDÓ / AUTORIZÓ:</b><br/><br/><br/>_________________________________<br/><b>{firmantes_acta['validado_por']}</b>", sig_style)
                 ]
             ]
             
@@ -759,42 +772,85 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 
 # ==========================================
-# DIÁLOGO DE VISTA PREVIA DE ACTA (MODAL TIPO ACTAS 2.PNG)
+# DIÁLOGO DE VISTA PREVIA DE ACTA (MODAL CON EDICIÓN INDIVIDUAL DE FIRMANTES)
 # ==========================================
 @st.dialog("Vista Previa de Acta Oficial de Dispensación", width="large")
 def mostrar_modal_acta(meta, df_acta_item):
-    st.markdown(f"<span style='color:#555; font-size:0.85rem;'>Hospital Provincial General Docente Vicente Corral Moscoso &nbsp;·&nbsp; Archivo: <b>{meta['nombre_pdf']}</b></span>", unsafe_allow_html=True)
+    pdf_key = meta['nombre_pdf']
+    edit_state_key = f"editing_firmantes_{pdf_key}"
+    
+    if edit_state_key not in st.session_state:
+        st.session_state[edit_state_key] = False
+
+    st.markdown(f"<span style='color:#555; font-size:0.85rem;'>Hospital Provincial General Docente Vicente Corral Moscoso &nbsp;·&nbsp; Archivo: <b>{pdf_key}</b></span>", unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Cabecera superior interna con botones tal como actas 2.png
-    col_dummy, col_edit_f, col_dl_pdf, col_print = st.columns([1.5, 2.5, 2.8, 2.2])
+    # Botones superiores en el modal
+    col_dummy, col_edit_f, col_dl_pdf, col_print = st.columns([1.2, 2.8, 2.8, 2.2])
     
+    firmantes_actuales = obtener_firmantes_acta(meta)
     pdf_bytes_acta = generar_pdf_individual_acta(meta, df_acta_item)
 
     with col_edit_f:
-        if st.button("✏️ Editar Firmantes", key=f"modal_edit_{meta['nombre_pdf']}"):
-            st.info("Para editar los firmantes globales, utilice la sección 'Personalizar Firmantes de Actas' en la pestaña Cruce de Lote.")
+        if st.button("✏️ Editar Firmantes", key=f"modal_edit_btn_{pdf_key}", use_container_width=True):
+            st.session_state[edit_state_key] = not st.session_state[edit_state_key]
+            st.rerun()
     with col_dl_pdf:
         st.download_button(
             label="📥 Descargar PDF",
             data=pdf_bytes_acta,
-            file_name=f"Acta_{meta['nombre_pdf'].replace('.pdf', '')}.pdf",
+            file_name=f"Acta_{pdf_key.replace('.pdf', '')}.pdf",
             mime="application/pdf",
-            key=f"modal_dl_{meta['nombre_pdf']}",
+            key=f"modal_dl_{pdf_key}",
             use_container_width=True
         )
     with col_print:
-        if st.button("🖨️ Imprimir", key=f"modal_print_{meta['nombre_pdf']}"):
+        if st.button("🖨️ Imprimir", key=f"modal_print_{pdf_key}", use_container_width=True):
             st.toast("Abriendo diálogo de impresión del acta...")
+
+    # Panel desplegable exclusivo para editar los firmantes de esta acta
+    if st.session_state[edit_state_key]:
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown(f"**Editando Firmantes para este documento:** <span style='font-family:monospace; color:#1f4e78;'>{pdf_key}</span>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.8rem; color:#555;'>Los cambios aplicarán **únicamente** a esta acta al guardar.</span>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            in_elab_key = f"input_elab_{pdf_key}"
+            in_entre_key = f"input_entre_{pdf_key}"
+            in_vali_key = f"input_vali_{pdf_key}"
+
+            nuevo_elab = st.text_input("1. Elaboró / Recibido", firmantes_actuales['elaborado_por'], key=in_elab_key)
+            nuevo_entre = st.text_input("2. Entregado Bodega", firmantes_actuales['entregado_por'], key=in_entre_key)
+            nuevo_vali = st.text_input("3. Validó / Autorizó", firmantes_actuales['validado_por'], key=in_vali_key)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            col_save, col_cancel = st.columns(2)
+            with col_save:
+                if st.button("💾 Guardar Cambios de esta Acta", key=f"save_ind_{pdf_key}", use_container_width=True):
+                    if 'firmantes_individuales_store' not in st.session_state:
+                        st.session_state['firmantes_individuales_store'] = {}
+                    st.session_state['firmantes_individuales_store'][pdf_key] = {
+                        'elaborado_por': nuevo_elab,
+                        'entregado_por': nuevo_entre,
+                        'validado_por': nuevo_vali
+                    }
+                    st.session_state[edit_state_key] = False
+                    st.success("✅ ¡Firmantes actualizados con éxito para esta acta!")
+                    st.rerun()
+            with col_cancel:
+                if st.button("Cancelar", key=f"cancel_ind_{pdf_key}", use_container_width=True):
+                    st.session_state[edit_state_key] = False
+                    st.rerun()
 
     st.markdown("<hr style='margin: 15px 0; border-color: #ddd;'>", unsafe_allow_html=True)
 
-    # Contenido del acta dentro del modal
+    # Cabecera interna del documento del acta
     st.markdown("<div style='text-align: center; font-family: Helvetica, sans-serif;'>", unsafe_allow_html=True)
     st.markdown("<span style='font-size:0.8rem; color:#555; font-weight:600;'>MINISTERIO DE SALUD PÚBLICA DEL ECUADOR</span>", unsafe_allow_html=True)
     st.markdown("<h3 style='color:#163a5f; margin: 4px 0;'>HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO</h3>", unsafe_allow_html=True)
     st.markdown("<span style='font-size:0.85rem; font-weight:bold; color:#333;'>ACTA OFICIAL DE DISPENSACIÓN Y CRUCE DE STOCK (FEFO)</span>", unsafe_allow_html=True)
-    st.markdown(f"<br><span style='font-size:0.75rem; color:#777;'>Archivo de Origen: {meta['nombre_pdf']}</span>", unsafe_allow_html=True)
+    st.markdown(f"<br><span style='font-size:0.75rem; color:#777;'>Archivo de Origen: {pdf_key}</span>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -815,20 +871,21 @@ def mostrar_modal_acta(meta, df_acta_item):
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Firmas en el modal
+    # Firmas actualizadas en tiempo real en la vista previa
+    firmantes_actuales = obtener_firmantes_acta(meta)
     col_s1, col_s2, col_s3 = st.columns(3)
     with col_s1:
-        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ELABORÓ / RECIBIDO:</b><br>{meta['elaborado_por']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ELABORÓ / RECIBIDO:</b><br>{firmantes_actuales['elaborado_por']}</div>", unsafe_allow_html=True)
     with col_s2:
-        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ENTREGADO BODEGA:</b><br>{meta['entregado_por']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ENTREGADO BODEGA:</b><br>{firmantes_actuales['entregado_por']}</div>", unsafe_allow_html=True)
     with col_s3:
-        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>VALIDÓ / AUTORIZÓ:</b><br>{meta['validado_por']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>VALIDÓ / AUTORIZÓ:</b><br>{firmantes_actuales['validado_por']}</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(f"<span style='font-size:0.8rem; color:#666;'>{len(df_acta_item)} ítems en este pedido</span>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("Cerrar Vista Previa", key=f"close_modal_{meta['nombre_pdf']}", use_container_width=True):
+    if st.button("Cerrar Vista Previa", key=f"close_modal_{pdf_key}", use_container_width=True):
         st.rerun()
 
 
@@ -907,7 +964,7 @@ elif selected_tab == "📚 Cruce de Lote":
         def_vali = st.session_state.get('unique_vali_key', "XIMENA KARINA CABRERA ZENTENO")
 
         with col_f_title:
-            st.markdown("🖋️ **Personalizar Firmantes de Actas** &nbsp;&nbsp; <span style='background-color:#e2ebf4; color:#1f4e78; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:600;'>Activo para todo el lote</span>", unsafe_allow_html=True)
+            st.markdown("🖋️ **Personalizar Firmantes Globales** &nbsp;&nbsp; <span style='background-color:#e2ebf4; color:#1f4e78; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:600;'>Plantilla base para nuevas cargas</span>", unsafe_allow_html=True)
             if not st.session_state['show_firmantes_config']:
                 st.markdown(f"<span style='color:#555; font-size:0.85rem;'>Elaboró: <b>{def_elab}</b> &nbsp;·&nbsp; Entregó: <b>{def_entre}</b> &nbsp;·&nbsp; Validó: <b>{def_vali}</b></span>", unsafe_allow_html=True)
 
@@ -928,7 +985,7 @@ elif selected_tab == "📚 Cruce de Lote":
             
             col_desc, col_rest = st.columns([7, 3])
             with col_desc:
-                st.markdown("<span style='color:#555; font-size:0.85rem;'>Define los nombres y cargos de los tres firmantes que figurarán en el acta oficial de dispensación.</span>", unsafe_allow_html=True)
+                st.markdown("<span style='color:#555; font-size:0.85rem;'>Define los firmantes predeterminados al procesar los PDFs.</span>", unsafe_allow_html=True)
             with col_rest:
                 if st.button("🔄 Restaurar Predeterminados", key="btn_restaurar_firmas"):
                     st.session_state['unique_elab_key'] = "RESPONSABLE DE SERVICIO"
@@ -941,21 +998,10 @@ elif selected_tab == "📚 Cruce de Lote":
             c_f1, c_f2, c_f3 = st.columns(3)
             with c_f1:
                 custom_elab = st.text_input("1. Elaboró / Recibido", def_elab, key="unique_elab_key")
-                st.markdown("<span style='color:#777; font-size:0.75rem;'>Líder de turno / Responsable de enfermería</span>", unsafe_allow_html=True)
             with c_f2:
                 custom_entre = st.text_input("2. Entregado Bodega", def_entre, key="unique_entre_key")
-                st.markdown("<span style='color:#777; font-size:0.75rem;'>Guardalmacén de Farmacia / Bodega Central</span>", unsafe_allow_html=True)
             with c_f3:
                 custom_vali = st.text_input("3. Validó / Autorizó", def_vali, key="unique_vali_key")
-                st.markdown("<span style='color:#777; font-size:0.75rem;'>Dra. Cabrera &nbsp;·&nbsp; Dr. Deleg Sari</span>", unsafe_allow_html=True)
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            col_chk_force, col_btn_act = st.columns([6, 4])
-            with col_chk_force:
-                st.checkbox("Forzar estos firmantes en todas las actas (sobrescribe los extraídos del PDF)", value=True, key="chk_forzar_firmas")
-            with col_btn_act:
-                if st.button("Actualizar Actas con estos Firmantes", key="btn_actualizar_firmas_action"):
-                    st.success("✅ ¡Firmantes actualizados correctamente para todo el lote!")
 
     custom_elab = st.session_state.get('unique_elab_key', def_elab)
     custom_entre = st.session_state.get('unique_entre_key', def_entre)
@@ -991,7 +1037,7 @@ elif selected_tab == "📚 Cruce de Lote":
                     st.session_state['df_resultado'] = df_resultado
                     st.success("🎉 **¡Procesamiento finalizado con éxito!** Se han asignado los lotes óptimos FEFO y generado las actas.")
                 else:
-                    st.error("🚨 No se pudieron generar los resultados. Asegúrese de que las estructuras internas de las tablas de los Excel sean correctas.")
+                    st.error("🚨 No se pudieron generar los resultados. Asegúrese de que las estructuras internas sean correctas.")
         else:
             st.warning("⚠️ **Requisito incompleto:** Por favor, cargue los tres tipos de archivo en sus respectivas tarjetas antes de ejecutar el proceso.")
 
@@ -1121,19 +1167,6 @@ elif selected_tab == "📚 Cruce de Lote":
             hide_index=True
         )
 
-        st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 4px; font-size: 0.85rem; color: #555;">
-            <div>Mostrando <b>{len(df_display)}</b> de <b>{num_items_val}</b> ítems evaluados</div>
-            <div style="display: flex; gap: 15px;">
-                <span><span style="display:inline-block; width:10px; height:10px; background-color:#FCE4D6; border:1px solid #C00000; border-radius:2px;"></span> Alerta de Stock Cero / Insuficiente</span>
-                <span><span style="display:inline-block; width:10px; height:10px; background-color:#ffffff; border:1px solid #ccc; border-radius:2px;"></span> Stock Conforme FEFO</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    else:
-        st.info("📂 Cargue sus archivos PDF, el Excel de Lotes y el Excel Unificado en las tarjetas superiores, y presione **'Ejecutar Cruce Hospitalario en Lote'** para desplegar el contenido detallado por servicios.")
-
 # 3. LOTES & BODEGA
 elif selected_tab == "📊 Lotes & Bodega":
     st.markdown("""
@@ -1201,7 +1234,7 @@ elif selected_tab == "📊 Lotes & Bodega":
         else:
             st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega** filtrado por sus pedidos, ejecute primero el cruce en la pestaña **'Cruce de Lote'**.")
 
-# 4. ACTAS OFICIALES (DISEÑO DE TARJETAS CON MODAL DE VISTA PREVIA TIPO ACTAS 2.PNG)
+# 4. ACTAS OFICIALES (TARJETAS Y MODAL INDIVIDUALIZADO)
 elif selected_tab == "📄 Actas Oficiales":
     col_t_left, col_t_right = st.columns([7, 3])
     with col_t_left:
@@ -1235,6 +1268,7 @@ elif selected_tab == "📄 Actas Oficiales":
             
             num_items_acta = len(df_acta_item)
             has_quiebres = df_acta_item['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False).any()
+            firmantes_card = obtener_firmantes_acta(meta)
 
             with st.container(border=True):
                 col_badge, col_status = st.columns([8, 2])
@@ -1253,15 +1287,14 @@ elif selected_tab == "📄 Actas Oficiales":
 
                 st.markdown(f"""
                 <div style='font-size:0.85rem; color:#333; line-height: 1.6;'>
-                    <b>Elaboró:</b> {meta['elaborado_por']}<br>
-                    <b>Entregó:</b> {meta['entregado_por']}<br>
-                    <b>Autorizó:</b> {meta['validado_por']}
+                    <b>Elaboró:</b> {firmantes_card['elaborado_por']}<br>
+                    <b>Entregó:</b> {firmantes_card['entregado_por']}<br>
+                    <b>Autorizó:</b> {firmantes_card['validado_por']}
                 </div>
                 """, unsafe_allow_html=True)
 
                 st.markdown("<br>", unsafe_allow_html=True)
 
-                # Botones inferiores de la tarjeta (Ver Acta y Descargar)
                 col_btn_view, col_btn_dl = st.columns([8, 2])
                 with col_btn_view:
                     if st.button("👁️ Ver Acta", key=f"btn_view_modal_{pdf_orig}", use_container_width=True):
