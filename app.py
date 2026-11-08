@@ -1332,11 +1332,6 @@ elif selected_tab == "🛡️ Normativa FEFO":
     </div>
     """, unsafe_allow_html=True)
 
-    # Inicializar estado para mostrar u ocultar el contenido completo de cada normativa
-    for k_reg in ['reg_1', 'reg_2', 'reg_3', 'reg_4', 'reg_5']:
-        if k_reg not in st.session_state:
-            st.session_state[k_reg] = False
-
     # 1. LOSNCP
     with st.container(border=True):
         st.markdown("### ⚖️ 1. Ley Orgánica del Sistema Nacional de Contratación Pública (LOSNCP) y su Reglamento General")
@@ -1346,16 +1341,11 @@ elif selected_tab == "🛡️ Normativa FEFO":
         * **Trazabilidad:** Garantizar que los insumos provengan de proveedores debidamente adjudicados y legalmente contratados[cite: 1].
         """, unsafe_allow_html=True)
         
-        if st.button("📖 Leer / Revisar Reglamento Completo (LOSNCP)", key="btn_toggle_reg_1"):
-            st.session_state['reg_1'] = not st.session_state['reg_1']
-            
-        if st.session_state['reg_1']:
-            st.info("""
-            **📄 Texto de Consulta Completa: Ley Orgánica del Sistema Nacional de Contratación Pública (LOSNCP)**
-            * **Artículo 6 (Definiciones clave):** Delimitación de bienes, obras y servicios normalizados y no normalizados, así como las fases de contratación pública.
-            * **Artículo 70 (Obligaciones del Administrador del Contrato):** Vigilar el cabal y oportuno cumplimiento de las cláusulas contractuales, plazos y especificaciones técnicas.
-            * **Artículo 74 (De las Actas de Recepción):** Requisito indispensable para la liquidación de obligaciones contractuales de bienes y suministros adquiridos para instituciones de salud pública.
-            """)
+        st.link_button(
+            "🔗 Abrir Ley Orgánica del Sistema Nacional de Contratación Pública (LOSNCP) Completa", 
+            "https://www.compraspublicas.gob.ec/ProcesoContratación/compras/lotaip/normativa/Ley-Organica-Sistema-Nacional-Contratacion-Publica-LOSNCP.pdf",
+            use_container_width=True
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1368,16 +1358,11 @@ elif selected_tab == "🛡️ Normativa FEFO":
         * **Trazabilidad de Lotes:** Registro riguroso de números de lote desde el ingreso hasta su dispensación y entrega final a los servicios clínicos[cite: 1].
         """, unsafe_allow_html=True)
         
-        if st.button("📖 Leer / Revisar Reglamento Completo (BPA / BPD / BPT)", key="btn_toggle_reg_2"):
-            st.session_state['reg_2'] = not st.session_state['reg_2']
-            
-        if st.session_state['reg_2']:
-            st.info("""
-            **📄 Texto de Consulta Completa: Normas de Almacenamiento, Distribución y Transporte (BPA / BPD / BPT)**
-            * **Infraestructura e Instalaciones:** Zonas claramente diferenciadas para recepción, cuarentena, almacenamiento general, productos rechazados y despachos.
-            * **Control de Stock y Cadenas de Frío:** Monitoreo y registro diario de temperatura en áreas de cadena de frío y medicamentos termolábiles.
-            * **Seguridad y Saneamiento:** Protocolos formales de limpieza, control de plagas y acceso restringido al personal autorizado en bodegas farmacéuticas.
-            """)
+        st.link_button(
+            "🔗 Abrir Normativa de Almacenamiento, Distribución y Transporte (BPA/BPD/BPT)", 
+            "https://www.controlsanitario.gob.ec/",
+            use_container_width=True
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1389,15 +1374,11 @@ elif selected_tab == "🛡️ Normativa FEFO":
         * **Prevención de Deterioro:** Uso de embalajes adecuados que eviten roturas, exposición a la humedad o alteraciones físico-químicas de los productos sanitarios.
         """, unsafe_allow_html=True)
         
-        if st.button("📖 Leer / Revisar Reglamento Completo (BPADT)", key="btn_toggle_reg_3"):
-            st.session_state['reg_3'] = not st.session_state['reg_3']
-            
-        if st.session_state['reg_3']:
-            st.info("""
-            **📄 Texto de Consulta Completa: Buenas Prácticas de Almacenamiento, Distribución y Transporte (BPADT)**
-            * **Requisitos del Transporte:** Vehículos y contenedores equipados para mantener las especificaciones técnicas de los productos durante su despacho.
-            * **Documentación de Resguardo:** Guías de remisión y actas de entrega firmadas que respalden la cantidad y lote exacto transportado.
-            """)
+        st.link_button(
+            "🔗 Abrir Guía Completa de Buenas Prácticas (BPADT)", 
+            "https://www.controlsanitario.gob.ec/",
+            use_container_width=True
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1409,16 +1390,11 @@ elif selected_tab == "🛡️ Normativa FEFO":
         * **Mitigación de Pérdidas:** Obligación de reportar y ejecutar los procesos normados de sustitución con el proveedor adjudicado para precautelar los recursos públicos del hospital.
         """, unsafe_allow_html=True)
         
-        if st.button("📖 Leer / Revisar Reglamento Completo (Acuerdo Ministerial No. 00015-2019)", key="btn_toggle_reg_4"):
-            st.session_state['reg_4'] = not st.session_state['reg_4']
-            
-        if st.session_state['reg_4']:
-            st.info("""
-            **📄 Texto de Consulta Completa: Acuerdo Ministerial No. 00015-2019 (Canjes de Medicamentos)**
-            * **Objeto y Ámbito:** Regula los procedimientos técnicos y administrativos para el canje de medicamentos en las entidades del Sistema Nacional de Salud.
-            * **Plazos de Notificación:** Obligación de notificar al proveedor con el margen de anticipación establecido en la normativa y contratos para proceder con el canje por proximidad de caducidad.
-            * **Obligaciones del Proveedor:** Deber de aceptar el canje bajo los términos contractuales vigentes sin perjuicio para la institución.
-            """)
+        st.link_button(
+            "🔗 Abrir Acuerdo Ministerial No. 00015-2019 (Canjes de Medicamentos)", 
+            "https://www.salud.gob.ec/",
+            use_container_width=True
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1430,12 +1406,8 @@ elif selected_tab == "🛡️ Normativa FEFO":
         * **Gestión de Alertas:** Retiro inmediato de productos observados, falsificados o con alertas sanitarias oficiales dentro del inventario del hospital.
         """, unsafe_allow_html=True)
         
-        if st.button("📖 Leer / Revisar Reglamento Completo (Control Sanitario General)", key="btn_toggle_reg_5"):
-            st.session_state['reg_5'] = not st.session_state['reg_5']
-            
-        if st.session_state['reg_5']:
-            st.info("""
-            **📄 Texto de Consulta Completa: Regulación y Control Sanitario General**
-            * **Vigilancia Post-registro:** Obligación del establecimiento de reportar eventos adversos, incidentes con dispositivos médicos y no conformidades de calidad.
-            * **Trazabilidad y Calidad:** Garantizar que todo insumo dispensado posea respaldo normativo y control sanitario activo en el territorio ecuatoriano.
-            """)
+        st.link_button(
+            "🔗 Abrir Normativa de Regulación y Control Sanitario General (ARCSA / MSP)", 
+            "https://www.controlsanitario.gob.ec/",
+            use_container_width=True
+        )
