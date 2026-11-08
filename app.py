@@ -82,6 +82,40 @@ st.markdown("""
         margin-bottom: 0;
     }
 
+    /* Banner Lateral Izquierdo de Inicio */
+    .inicio-banner-left {
+        background: linear-gradient(135deg, #163a5f 0%, #1f4e78 100%);
+        padding: 40px 32px;
+        border-radius: 16px;
+        color: white;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        border-left: 8px solid #007bff;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: left;
+    }
+    .inicio-banner-left h1 {
+        color: #ffffff !important;
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 12px;
+        line-height: 1.2;
+    }
+    .inicio-banner-left h3 {
+        color: #e0effe !important;
+        font-weight: 500;
+        font-size: 1.15rem;
+        margin-bottom: 20px;
+    }
+    .inicio-banner-left p {
+        color: #d0e7ff;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
     /* Botón Ejecutar Estilizado */
     .stButton > button {
         background: linear-gradient(135deg, #1f4e78 0%, #163a5f 100%);
@@ -776,7 +810,30 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
 # 1. INICIO
 if selected_tab == "🏠 Inicio":
-    st.write("") 
+    st.write("")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    col_banner_left, col_banner_right = st.columns([5, 5])
+
+    with col_banner_left:
+        st.markdown("""
+        <div class="inicio-banner-left">
+            <h1>🏥 Hospital Provincial General Docente Vicente Corral Moscoso</h1>
+            <h3>Sistema Automatizado de Gestión FEFO & Cruce de Pedidos por Servicio</h3>
+            <p>Plataforma oficial para el control riguroso de fechas de caducidad, trazabilidad de lotes, generación de matrices de despacho en Excel y emisión de actas oficiales con firmas electrónicas.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_banner_right:
+        with st.container(border=True):
+            st.markdown("### 📋 Guía Rápida de Operación")
+            st.markdown("""
+            1. **Cargue de Archivos:** Diríjase a la pestaña **Cruce de Lote** y cargue los PDFs de pedidos de los servicios, el Excel de Lotes FEFO y el Excel Unificado de Stock.
+            2. **Ejecución Automática:** Haga clic en el botón de procesamiento para aplicar el algoritmo FEFO y descontar existencias de forma secuencial.
+            3. **Gestión de Lotes y Bodega:** Revise el stock remanente y los lotes asignados desde la pestaña **Lotes & Bodega**.
+            4. **Actas de Entrega:** Verifique, edite firmantes e imprima las actas oficiales en la pestaña **Actas Oficiales**.
+            5. **Respaldo Legal:** Consulte las normativas vigentes (LOSNCP, BPADT, Canjes y Red Pública) en la pestaña **Normativa FEFO**.
+            """, unsafe_allow_html=True)
 
 # 2. CRUCE DE LOTE
 elif selected_tab == "📚 Cruce de Lote":
@@ -1323,7 +1380,7 @@ elif selected_tab == "📄 Actas Oficiales":
         else:
             st.info("📂 Cargue sus archivos y ejecute el cruce hospitalario en la pestaña **'Cruce de Lote'** para generar y visualizar las tarjetas de las Actas Oficiales.")
 
-# 5. NORMATIVA FEFO (CON ENLACES DIRECTOS A LOS ARCHIVOS PDF OFICIALES)
+# 5. NORMATIVA FEFO
 elif selected_tab == "🛡️ Normativa FEFO":
     st.markdown("""
     <div class="hospital-header">
@@ -1357,7 +1414,7 @@ elif selected_tab == "🛡️ Normativa FEFO":
         st.link_button(
             "📄 Abrir PDF Oficial: Reglamento de BPADT para Establecimientos Farmacéuticos (ARCSA)", 
             "https://www.controlsanitario.gob.ec/wp-content/uploads/downloads/2014/09/A-4872-Reglamento-de-BPADT-para-Establecimientos-Farmac%C3%A9uticos.pdf",
-            use_container_width=True
+            use_command_width=True if 'use_command_width' in globals() else use_container_width=True
         )
 
     st.markdown("<br>", unsafe_allow_html=True)
