@@ -779,12 +779,15 @@ if selected_tab == "🏠 Inicio":
     st.write("")
     st.markdown("<br>", unsafe_allow_html=True)
 
-    st.markdown("""
-    <div style="text-align: left; padding: 20px 10px;">
-        <h2 style="color: #1f4e78; font-weight: 600; margin-bottom: 5px;">¡Bienvenido!</h2>
-        <h1 style="color: #163a5f; font-weight: 700; font-size: 2.2rem; margin-top: 0;">Hospital Provincial General Docente Vicente Corral Moscoso</h1>
-    </div>
-    """, unsafe_allow_html=True)
+    col_izq, col_der = st.columns([6, 4])
+
+    with col_izq:
+        st.markdown("""
+        <div style="text-align: left; padding: 10px 0;">
+            <h1 style="color: #1f4e78; font-weight: 700; font-size: 2.8rem; margin-bottom: 0;">¡Bienvenido!</h1>
+            <h1 style="color: #163a5f; font-weight: 800; font-size: 2.5rem; margin-top: 10px; line-height: 1.2;">Hospital Provincial General Docente Vicente Corral Moscoso</h1>
+        </div>
+        """, unsafe_allow_html=True)
 
 # 2. CRUCE DE LOTE
 elif selected_tab == "📚 Cruce de Lote":
@@ -1389,7 +1392,7 @@ elif selected_tab == "🛡️ Normativa FEFO":
     with st.container(border=True):
         st.markdown("### 🏥 4. Manual de Recepción, Almacenamiento, Distribución y Transporte (Acuerdo 00050-2022)")
         st.markdown("""
-        * **Manual Técnico Unificado (3er Suplemento R.O. 29):** Manual sustitutivo oficial del MSP para la recepción, almacenamiento, distribución y transporte en las entidades del Sistema Nacional de Salud.
+        * **Manual Técnico Unificado (3er Suplemento R.O. 29):** Manual sustitutivo oficial del MSP para la recepción, almacenamiento, distribution y transporte en las entidades del Sistema Nacional de Salud.
         """, unsafe_allow_html=True)
         
         st.link_button(
