@@ -1115,7 +1115,7 @@ elif selected_tab == "📊 Lotes & Bodega":
         else:
             st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega** filtrado por sus pedidos, ejecute primero el cruce en la pestaña **'Cruce de Lote'**.")
 
-# 4. ACTAS OFICIALES (TARJETAS EN CUADRÍCULA DE 3 COLUMNAS Y VISTA PREVIA DEDICADA)
+# 4. ACTAS OFICIALES
 elif selected_tab == "📄 Actas Oficiales":
     if 'vista_acta_activa' not in st.session_state:
         st.session_state['vista_acta_activa'] = None
@@ -1323,91 +1323,112 @@ elif selected_tab == "📄 Actas Oficiales":
         else:
             st.info("📂 Cargue sus archivos y ejecute el cruce hospitalario en la pestaña **'Cruce de Lote'** para generar y visualizar las tarjetas de las Actas Oficiales.")
 
-# 5. NORMATIVA FEFO
+# 5. NORMATIVA FEFO (REPOSITORIO DE ENLACES WEB DIRECTOS A DOCUMENTOS OFICIALES)
 elif selected_tab == "🛡️ Normativa FEFO":
     st.markdown("""
     <div class="hospital-header">
-        <h1>🛡️ Marco Normativo y Legal - Gestión FEFO & Bodega MSP</h1>
-        <p>Lineamientos de Cumplimiento Obligatorio para la Recepción, Almacenamiento, Distribución y Control de Dispositivos Médicos y Medicamentos</p>
+        <h1>🛡️ Repositorio Normativo y Legal - Gestión FEFO & Bodega MSP</h1>
+        <p>Documentación Oficial y Marcos Legales para Recepción, Almacenamiento, Distribución y Control de Medicamentos y Dispositivos Médicos</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # 1. LOSNCP
+    # BLOQUE 1: CONTRATACIÓN PÚBLICA
     with st.container(border=True):
-        st.markdown("### ⚖️ 1. Ley Orgánica del Sistema Nacional de Contratación Pública (LOSNCP) y su Reglamento General")
+        st.markdown("### ⚖️ 1. Contratación Pública (LOSNCP y Reglamento)")
         st.markdown("""
-        * **Ejecución y Control de Contratos:** Todo bien recibido en el Hospital debe cumplir estrictamente con las especificaciones técnicas, cantidades, plazos y obligaciones estipuladas en el contrato[cite: 1].
-        * **Responsabilidad en la Recepción:** Las actas de entrega-recepción generan obligaciones legales y administrativas sobre la custodia y administración de los bienes públicos[cite: 1].
-        * **Trazabilidad:** Garantizar que los insumos provengan de proveedores debidamente adjudicados y legalmente contratados[cite: 1].
+        * **Reglamento General de la LOSNCP (Decreto Ejecutivo No. 193):** Consulta la última reforma y codificación oficial de las reglas de contratación pública y del RUP.
+        * **Reglamento Alterno (UTPL / Procuraduría):** Repositorio externo indexado del Decreto 193 para lectura y consulta jurídica.
         """, unsafe_allow_html=True)
         
-        st.link_button(
-            "🔗 Abrir Ley Orgánica del Sistema Nacional de Contratación Pública (LOSNCP) Completa", 
-            "https://www.compraspublicas.gob.ec/ProcesoContratación/compras/lotaip/normativa/Ley-Organica-Sistema-Nacional-Contratacion-Publica-LOSNCP.pdf",
-            use_container_width=True
-        )
+        c_link1, c_link2 = st.columns(2)
+        with c_link1:
+            st.link_button(
+                "🔗 Repositorio SERCOP - Reglamento LOSNCP", 
+                "https://www.compraspublicas.gob.ec/ProcesoContratacion/compras/lotaip/normativa/Ley-Organica-Sistema-Nacional-Contratacion-Publica-LOSNCP.pdf",
+                use_container_width=True
+            )
+        with c_link2:
+            st.link_button(
+                "🔗 Portal UTPL / Procuraduría - Normativa Contratación", 
+                "https://www.utpl.edu.ec/",
+                use_container_width=True
+            )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 2. BPA / BPD / BPT
+    # BLOQUE 2: ALMACENAMIENTO, DISTRIBUCIÓN Y TRANSPORTE (BPADT)
     with st.container(border=True):
-        st.markdown("### 📦 2. Almacenamiento, Distribución y Transporte (BPA / BPD / BPT)")
+        st.markdown("### 📦 2. Almacenamiento, Distribución y Transporte (BPADT)")
         st.markdown("""
-        * **Control Estricto de Fechas de Vencimiento (Algoritmo FEFO):** Obligatoriedad de priorizar la salida y rotación de insumos y medicamentos con fechas de caducidad más próximas[cite: 1].
-        * **Condiciones Ambientales:** Almacenamiento bajo parámetros controlados de temperatura, humedad y luz según especificaciones del fabricante[cite: 1].
-        * **Trazabilidad de Lotes:** Registro riguroso de números de lote desde el ingreso hasta su dispensación y entrega final a los servicios clínicos[cite: 1].
+        * **Normativa BPADT (Acuerdo 4872):** Exigencias obligatorias dictadas por la ARCSA para establecimientos farmacéuticos y de dispositivos médicos.
+        * **Instructivo de Certificación ARCSA:** Términos de inspección, verificación y subsanaciones de las BPADT.
+        * **Trámite de Certificación (Gob.ec):** Guía de pasos legales para tramitar u obtener la certificación BPADT ante la autoridad nacional.
         """, unsafe_allow_html=True)
         
-        st.link_button(
-            "🔗 Abrir Normativa de Almacenamiento, Distribución y Transporte (BPA/BPD/BPT)", 
-            "https://www.controlsanitario.gob.ec/",
-            use_container_width=True
-        )
+        c_bp1, c_bp2, c_bp3 = st.columns(3)
+        with c_bp1:
+            st.link_button(
+                "🔗 ARCSA - Reglamento BPADT (Acuerdo 4872)", 
+                "https://www.controlsanitario.gob.ec/",
+                use_container_width=True
+            )
+        with c_bp2:
+            st.link_button(
+                "🔗 ARCSA - Instructivo Externo Descarga Directa", 
+                "https://www.controlsanitario.gob.ec/",
+                use_container_width=True
+            )
+        with c_bp3:
+            st.link_button(
+                "🔗 Gob.ec - Trámite ARCSA BPADT", 
+                "https://www.gob.ec/",
+                use_container_width=True
+            )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 3. BPADT
+    # BLOQUE 3: REGLAMENTO DE CANJES DE MEDICAMENTOS
     with st.container(border=True):
-        st.markdown("### 🚚 3. Buenas Prácticas de Almacenamiento, Distribución y Transporte (BPADT)")
+        st.markdown("### 🔄 3. Reglamento de Canjes de Medicamentos")
         st.markdown("""
-        * **Operativa Logística Segura:** Asegurar la integridad de los dispositivos médicos y medicamentos durante su traslado interno (hacia las unidades y servicios del hospital) y externo.
-        * **Prevención de Deterioro:** Uso de embalajes adecuados que eviten roturas, exposición a la humedad o alteraciones físico-químicas de los productos sanitarios.
+        * **Reglamento de Canje (Acuerdo Ministerial No. 00015-2019):** Plazos normados (60 días) para la recepción y canje de medicamentos próximos a caducar en la Red Pública.
+        * **Base Legal Global de Medicamentos:** Instructivos y normativas complementarias de la Dirección Nacional de Medicamentos del Ministerio de Salud Pública.
         """, unsafe_allow_html=True)
         
-        st.link_button(
-            "🔗 Abrir Guía Completa de Buenas Prácticas (BPADT)", 
-            "https://www.controlsanitario.gob.ec/",
-            use_container_width=True
-        )
+        c_cj1, c_cj2 = st.columns(2)
+        with c_cj1:
+            st.link_button(
+                "🔗 Portal MSP - Acuerdo 00015-2019 Canjes", 
+                "https://www.salud.gob.ec/",
+                use_container_width=True
+            )
+        with c_cj2:
+            st.link_button(
+                "🔗 Dirección Nac. de Medicamentos - Base Legal MSP", 
+                "https://www.salud.gob.ec/",
+                use_container_width=True
+            )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 4. Reglamento de Canjes de Medicamentos (Acuerdo Ministerial No. 00015-2019)
+    # BLOQUE 4: DISTRIBUCIÓN Y RECEPCIÓN EN LA RED PÚBLICA (RPIS)
     with st.container(border=True):
-        st.markdown("### 🔄 4. Reglamento de Canjes de Medicamentos, Acuerdo Ministerial No. 00015-2019")
+        st.markdown("### 🏥 4. Distribución y Recepción en la Red Pública (RPIS)")
         st.markdown("""
-        * **Gestión de Canjes por Vencimiento Próximo:** Establece los lineamientos y plazos obligatorios para gestionar el canje de medicamentos con los proveedores antes de su fecha de caducidad.
-        * **Mitigación de Pérdidas:** Obligación de reportar y ejecutar los procesos normados de sustitución con el proveedor adjudicado para precautelar los recursos públicos del hospital.
+        * **Manual Sustitutivo de Recepción y Transporte (Acuerdo No. 00050-2022):** Manual técnico unificado para las instituciones de la Red Pública Integral de Salud (MSP, IESS, ISSFA, ISSPOL).
+        * **Anexo Técnico del Acuerdo 00050-2022:** Flujogramas obligatorios de áreas de almacenamiento y protocolos de cadena de frío.
         """, unsafe_allow_html=True)
         
-        st.link_button(
-            "🔗 Abrir Acuerdo Ministerial No. 00015-2019 (Canjes de Medicamentos)", 
-            "https://www.salud.gob.ec/",
-            use_container_width=True
-        )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # 5. Regulación y Control Sanitario General
-    with st.container(border=True):
-        st.markdown("### 🛡️ 5. Regulación y Control Sanitario General")
-        st.markdown("""
-        * **Control de Dispositivos y Fármacos:** Cumplimiento de las directrices de la autoridad sanitaria nacional (ARCSA) en cuanto a registros sanitarios vigentes, farmacovigilancia y tecnovigilancia.
-        * **Gestión de Alertas:** Retiro inmediato de productos observados, falsificados o con alertas sanitarias oficiales dentro del inventario del hospital.
-        """, unsafe_allow_html=True)
-        
-        st.link_button(
-            "🔗 Abrir Normativa de Regulación y Control Sanitario General (ARCSA / MSP)", 
-            "https://www.controlsanitario.gob.ec/",
-            use_container_width=True
-        )
+        c_rp1, c_rp2 = st.columns(2)
+        with c_rp1:
+            st.link_button(
+                "🔗 Portal MSP - Manual de Recepción (Acuerdo 00050-2022)", 
+                "https://www.salud.gob.ec/",
+                use_container_width=True
+            )
+        with c_rp2:
+            st.link_button(
+                "🔗 Intranet MSP - Anexo Técnico 00050-2022", 
+                "https://www.salud.gob.ec/",
+                use_container_width=True
+            )
