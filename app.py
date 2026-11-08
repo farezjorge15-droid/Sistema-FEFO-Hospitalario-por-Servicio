@@ -678,7 +678,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         wb.save(output_excel)
         output_excel.seek(0)
 
-        # PDF ACTAS COMPLETO
+        # PDF ACTAS COMPLETO (CONSULTANDO FIRMANTES ACTUALIZADOS)
         output_pdf = io.BytesIO()
         doc = SimpleDocTemplate(output_pdf, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
         elements = []
@@ -699,6 +699,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             if df_acta_actual.empty:
                 continue
 
+            # Obtenemos los firmantes actuales (incluyendo modificaciones si las hubo)
             firmantes_acta = obtener_firmantes_acta(meta)
 
             elements.append(Paragraph("HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO", title_style))
@@ -991,17 +992,105 @@ elif selected_tab == "📚 Cruce de Lote":
             st.button("📊 Descargar Excel (.xlsx)", disabled=True, use_container_width=True, key="btn_dl_excel_dis")
 
     with col_dl_pdf:
-        if 'pdf_res' in st.session_state:
-            st.download_button(
-                label="📄 Descargar Actas Oficiales PDF",
-                data=st.session_state['pdf_res'],
-                file_name="Actas_Oficiales_Consolidas.pdf",
-                mime="application/pdf",
-                key="btn_dl_pdf_top",
-                use_container_width=True
-            )
+        if 'metadata_actas_store' in st.session_state and 'df_resultado' in st.session_state:
+            # Generar dinámicamente el PDF consolidado con los firmantes actuales actualizados
+            df_res_temp = st.session_state['df_resultado']
+            meta_list_temp = st.session_state['metadata_actas_store']
+            
+            pdf_gen_bytes = io.BytesIO()
+            doc_gen = SimpleDocTemplate(pdf_gen_bytes, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
+            elements_gen = []
+            
+            styles_g = getSampleStyleSheet()
+            t_style_g = ParagraphStyle('TSG', parent=styles_g['Heading1'], fontName='Helvetica-Bold', fontSize=10, alignment=1, textColor=colors.HexColor('#1F4E78'))
+            sub_style_g = ParagraphStyle('SSG', parent=styles_g['Normal'], fontName='Helvetica-Bold', fontSize=7.5, alignment=1, textColor=colors.darkgray)
+            meta_style_g = ParagraphStyle('MSG', parent=styles_g['Normal'], fontName='Helvetica-Bold', fontSize=8, alignment=0, textColor=colors.black)
+            cell_style_g = ParagraphStyle('CSG', parent=styles_g['Normal'], fontName='Helvetica', fontSize=7)
+            cell_center_g = ParagraphStyle('CCG', parent=styles_g['Normal'], fontName='Helvetica', fontSize=7, alignment=1)
+            cell_red_g = ParagraphStyle('CRG', parent=styles_g['Normal'], fontName='Helvetica-Bold', fontSize=7, textColor=colors.HexColor('#C00000'))
+            cell_red_center_g = ParagraphStyle('CRCG', parent=styles_g['Normal'], fontName='Helvetica-Bold', fontSize=7, textColor=colors.HexColor('#C00000'), alignment=1)
+            sig_style_g = ParagraphStyle('SGG', parent=styles_g['Normal'], fontName='Helvetica', fontSize=6.5, alignment=1)
+
+            for i, meta_g in enumerate(meta_list_temp):
+                p_name_g = meta_g['nombre_pdf']
+                df_acta_g = df_res_temp[df_res_temp['PDF Origen'] == p_name_g]
+                if df_acta_g.empty:
+                    continue
+
+                firmantes_g = obtener_firmantes_acta(meta_g)
+
+                elements_gen.append(Paragraph("HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO", t_style_g))
+                elements_gen.append(Paragraph(f"ACTA OFICIAL DE DISPENSACIÓN Y CRUCE DE STOCK (FEFO) - Archivo: {p_name_g}", sub_style_g))
+                elements_gen.append(Spacer(1, 4))
+                elements_gen.append(Paragraph(f"<b>SERVICIO:</b> {meta_g['servicio']} &nbsp;&nbsp;|&nbsp;&nbsp; <b>EMISIÓN:</b> {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", meta_style_g))
+                elements_gen.append(Spacer(1, 4))
+
+                table_data_g = [['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Ap.', 'Lotes y Cantidades a Despachar', 'Fechas Caducidad', 'Stock']]
+                for _, row_g in df_acta_g.iterrows():
+                    is_red_g = row_g['Alerta_Rojo'] or (row_g['Stock Bodega'] <= 0)
+                    c_s = cell_red_g if is_red_g else cell_style_g
+                    c_s_c = cell_red_center_g if is_red_g else cell_center_g
+                    
+                    table_data_g.append([
+                        str(row_g['Nro.']),
+                        Paragraph(str(row_g['Código']), c_s_c),
+                        Paragraph(str(row_g['Dispositivo Médico']), c_s),
+                        str(int(row_g['Cant. Aprobada'])),
+                        Paragraph(str(row_g['Lotes y Cantidades a Despachar']), c_s),
+                        Paragraph(str(row_g['Fechas de Caducidad']), c_s),
+                        Paragraph(f"{row_g['Stock Bodega']:,.0f}", c_s_c)
+                    ])
+
+                t_g = Table(table_data_g, colWidths=[22, 50, 180, 38, 150, 75, 45])
+                t_g.setStyle(TableStyle([
+                    ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1F4E78')),
+                    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+                    ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0,0), (-1,0), 7.5),
+                    ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                    ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                    ('BOTTOMPADDING', (0,0), (-1,0), 3),
+                    ('TOPPADDING', (0,0), (-1,0), 3),
+                    ('GRID', (0,0), (-1,-1), 0.5, colors.lightgrey),
+                ]))
+                elements_gen.append(t_g)
+                elements_gen.append(Spacer(1, 10))
+
+                firma_data_g = [
+                    [
+                        Paragraph(f"<b>ELABORÓ / RECIBIDO:</b><br/><br/><br/>_________________________________<br/><b>{firmantes_g['elaborado_por']}</b>", sig_style_g),
+                        Paragraph(f"<b>ENTREGADO BODEGA:</b><br/><br/><br/>_________________________________<br/><b>{firmantes_g['entregado_por']}</b>", sig_style_g),
+                        Paragraph(f"<b>VALIDÓ / AUTORIZÓ:</b><br/><br/><br/>_________________________________<br/><b>{firmantes_g['validado_por']}</b>", sig_style_g)
+                    ]
+                ]
+                t_firmas_g = Table(firma_data_g, colWidths=[185, 185, 185])
+                t_firmas_g.setStyle(TableStyle([
+                    ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                    ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                    ('LEFTPADDING', (0,0), (-1,-1), 4),
+                    ('RIGHTPADDING', (0,0), (-1,-1), 4),
+                ]))
+                elements_gen.append(t_firmas_g)
+
+                if i < len(meta_list_temp) - 1:
+                    elements_gen.append(PageBreak())
+
+            doc_gen.build(elements_gen)
+            pdf_gen_bytes.seek(0)
+            pdf_bytes_final = pdf_gen_bytes.getvalue()
         else:
-            st.button("📄 Descargar Actas Oficiales PDF", disabled=True, use_container_width=True, key="btn_dl_pdf_dis")
+            pdf_bytes_final = st.session_state.get('pdf_res', b'')
+
+        st.download_button(
+            label="📄 Descargar Actas Oficiales PDF",
+            data=pdf_bytes_final,
+            file_name="Actas_Oficiales_Consolidas.pdf",
+            mime="application/pdf",
+            key="btn_dl_pdf_top",
+            use_container_width=True
+        )
+    else:
+        st.button("📄 Descargar Actas Oficiales PDF", disabled=True, use_container_width=True, key="btn_dl_pdf_dis")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1174,7 +1263,7 @@ elif selected_tab == "📄 Actas Oficiales":
                 st.markdown("<br>", unsafe_allow_html=True)
                 with st.container(border=True):
                     st.markdown(f"**Editando Firmantes para este documento:** <span style='font-family:monospace; color:#1f4e78;'>{pdf_key}</span>", unsafe_allow_html=True)
-                    st.markdown("<span style='font-size:0.8rem; color:#555;'>Los cambios aplicarán <b>únicamente</b> a esta acta.</span>", unsafe_allow_html=True)
+                    st.markdown("<span style='font-size:0.8rem; color:#555;'>Los cambios aplicarán <b>únicamente</b> a esta acta y se reflejarán tanto aquí como en la descarga consolidada.</span>", unsafe_allow_html=True)
                     st.markdown("<br>", unsafe_allow_html=True)
 
                     nuevo_elab = st.text_input("1. Elaboró / Recibido", firmantes_actuales['elaborado_por'], key=f"in_elab_{pdf_key}")
@@ -1193,7 +1282,7 @@ elif selected_tab == "📄 Actas Oficiales":
                                 'validado_por': nuevo_vali
                             }
                             st.session_state[edit_state_key] = False
-                            st.success("✅ ¡Firmantes actualizados con éxito para esta acta!")
+                            st.success("✅ ¡Firmantes actualizados con éxito para esta acta y para el consolidado general!")
                     with col_cancel_btn:
                         if st.button("Cancelar", key=f"cancel_ind_{pdf_key}", use_container_width=True):
                             st.session_state[edit_state_key] = False
@@ -1248,9 +1337,99 @@ elif selected_tab == "📄 Actas Oficiales":
         with col_t_right:
             if 'pdf_res' in st.session_state:
                 st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+                
+                # Botón superior de descarga masiva con firmas actualizadas
+                if 'metadata_actas_store' in st.session_state and 'df_resultado' in st.session_state:
+                    df_res_temp = st.session_state['df_resultado']
+                    meta_list_temp = st.session_state['metadata_actas_store']
+                    
+                    pdf_gen_bytes = io.BytesIO()
+                    doc_gen = SimpleDocTemplate(pdf_gen_bytes, pagesize=letter, rightMargin=18, leftMargin=18, topMargin=20, bottomMargin=20)
+                    elements_gen = []
+                    
+                    styles_g = getSampleStyleSheet()
+                    t_style_g = ParagraphStyle('TSG', parent=styles_g['Heading1'], fontName='Helvetica-Bold', fontSize=10, alignment=1, textColor=colors.HexColor('#1F4E78'))
+                    sub_style_g = ParagraphStyle('SSG', parent=styles_g['Normal'], fontName='Helvetica-Bold', fontSize=7.5, alignment=1, textColor=colors.darkgray)
+                    meta_style_g = ParagraphStyle('MSG', parent=styles_g['Normal'], fontName='Helvetica-Bold', fontSize=8, alignment=0, textColor=colors.black)
+                    cell_style_g = ParagraphStyle('CSG', parent=styles_g['Normal'], fontName='Helvetica', fontSize=7)
+                    cell_center_g = ParagraphStyle('CCG', parent=styles_g['Normal'], fontName='Helvetica', fontSize=7, alignment=1)
+                    cell_red_g = ParagraphStyle('CRG', parent=styles_g['Normal'], fontName='Helvetica-Bold', fontSize=7, textColor=colors.HexColor('#C00000'))
+                    cell_red_center_g = ParagraphStyle('CRCG', parent=styles_g['Normal'], fontName='Helvetica-Bold', fontSize=7, textColor=colors.HexColor('#C00000'), alignment=1)
+                    sig_style_g = ParagraphStyle('SGG', parent=styles_g['Normal'], fontName='Helvetica', fontSize=6.5, alignment=1)
+
+                    for i, meta_g in enumerate(meta_list_temp):
+                        p_name_g = meta_g['nombre_pdf']
+                        df_acta_g = df_res_temp[df_res_temp['PDF Origen'] == p_name_g]
+                        if df_acta_g.empty:
+                            continue
+
+                        firmantes_g = obtener_firmantes_acta(meta_g)
+
+                        elements_gen.append(Paragraph("HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO", t_style_g))
+                        elements_gen.append(Paragraph(f"ACTA OFICIAL DE DISPENSACIÓN Y CRUCE DE STOCK (FEFO) - Archivo: {p_name_g}", sub_style_g))
+                        elements_gen.append(Spacer(1, 4))
+                        elements_gen.append(Paragraph(f"<b>SERVICIO:</b> {meta_g['servicio']} &nbsp;&nbsp;|&nbsp;&nbsp; <b>EMISIÓN:</b> {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", meta_style_g))
+                        elements_gen.append(Spacer(1, 4))
+
+                        table_data_g = [['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Ap.', 'Lotes y Cantidades a Despachar', 'Fechas Caducidad', 'Stock']]
+                        for _, row_g in df_acta_g.iterrows():
+                            is_red_g = row_g['Alerta_Rojo'] or (row_g['Stock Bodega'] <= 0)
+                            c_s = cell_red_g if is_red_g else cell_style_g
+                            c_s_c = cell_red_center_g if is_red_g else cell_center_g
+                            
+                            table_data_g.append([
+                                str(row_g['Nro.']),
+                                Paragraph(str(row_g['Código']), c_s_c),
+                                Paragraph(str(row_g['Dispositivo Médico']), c_s),
+                                str(int(row_g['Cant. Aprobada'])),
+                                Paragraph(str(row_g['Lotes y Cantidades a Despachar']), c_s),
+                                Paragraph(str(row_g['Fechas de Caducidad']), c_s),
+                                Paragraph(f"{row_g['Stock Bodega']:,.0f}", c_s_c)
+                            ])
+
+                        t_g = Table(table_data_g, colWidths=[22, 50, 180, 38, 150, 75, 45])
+                        t_g.setStyle(TableStyle([
+                            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1F4E78')),
+                            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+                            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0,0), (-1,0), 7.5),
+                            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                            ('BOTTOMPADDING', (0,0), (-1,0), 3),
+                            ('TOPPADDING', (0,0), (-1,0), 3),
+                            ('GRID', (0,0), (-1,-1), 0.5, colors.lightgrey),
+                        ]))
+                        elements_gen.append(t_g)
+                        elements_gen.append(Spacer(1, 10))
+
+                        firma_data_g = [
+                            [
+                                Paragraph(f"<b>ELABORÓ / RECIBIDO:</b><br/><br/><br/>_________________________________<br/><b>{firmantes_g['elaborado_por']}</b>", sig_style_g),
+                                Paragraph(f"<b>ENTREGADO BODEGA:</b><br/><br/><br/>_________________________________<br/><b>{firmantes_g['entregado_por']}</b>", sig_style_g),
+                                Paragraph(f"<b>VALIDÓ / AUTORIZÓ:</b><br/><br/><br/>_________________________________<br/><b>{firmantes_g['validado_por']}</b>", sig_style_g)
+                            ]
+                        ]
+                        t_firmas_g = Table(firma_data_g, colWidths=[185, 185, 185])
+                        t_firmas_g.setStyle(TableStyle([
+                            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                            ('LEFTPADDING', (0,0), (-1,-1), 4),
+                            ('RIGHTPADDING', (0,0), (-1,-1), 4),
+                        ]))
+                        elements_gen.append(t_firmas_g)
+
+                        if i < len(meta_list_temp) - 1:
+                            elements_gen.append(PageBreak())
+
+                    doc_gen.build(elements_gen)
+                    pdf_gen_bytes.seek(0)
+                    pdf_bytes_masivo = pdf_gen_bytes.getvalue()
+                else:
+                    pdf_bytes_masivo = st.session_state['pdf_res']
+
                 st.download_button(
                     label="⬇️ Descargar Todas las Actas (.pdf)",
-                    data=st.session_state['pdf_res'],
+                    data=pdf_bytes_masivo,
                     file_name="Actas_Oficiales_Consolidas.pdf",
                     mime="application/pdf",
                     key="btn_dl_all_actas_top",
