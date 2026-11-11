@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# DISEÑO Y ESTILOS CSS (UI MODERNA INSTITUCIONAL)
+# DISEÑO Y ESTILOS CSS (TEXTOS EN BLANCO BRILLANTE Y UI MODERNA)
 # ==========================================
 st.markdown("""
 <style>
@@ -45,7 +45,12 @@ st.markdown("""
         visibility: hidden;
     }
 
-    /* Forzar alta visibilidad en las etiquetas de los radio buttons de navegación */
+    /* FORZAR TEXTOS EN BLANCO BRILLANTE EN TODA LA APLICACIÓN */
+    p, span, label, div, h1, h2, h3, h4, h5, h6, .stMarkdown, .stText, .streamlit-expanderHeader {
+        color: #ffffff !important;
+    }
+
+    /* Alta visibilidad en las etiquetas de los radio buttons de navegación */
     div[row-widget="stHorizontal"] label p, div.stRadio label p {
         color: #ffffff !important;
         font-weight: 600 !important;
@@ -65,7 +70,7 @@ st.markdown("""
     }
 
     .typewriter-title {
-        color: #38bdf8;
+        color: #38bdf8 !important;
         font-weight: 600;
         font-size: 2.5rem;
         margin-bottom: 0;
@@ -74,7 +79,7 @@ st.markdown("""
     }
 
     .typewriter-hospital {
-        color: #ffffff;
+        color: #ffffff !important;
         font-weight: 800;
         font-size: 3.5rem;
         margin-top: 5px;
@@ -84,9 +89,16 @@ st.markdown("""
         animation: revealText 1.3s ease-out 0.3s forwards;
     }
 
+    /* Tarjetas de Contenedores y Carga con Fondo Semitransparente */
+    div.st-emotion-cache-1r6slb0, div[data-testid="stVerticalBlock"] > div[data-testid="stContainer"] {
+        background-color: rgba(30, 41, 59, 0.75) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 12px;
+    }
+
     /* Cabecera Principal de Secciones */
     .hospital-header {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
         padding: 24px 28px;
         border-radius: 12px;
         color: white;
@@ -102,7 +114,7 @@ st.markdown("""
         margin: 0;
     }
     .hospital-header p {
-        color: #94a3b8;
+        color: #cbd5e1 !important;
         font-size: 0.95rem;
         margin-top: 6px;
         margin-bottom: 0;
@@ -141,7 +153,6 @@ col_nav, col_logo = st.columns([7.5, 2.5])
 with col_nav:
     opciones_menu = ["📊 Dashboard", "📚 Cruce de Lote", "📦 Inventario / Bodega", "📄 Actas", "🛡️ Normativa", "⚙️ Configuración"]
     
-    # Sincronizar radio button con session_state
     selected_tab = st.radio(
         "Navegación",
         opciones_menu,
@@ -829,19 +840,19 @@ elif st.session_state['active_tab'] == "📚 Cruce de Lote":
     with col_card1:
         with st.container(border=True):
             st.markdown("📄 **1. Pedidos en PDF (Hasta 30+)**")
-            st.markdown("<span style='font-size:0.82rem; color:#555;'>Solicitudes de despacho con servicios y firmas electrónicas.</span>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.82rem;'>Solicitudes de despacho con servicios y firmas electrónicas.</span>", unsafe_allow_html=True)
             uploaded_pdfs = st.file_uploader("Cargar PDFs de Pedidos", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
 
     with col_card2:
         with st.container(border=True):
             st.markdown("📊 **2. Excel de Lotes (FEFO)**")
-            st.markdown("<span style='font-size:0.82rem; color:#555;'>Columnas: Producto, Lote, F. Cad, Existen.</span>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.82rem;'>Columnas: Producto, Lote, F. Cad, Existen.</span>", unsafe_allow_html=True)
             uploaded_lotes = st.file_uploader("Cargar Excel de Lotes", type=["xlsx", "xls"], key="unique_lotes_key")
 
     with col_card3:
         with st.container(border=True):
             st.markdown("📈 **3. Excel Unificado / Stock**")
-            st.markdown("<span style='font-size:0.82rem; color:#555;'>Columnas: Producto, Código, SKU, Stock Bodega.</span>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.82rem;'>Columnas: Producto, Código, SKU, Stock Bodega.</span>", unsafe_allow_html=True)
             uploaded_unificado = st.file_uploader("Cargar Excel Unificado", type=["xlsx", "xls"], key="unique_unificado_key")
 
     st.markdown("<br>", unsafe_allow_html=True)
