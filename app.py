@@ -24,37 +24,27 @@ st.set_page_config(
 )
 
 # ==========================================
-# DISEÑO Y ESTILOS CSS (TEXTOS EN BLANCO BRILLANTE Y UI MODERNA)
+# DISEÑO Y ESTILOS CSS (ESTÉTICA INSTITUCIONAL & NAVBAR FIJA)
 # ==========================================
 st.markdown("""
 <style>
-    /* Fondo con difuminado institucional y fotografía del hospital */
+    /* Fondo: Difuminado en azul cielo al 70% en la izquierda y nítido a todo color en la derecha */
     .stApp {
-        background: linear-gradient(to right, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.75) 45%, rgba(15, 23, 42, 0.4) 75%, rgba(15, 23, 42, 0.2) 100%), 
+        background: linear-gradient(to right, rgba(224, 239, 254, 0.75) 0%, rgba(224, 239, 254, 0.55) 45%, rgba(255, 255, 255, 0.05) 75%, rgba(255, 255, 255, 0) 100%), 
                     url("https://www.metroecuador.com.ec/resizer/v2/JPWRHUMSIRGCDIHJTUBWDHGKJU.jpg?auth=5e0819a9b2036e60b75f706117b2939a852dfd313c77b0cc4feb0e1e423b24c0&width=1440&height=752");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }
 
-    /* Ocultar margen superior predeterminado y barra nativa */
+    /* Ocultar margen superior predeterminado y dar espacio para la barra fija */
     .block-container {
-        padding-top: 3.5rem !important;
+        padding-top: 4.2rem !important;
     }
+
+    /* Ocultar elementos predeterminados de Streamlit */
     .st-emotion-cache-1wmy9hl, header {
         visibility: hidden;
-    }
-
-    /* FORZAR TEXTOS EN BLANCO BRILLANTE EN TODA LA APLICACIÓN */
-    p, span, label, div, h1, h2, h3, h4, h5, h6, .stMarkdown, .stText, .streamlit-expanderHeader {
-        color: #ffffff !important;
-    }
-
-    /* Alta visibilidad en las etiquetas de los radio buttons de navegación */
-    div[row-widget="stHorizontal"] label p, div.stRadio label p {
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        font-size: 0.95rem !important;
     }
 
     /* Animación de Revelación Progresiva */
@@ -70,42 +60,46 @@ st.markdown("""
     }
 
     .typewriter-title {
-        color: #38bdf8 !important;
-        font-weight: 600;
-        font-size: 2.5rem;
+        color: #1f4e78;
+        font-weight: 700;
+        font-size: 3rem;
         margin-bottom: 0;
         opacity: 0;
-        animation: revealText 1s ease-out forwards;
+        animation: revealText 1.2s ease-out forwards;
     }
 
     .typewriter-hospital {
-        color: #ffffff !important;
+        color: #1f4e78;
         font-weight: 800;
-        font-size: 3.5rem;
-        margin-top: 5px;
-        line-height: 1.1;
-        max-width: 750px;
+        font-size: 5rem;
+        margin-top: 10px;
+        line-height: 1.05;
+        max-width: 650px;
         opacity: 0;
-        animation: revealText 1.3s ease-out 0.3s forwards;
+        animation: revealText 1.5s ease-out 0.4s forwards;
     }
 
-    /* Tarjetas de Contenedores y Carga con Fondo Semitransparente */
-    div.st-emotion-cache-1r6slb0, div[data-testid="stVerticalBlock"] > div[data-testid="stContainer"] {
-        background-color: rgba(30, 41, 59, 0.75) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 12px;
+    /* Estilos del texto institucional derecho */
+    .header-right-text {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #3f5973;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: inline-block;
+        margin-top: 8px;
+        text-align: right;
     }
 
-    /* Cabecera Principal de Secciones */
+    /* Cabecera Principal */
     .hospital-header {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
+        background: linear-gradient(135deg, #163a5f 0%, #1f4e78 100%);
         padding: 24px 28px;
         border-radius: 12px;
         color: white;
         margin-top: 10px;
         margin-bottom: 25px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
-        border-left: 6px solid #38bdf8;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+        border-left: 6px solid #007bff;
     }
     .hospital-header h1 {
         color: #ffffff !important;
@@ -114,70 +108,70 @@ st.markdown("""
         margin: 0;
     }
     .hospital-header p {
-        color: #cbd5e1 !important;
+        color: #e0effe;
         font-size: 0.95rem;
         margin-top: 6px;
         margin-bottom: 0;
     }
 
-    /* Botón Principal Estilizado */
+    /* Botón Ejecutar Estilizado */
     .stButton > button {
-        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        background: linear-gradient(135deg, #1f4e78 0%, #163a5f 100%);
         color: white !important;
         border: none;
         border-radius: 10px;
         font-weight: 600;
         padding: 12px 24px;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        width: 100%;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.6);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.22);
     }
 </style>
 """, unsafe_allow_html=True)
 
 
 # ==========================================
-# GESTIÓN DE ESTADO DE NAVEGACIÓN
+# BARRA SUPERIOR FIJA & NAVEGACIÓN EN LA MISMA LÍNEA
 # ==========================================
-if 'active_tab' not in st.session_state:
-    st.session_state['active_tab'] = "📊 Dashboard"
-
-# ==========================================
-# BARRA SUPERIOR FIJA & NAVEGACIÓN MODERNA
-# ==========================================
-col_nav, col_logo = st.columns([7.5, 2.5])
+col_nav, col_header_right = st.columns([6.8, 3.2])
 
 with col_nav:
-    opciones_menu = ["📊 Dashboard", "📚 Cruce de Lote", "📦 Inventario / Bodega", "📄 Actas", "🛡️ Normativa", "⚙️ Configuración"]
-    
     selected_tab = st.radio(
         "Navegación",
-        opciones_menu,
-        index=opciones_menu.index(st.session_state['active_tab']) if st.session_state['active_tab'] in opciones_menu else 0,
+        ["🏠 Inicio", "📚 Cruce de Lote", "📊 Lotes & Bodega", "📄 Actas Oficiales", "🛡️ Normativa FEFO"],
         horizontal=True,
         label_visibility="collapsed",
         key="main_navigation_menu"
     )
-    if selected_tab != st.session_state['active_tab']:
-        st.session_state['active_tab'] = selected_tab
-        st.rerun()
 
-with col_logo:
-    st.markdown("""
-    <div style="text-align: right; padding-top: 5px;">
-        <span style="color: white; font-weight: 800; font-size: 1.2rem; letter-spacing: 1px;">MSP</span><br>
-        <span style="color: #38bdf8; font-size: 0.65rem; font-weight: 600; letter-spacing: 2px;">ECUADOR</span>
-    </div>
-    """, unsafe_allow_html=True)
+with col_header_right:
+    if selected_tab == "📚 Cruce de Lote":
+        c_btn, c_txt = st.columns([1.2, 1.8])
+        with c_btn:
+            if st.button("🔄 Reiniciar", key="btn_reset_page", use_container_width=True):
+                keys_to_reset = [
+                    'unique_pdfs_key', 'unique_lotes_key', 'unique_unificado_key', 
+                    'excel_res', 'pdf_res', 'df_resultado', 'show_firmantes_config',
+                    'df_lotes_raw', 'df_unif_raw', 'df_lotes_fefo_view', 'productos_pedidos_set', 'metadata_actas_store', 'firmantes_individuales_store', 'vista_acta_activa'
+                ]
+                for k in keys_to_reset:
+                    if k in st.session_state:
+                        del st.session_state[k]
+                st.rerun()
+        with c_txt:
+            st.markdown('<div class="header-right-text">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div style="text-align: right;" class="header-right-text">MSP Ecuador · Cuenca</div>', unsafe_allow_html=True)
 
-st.markdown("<hr style='margin-top: 2px; margin-bottom: 15px; border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin-top: 2px; margin-bottom: 15px; border-color: #e1e8f0;'>", unsafe_allow_html=True)
 
 
 # ==========================================
-# FUNCIONES LÓGICAS (MOTOR FEFO ORIGINAL)
+# FUNCIONES LÓGICAS (MOTOR FEFO ORIGINAL INTACTO)
 # ==========================================
 def cargar_excel_seguro(file_bytes):
     try:
@@ -278,10 +272,12 @@ def generar_pdf_individual_acta(meta, df_acta_actual):
     elements.append(Paragraph("HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO", title_style))
     elements.append(Paragraph(f"ACTA OFICIAL DE DISPENSACIÓN Y CRUCE DE STOCK (FEFO) - Archivo: {meta['nombre_pdf']}", subtitle_style))
     elements.append(Spacer(1, 4))
+
     elements.append(Paragraph(f"<b>SERVICIO:</b> {meta['servicio']} &nbsp;&nbsp;|&nbsp;&nbsp; <b>EMISIÓN:</b> {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", meta_style))
     elements.append(Spacer(1, 4))
 
     table_data = [['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Ap.', 'Lotes y Cantidades a Despachar', 'Fechas Caducidad', 'Stock']]
+    
     for _, row in df_acta_actual.iterrows():
         is_red = row['Alerta_Rojo'] or (row['Stock Bodega'] <= 0)
         c_style = cell_red if is_red else cell_style
@@ -320,6 +316,7 @@ def generar_pdf_individual_acta(meta, df_acta_actual):
             Paragraph(f"<b>VALIDÓ / AUTORIZÓ:</b><br/><br/><br/>_________________________________<br/><b>{firmantes['validado_por']}</b>", sig_style)
         ]
     ]
+    
     t_firmas = Table(firma_data, colWidths=[185, 185, 185])
     t_firmas.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
@@ -689,6 +686,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         st.session_state['productos_pedidos_set'] = productos_pedidos_set
         st.session_state['metadata_actas_store'] = metadata_actas
 
+        # CONSTRUCCIÓN DE LA TABLA LOTES FEFO FILTRADA
         lista_lotes_fefo_view = []
         df_lotes_filtrados = df_lotes_grouped[df_lotes_grouped['clean_name'].isin(productos_pedidos_set)]
 
@@ -715,17 +713,21 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                 'clean_name': row_l['clean_name']
             })
 
-        st.session_state['df_lotes_fefo_view'] = pd.DataFrame(lista_lotes_fefo_view)
+        df_lotes_fefo_final = pd.DataFrame(lista_lotes_fefo_view)
+        st.session_state['df_lotes_fefo_view'] = df_lotes_fefo_final
+
         df_final = pd.DataFrame(todos_los_resultados)
         if df_final.empty:
             return None, None, None
 
+        # MATRIZ EXCEL
         output_excel = io.BytesIO()
         wb = Workbook()
         ws = wb.active
         ws.title = "ConsolidadoPedidos"
 
         servicios_unicos = sorted(df_final['Servicio'].unique())
+        
         header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
         header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
         red_fill = PatternFill(start_color="FCE4D6", end_color="FCE4D6", fill_type="solid")
@@ -757,10 +759,12 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             prod_stock = p_row['Stock Bodega']
             
             df_prod_all = df_final[df_final['Dispositivo Médico'] == prod_nombre]
+            
             lotes_brutos_totales = " / ".join(df_prod_all['Lotes y Cantidades a Despachar'].dropna().astype(str))
             lotes_str = consolidar_lotes_texto(lotes_brutos_totales)
 
             fila_datos = [prod_nombre, prod_codigo, prod_sku, prod_pres, prod_stock, lotes_str]
+            
             total_aprob_prod = 0
             for serv in servicios_unicos:
                 match_serv = df_prod_all[df_prod_all['Servicio'] == serv]
@@ -788,6 +792,8 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
         wb.save(output_excel)
         output_excel.seek(0)
+
+        # PDF ACTAS COMPLETO (CONSULTANDO FIRMANTES ACTUALIZADOS)
         output_pdf_bytes = generar_pdf_consolidado_actualizado(metadata_actas, df_final)
 
         return output_excel.getvalue(), output_pdf_bytes, df_final
@@ -800,8 +806,8 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 # RENDERIZADO DE CONTENIDO SEGÚN LA PESTAÑA ACTIVA
 # ==========================================
 
-# 1. DASHBOARD / INICIO
-if st.session_state['active_tab'] == "📊 Dashboard":
+# 1. INICIO
+if selected_tab == "🏠 Inicio":
     st.write("")
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -814,18 +820,9 @@ if st.session_state['active_tab'] == "📊 Dashboard":
             <h1 class="typewriter-hospital">HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO</h1>
         </div>
         """, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Botón conectado directamente a Cruce de Lote
-        col_btn_action, _ = st.columns([2.5, 2.5])
-        with col_btn_action:
-            if st.button("⚡ Iniciar Procedimiento FEFO ➔", use_container_width=True):
-                st.session_state['active_tab'] = "📚 Cruce de Lote"
-                st.rerun()
 
 # 2. CRUCE DE LOTE
-elif st.session_state['active_tab'] == "📚 Cruce de Lote":
+elif selected_tab == "📚 Cruce de Lote":
     st.markdown("""
     <div class="hospital-header">
         <h1>🏥 Sistema de Gestión FEFO & Cruce de Pedidos</h1>
@@ -840,20 +837,33 @@ elif st.session_state['active_tab'] == "📚 Cruce de Lote":
     with col_card1:
         with st.container(border=True):
             st.markdown("📄 **1. Pedidos en PDF (Hasta 30+)**")
-            st.markdown("<span style='font-size:0.82rem;'>Solicitudes de despacho con servicios y firmas electrónicas.</span>", unsafe_allow_html=True)
-            uploaded_pdfs = st.file_uploader("Cargar PDFs de Pedidos", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
+            st.markdown("<span style='font-size:0.82rem; color:#555;'>Solicitudes de despacho con servicios y firmas electrónicas.</span>", unsafe_allow_html=True)
+            uploaded_pdfs = st.file_uploader(
+                "Cargar PDFs de Pedidos", 
+                type=["pdf"], 
+                accept_multiple_files=True, 
+                key="unique_pdfs_key"
+            )
 
     with col_card2:
         with st.container(border=True):
             st.markdown("📊 **2. Excel de Lotes (FEFO)**")
-            st.markdown("<span style='font-size:0.82rem;'>Columnas: Producto, Lote, F. Cad, Existen.</span>", unsafe_allow_html=True)
-            uploaded_lotes = st.file_uploader("Cargar Excel de Lotes", type=["xlsx", "xls"], key="unique_lotes_key")
+            st.markdown("<span style='font-size:0.82rem; color:#555;'>Columnas: Producto, Lote, F. Cad, Existen.</span>", unsafe_allow_html=True)
+            uploaded_lotes = st.file_uploader(
+                "Cargar Excel de Lotes", 
+                type=["xlsx", "xls"], 
+                key="unique_lotes_key"
+            )
 
     with col_card3:
         with st.container(border=True):
             st.markdown("📈 **3. Excel Unificado / Stock**")
-            st.markdown("<span style='font-size:0.82rem;'>Columnas: Producto, Código, SKU, Stock Bodega.</span>", unsafe_allow_html=True)
-            uploaded_unificado = st.file_uploader("Cargar Excel Unificado", type=["xlsx", "xls"], key="unique_unificado_key")
+            st.markdown("<span style='font-size:0.82rem; color:#555;'>Columnas: Producto, Código, SKU, Stock Bodega.</span>", unsafe_allow_html=True)
+            uploaded_unificado = st.file_uploader(
+                "Cargar Excel Unificado", 
+                type=["xlsx", "xls"], 
+                key="unique_unificado_key"
+            )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -867,17 +877,78 @@ elif st.session_state['active_tab'] == "📚 Cruce de Lote":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    if 'show_firmantes_config' not in st.session_state:
+        st.session_state['show_firmantes_config'] = False
+
+    with st.container(border=True):
+        col_f_title, col_f_btn = st.columns([8, 2])
+        
+        def_elab = st.session_state.get('unique_elab_key', "RESPONSABLE DE SERVICIO")
+        def_entre = st.session_state.get('unique_entre_key', "GUARDALMACÉN / DESPACHADOR")
+        def_vali = st.session_state.get('unique_vali_key', "XIMENA KARINA CABRERA ZENTENO")
+
+        with col_f_title:
+            st.markdown("🖋️ **Personalizar Firmantes Globales** &nbsp;&nbsp; <span style='background-color:#e2ebf4; color:#1f4e78; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:600;'>Plantilla base para nuevas cargas</span>", unsafe_allow_html=True)
+            if not st.session_state['show_firmantes_config']:
+                st.markdown(f"<span style='color:#555; font-size:0.85rem;'>Elaboró: <b>{def_elab}</b> &nbsp;·&nbsp; Entregó: <b>{def_entre}</b> &nbsp;·&nbsp; Validó: <b>{def_vali}</b></span>", unsafe_allow_html=True)
+
+        with col_f_btn:
+            st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+            if st.session_state['show_firmantes_config']:
+                if st.button("Ocultar ajustes ▴", key="btn_toggle_firmantes"):
+                    st.session_state['show_firmantes_config'] = False
+                    st.rerun()
+            else:
+                if st.button("Configurar ▾", key="btn_toggle_firmantes"):
+                    st.session_state['show_firmantes_config'] = True
+                    st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        if st.session_state['show_firmantes_config']:
+            st.markdown("<hr style='margin: 10px 0; border-color: #eaeaea;'>", unsafe_allow_html=True)
+            
+            col_desc, col_rest = st.columns([7, 3])
+            with col_desc:
+                st.markdown("<span style='color:#555; font-size:0.85rem;'>Define los firmantes predeterminados al procesar los PDFs.</span>", unsafe_allow_html=True)
+            with col_rest:
+                if st.button("🔄 Restaurar Predeterminados", key="btn_restaurar_firmas"):
+                    st.session_state['unique_elab_key'] = "RESPONSABLE DE SERVICIO"
+                    st.session_state['unique_entre_key'] = "GUARDALMACÉN / DESPACHADOR"
+                    st.session_state['unique_vali_key'] = "XIMENA KARINA CABRERA ZENTENO"
+                    st.rerun()
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            c_f1, c_f2, c_f3 = st.columns(3)
+            with c_f1:
+                custom_elab = st.text_input("1. Elaboró / Recibido", def_elab, key="unique_elab_key")
+            with c_f2:
+                custom_entre = st.text_input("2. Entregado Bodega", def_entre, key="unique_entre_key")
+            with c_f3:
+                custom_vali = st.text_input("3. Validó / Autorizó", def_vali, key="unique_vali_key")
+
+    custom_elab = st.session_state.get('unique_elab_key', def_elab)
+    custom_entre = st.session_state.get('unique_entre_key', def_entre)
+    custom_vali = st.session_state.get('unique_vali_key', def_vali)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
     if btn_procesar:
         if uploaded_lotes and uploaded_unificado and uploaded_pdfs:
             with st.spinner("⏳ Procesando cruce de lotes, asignando algoritmos FEFO y generando actas..."):
+                
                 lotes_bytes = uploaded_lotes.getvalue()
                 unificado_bytes = uploaded_unificado.getvalue()
-                lista_pdfs = [(pdf.name, pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()) for pdf in uploaded_pdfs]
+                
+                lista_pdfs = []
+                for pdf in uploaded_pdfs:
+                    pdf_bytes = pdf.getvalue() if hasattr(pdf, 'getvalue') else pdf.read()
+                    lista_pdfs.append((pdf.name, pdf_bytes))
 
                 firmantes_config = {
-                    'elaborado_por': "RESPONSABLE DE SERVICIO",
-                    'entregado_por': "GUARDALMACÉN / DESPACHADOR",
-                    'validado_por': "XIMENA KARINA CABRERA ZENTENO"
+                    'elaborado_por': custom_elab,
+                    'entregado_por': custom_entre,
+                    'validado_por': custom_vali
                 }
 
                 excel_res, pdf_res, df_resultado = procesar_cruce_hospitalario_lote(
@@ -888,41 +959,140 @@ elif st.session_state['active_tab'] == "📚 Cruce de Lote":
                     st.session_state['excel_res'] = excel_res
                     st.session_state['pdf_res'] = pdf_res
                     st.session_state['df_resultado'] = df_resultado
-                    st.success("🎉 **¡Procesamiento finalizado con éxito!** Se han asignado los lotes óptimos FEFO.")
+                    st.success("🎉 **¡Procesamiento finalizado con éxito!** Se han asignado los lotes óptimos FEFO y generado las actas.")
                 else:
-                    st.error("🚨 No se pudieron generar los resultados. Verifique las estructuras internas.")
+                    st.error("🚨 No se pudieron generar los resultados. Asegúrese de que las estructuras internas sean correctas.")
         else:
-            st.warning("⚠️ **Requisito incompleto:** Por favor, cargue los tres tipos de archivo en sus respectivas tarjetas antes de ejecutar.")
+            st.warning("⚠️ **Requisito incompleto:** Por favor, cargue los tres tipos de archivo en sus respectivas tarjetas antes de ejecutar el proceso.")
 
     if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None:
         df_res = st.session_state['df_resultado']
         num_pdfs_val = df_res['PDF Origen'].nunique()
         num_servicios_val = df_res['Servicio'].nunique()
         num_items_val = len(df_res)
+        
         sin_quiebres = df_res[~df_res['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False)]
         lotes_asignados_val = len(sin_quiebres)
         porcentaje_asignados = int((lotes_asignados_val / num_items_val) * 100) if num_items_val > 0 else 0
         quiebres_val = num_items_val - lotes_asignados_val
+    else:
+        num_pdfs_val = len(uploaded_pdfs) if uploaded_pdfs else 0
+        num_servicios_val = num_pdfs_val
+        num_items_val = 0
+        lotes_asignados_val = 0
+        porcentaje_asignados = 0
+        quiebres_val = 0
 
-        col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
-        with col_kpi1:
-            st.metric("Pedidos en Lote", f"{num_pdfs_val} archivos")
-        with col_kpi2:
-            st.metric("Líneas de Pedido", f"{num_items_val} ítems")
-        with col_kpi3:
-            st.metric("Lotes Asignados", f"{lotes_asignados_val} ({porcentaje_asignados}%)")
-        with col_kpi4:
-            st.metric("Quiebres / Sin Stock", f"{quiebres_val}", delta_color="inverse")
+    col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
+
+    with col_kpi1:
+        with st.container(border=True):
+            st.markdown("Pedidos en Lote &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 📄", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#163a5f; margin: 0; padding: 5px 0;'>{num_pdfs_val}</h2>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color:#666; font-size:0.82rem;'>en {num_servicios_val} servicios</span>", unsafe_allow_html=True)
+
+    with col_kpi2:
+        with st.container(border=True):
+            st.markdown("Líneas de Pedido &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 📦", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#163a5f; margin: 0; padding: 5px 0;'>{num_items_val}</h2>", unsafe_allow_html=True)
+            st.markdown("<span style='color:#666; font-size:0.82rem;'>ítems cruzados</span>", unsafe_allow_html=True)
+
+    with col_kpi3:
+        with st.container(border=True):
+            st.markdown("Lotes 100% Asignados &nbsp;&nbsp;&nbsp; ✅", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#008000; margin: 0; padding: 5px 0;'>{lotes_asignados_val} <span style='font-size:1rem; color:#666;'>({porcentaje_asignados}%)</span></h2>", unsafe_allow_html=True)
+            st.markdown("<span style='color:transparent; font-size:0.82rem;'>.</span>", unsafe_allow_html=True)
+
+    with col_kpi4:
+        with st.container(border=True):
+            st.markdown("Quiebres / Sin Stock &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⚠️", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color:#C00000; margin: 0; padding: 5px 0;'>{quiebres_val}</h2>", unsafe_allow_html=True)
+            st.markdown("<span style='color:#666; font-size:0.82rem;'>requieren gestión</span>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    col_search, col_alert_btn, col_dl_excel, col_dl_pdf = st.columns([3.2, 1.8, 2.5, 2.5])
+
+    with col_search:
+        search_query = st.text_input("Búsqueda", placeholder="🔍 Buscar por dispositivo, código, lote o PDF...", label_visibility="collapsed")
+
+    with col_alert_btn:
+        solo_faltantes = st.toggle("⚠️ Solo Faltantes / Alertas", value=False)
+
+    with col_dl_excel:
+        if 'excel_res' in st.session_state:
+            st.download_button(
+                label="📊 Descargar Excel (.xlsx)",
+                data=st.session_state['excel_res'],
+                file_name="Consolidado_Pedidos_Matriz_FEFO.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="btn_dl_excel_top",
+                use_container_width=True
+            )
+        else:
+            st.button("📊 Descargar Excel (.xlsx)", disabled=True, use_container_width=True, key="btn_dl_excel_dis")
+
+    with col_dl_pdf:
+        if 'pdf_res' in st.session_state:
+            st.download_button(
+                label="📄 Descargar Actas Oficiales PDF",
+                data=st.session_state['pdf_res'],
+                file_name="Actas_Oficiales_Consolidas.pdf",
+                mime="application/pdf",
+                key="btn_dl_pdf_top",
+                use_container_width=True
+            )
+        else:
+            st.button("📄 Descargar Actas Oficiales PDF", disabled=True, use_container_width=True, key="btn_dl_pdf_dis")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None:
+        df_display = st.session_state['df_resultado'].copy()
+
+        if search_query:
+            q = search_query.upper()
+            df_display = df_display[
+                df_display['Dispositivo Médico'].str.upper().str.contains(q, na=False) |
+                df_display['Código'].str.upper().str.contains(q, na=False) |
+                df_display['Lotes y Cantidades a Despachar'].str.upper().str.contains(q, na=False) |
+                df_display['PDF Origen'].str.upper().str.contains(q, na=False)
+            ]
+
+        if solo_faltantes:
+            df_display = df_display[df_display['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False)]
+
+        servicios_disponibles = ['TODOS'] + sorted(df_display['Servicio'].unique().tolist())
+        conteo_serv = df_display['Servicio'].value_counts()
+        
+        selected_serv_tab = st.radio(
+            "Servicios",
+            options=servicios_disponibles,
+            format_func=lambda x: f"TODOS ({len(df_display)})" if x == 'TODOS' else f"{x} ({conteo_serv.get(x, 0)})",
+            horizontal=True,
+            label_visibility="collapsed",
+            key="service_tabs_selector"
+        )
+
+        if selected_serv_tab != 'TODOS':
+            df_display = df_display[df_display['Servicio'] == selected_serv_tab]
 
         st.markdown("<br>", unsafe_allow_html=True)
-        col_dl_excel, col_dl_pdf = st.columns(2)
-        with col_dl_excel:
-            st.download_button("📊 Descargar Matriz Consolidada Excel (.xlsx)", data=st.session_state['excel_res'], file_name="Consolidado_FEFO.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
-        with col_dl_pdf:
-            st.download_button("📄 Descargar Actas Oficiales PDF", data=st.session_state['pdf_res'], file_name="Actas_Oficiales.pdf", mime="application/pdf", use_container_width=True)
 
-# 3. INVENTARIO / BODEGA
-elif st.session_state['active_tab'] == "📦 Inventario / Bodega":
+        st.markdown(f"""
+        <div style="background-color: #1f4e78; color: white; padding: 10px 14px; border-top-left-radius: 8px; border-top-right-radius: 8px; font-weight: 600; font-size: 0.85rem;">
+            TABLA DE CRUCE FEFO Y ASIGNACIÓN DE LOTES POR SERVICIO
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.dataframe(
+            df_display[['Nro.', 'PDF Origen', 'Servicio', 'Código', 'SKU', 'Dispositivo Médico', 'Cant. Solicitada', 'Cant. Aprobada', 'Lotes y Cantidades a Despachar', 'Fechas de Caducidad', 'Stock Bodega']],
+            use_container_width=True,
+            hide_index=True
+        )
+
+# 3. LOTES & BODEGA
+elif selected_tab == "📊 Lotes & Bodega":
     st.markdown("""
     <div class="hospital-header">
         <h1>📊 Control General de Lotes & Bodega</h1>
@@ -930,41 +1100,335 @@ elif st.session_state['active_tab'] == "📦 Inventario / Bodega":
     </div>
     """, unsafe_allow_html=True)
 
-    if 'df_lotes_fefo_view' in st.session_state and st.session_state['df_lotes_fefo_view'] is not None:
-        st.dataframe(st.session_state['df_lotes_fefo_view'], use_container_width=True, hide_index=True)
+    sub_tab_lotes = st.radio(
+        "Subpestañas Lotes",
+        ["📦 Lotes FEFO", "📈 Stock Maestro Bodega"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="subtab_lotes_bodega_selector"
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    if sub_tab_lotes == "📦 Lotes FEFO":
+        col_space, col_search_lotes = st.columns([6, 4])
+        with col_search_lotes:
+            search_lotes_query = st.text_input("Buscar lote o producto", placeholder="🔍 Buscar lote o producto...", label_visibility="collapsed", key="search_lotes_fefo_input")
+
+        if 'df_lotes_fefo_view' in st.session_state and st.session_state['df_lotes_fefo_view'] is not None:
+            df_lotes_view = st.session_state['df_lotes_fefo_view'].copy()
+            
+            if search_lotes_query:
+                sq = search_lotes_query.upper()
+                df_lotes_view = df_lotes_view[
+                    df_lotes_view['PRODUCTO (NORMALIZADO)'].str.contains(sq, na=False) |
+                    df_lotes_view['LOTE'].str.contains(sq, na=False) |
+                    df_lotes_view['FECHA DE CADUCIDAD'].str.contains(sq, na=False) |
+                    df_lotes_view['ESTADO DINÁMICO'].str.contains(sq, na=False)
+                ]
+
+            st.dataframe(
+                df_lotes_view[['#', 'PRODUCTO (NORMALIZADO)', 'LOTE', 'FECHA DE CADUCIDAD', 'EXISTENCIAS INICIALES', 'STOCK RESTANTE POST-LOTE', 'ESTADO DINÁMICO']],
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.info("ℹ️ Para visualizar el detalle de **Lotes FEFO** de sus pedidos, cargue los archivos y ejecute el cruce en la pestaña **'Cruce de Lote'**.")
+
+    elif sub_tab_lotes == "📈 Stock Maestro Bodega":
+        col_space, col_search_unif = st.columns([6, 4])
+        with col_search_unif:
+            search_unif_query = st.text_input("Buscar producto maestro", placeholder="🔍 Buscar código, SKU o producto...", label_visibility="collapsed", key="search_unif_input")
+
+        if 'df_unif_raw' in st.session_state and st.session_state['df_unif_raw'] is not None and 'productos_pedidos_set' in st.session_state:
+            df_u_view = st.session_state['df_unif_raw'].copy()
+            df_u_view['clean_name'] = df_u_view['Producto'].apply(clean_exact)
+            df_u_view = df_u_view[df_u_view['clean_name'].isin(st.session_state['productos_pedidos_set'])]
+            df_u_view = df_u_view.drop(columns=['clean_name'])
+
+            if search_unif_query:
+                uq = search_unif_query.upper()
+                cols_str = [c for c in df_u_view.columns if df_u_view[c].dtype == object]
+                mask = False
+                for c in cols_str:
+                    mask = mask | df_u_view[c].str.upper().str.contains(uq, na=False)
+                df_u_view = df_u_view[mask]
+
+            st.dataframe(df_u_view, use_container_width=True, hide_index=True)
+        else:
+            st.info("ℹ️ Para visualizar el **Stock Maestro de Bodega** filtrado por sus pedidos, ejecute primero el cruce en la pestaña **'Cruce de Lote'**.")
+
+# 4. ACTAS OFICIALES
+elif selected_tab == "📄 Actas Oficiales":
+    if 'vista_acta_activa' not in st.session_state:
+        st.session_state['vista_acta_activa'] = None
+
+    if st.session_state['vista_acta_activa'] is not None:
+        meta_v = st.session_state['vista_acta_activa']
+        pdf_key = meta_v['nombre_pdf']
+        df_res_actas = st.session_state['df_resultado']
+        df_acta_item = df_res_actas[df_res_actas['PDF Origen'] == pdf_key]
+
+        edit_state_key = f"editing_firmantes_{pdf_key}"
+        if edit_state_key not in st.session_state:
+            st.session_state[edit_state_key] = False
+
+        if st.button("⬅️ Volver a la lista de Actas Oficiales", key="btn_volver_lista"):
+            st.session_state['vista_acta_activa'] = None
+            st.rerun()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        with st.container(border=True):
+            col_info_v, col_edit_v, col_dl_v, col_print_v, col_close_v = st.columns([3.5, 2.2, 2.2, 1.6, 1.5])
+            
+            firmantes_actuales = obtener_firmantes_acta(meta_v)
+            pdf_bytes_acta = generar_pdf_individual_acta(meta_v, df_acta_item)
+
+            with col_info_v:
+                st.markdown(f"**Vista Previa:** <span style='font-size:0.82rem; font-family:monospace;'>{pdf_key}</span>", unsafe_allow_html=True)
+            with col_edit_v:
+                if st.button("✏️ Editar Firmantes", key=f"panel_edit_{pdf_key}", use_container_width=True):
+                    st.session_state[edit_state_key] = not st.session_state[edit_state_key]
+            with col_dl_v:
+                st.download_button(
+                    label="📥 Descargar PDF",
+                    data=pdf_bytes_acta,
+                    file_name=f"Acta_{pdf_key.replace('.pdf', '')}.pdf",
+                    mime="application/pdf",
+                    key=f"panel_dl_{pdf_key}",
+                    use_container_width=True
+                )
+            with col_print_v:
+                if st.button("🖨️ Imprimir", key=f"panel_print_{pdf_key}", use_container_width=True):
+                    st.toast("Abriendo diálogo de impresión...")
+            with col_close_v:
+                if st.button("❌ Cerrar", key=f"panel_close_{pdf_key}", use_container_width=True):
+                    st.session_state['vista_acta_activa'] = None
+                    st.rerun()
+
+            if st.session_state[edit_state_key]:
+                st.markdown("<br>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown(f"**Editando Firmantes para este documento:** <span style='font-family:monospace; color:#1f4e78;'>{pdf_key}</span>", unsafe_allow_html=True)
+                    st.markdown("<span style='font-size:0.8rem; color:#555;'>Los cambios aplicarán <b>únicamente</b> a esta acta y se reflejarán tanto aquí como en la descarga consolidada.</span>", unsafe_allow_html=True)
+                    st.markdown("<br>", unsafe_allow_html=True)
+
+                    nuevo_elab = st.text_input("1. Elaboró / Recibido", firmantes_actuales['elaborado_por'], key=f"in_elab_{pdf_key}")
+                    nuevo_entre = st.text_input("2. Entregado Bodega", firmantes_actuales['entregado_por'], key=f"in_entre_{pdf_key}")
+                    nuevo_vali = st.text_input("3. Validó / Autorizó", firmantes_actuales['validado_por'], key=f"in_vali_{pdf_key}")
+
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    col_save_btn, col_cancel_btn = st.columns(2)
+                    with col_save_btn:
+                        if st.button("💾 Guardar Cambios de esta Acta", key=f"save_ind_{pdf_key}", use_container_width=True):
+                            if 'firmantes_individuales_store' not in st.session_state:
+                                st.session_state['firmantes_individuales_store'] = {}
+                            st.session_state['firmantes_individuales_store'][pdf_key] = {
+                                'elaborado_por': nuevo_elab,
+                                'entregado_por': nuevo_entre,
+                                'validado_por': nuevo_vali
+                            }
+                            st.session_state[edit_state_key] = False
+                            st.success("✅ ¡Firmantes actualizados con éxito para esta acta y para el consolidado general!")
+                    with col_cancel_btn:
+                        if st.button("Cancelar", key=f"cancel_ind_{pdf_key}", use_container_width=True):
+                            st.session_state[edit_state_key] = False
+
+            st.markdown("<hr style='margin: 20px 0; border-color: #ddd;'>", unsafe_allow_html=True)
+
+            st.markdown("<div style='text-align: center; font-family: Helvetica, sans-serif;'>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.8rem; color:#555; font-weight:600;'>MINISTERIO DE SALUD PÚBLICA DEL ECUADOR</span>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color:#163a5f; margin: 4px 0;'>HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO</h3>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.85rem; font-weight:bold; color:#333;'>ACTA OFICIAL DE DISPENSACIÓN Y CRUCE DE STOCK (FEFO)</span>", unsafe_allow_html=True)
+            st.markdown(f"<br><span style='font-size:0.75rem; color:#777;'>Archivo de Origen: {pdf_key}</span>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            col_m_serv, col_m_emi = st.columns([6, 4])
+            with col_m_serv:
+                st.markdown(f"**SERVICIO:** <span style='color:#1f4e78;'>{meta_v['servicio']}</span>", unsafe_allow_html=True)
+            with col_m_emi:
+                st.markdown(f"**EMISIÓN:** {datetime.datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}", unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            df_tabla_modal = df_acta_item[['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Aprobada', 'Lotes y Cantidades a Despachar', 'Fechas de Caducidad', 'Stock Bodega']].copy()
+            df_tabla_modal.columns = ['Nro.', 'Código', 'Dispositivo Médico', 'Cant. Ap.', 'Lotes & Cantidades a Despachar', 'Fechas Caducidad', 'Stock']
+
+            st.dataframe(df_tabla_modal, use_container_width=True, hide_index=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            firmantes_actuales = obtener_firmantes_acta(meta_v)
+            col_s1, col_s2, col_s3 = st.columns(3)
+            with col_s1:
+                st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ELABORÓ / RECIBIDO:</b><br>{firmantes_actuales['elaborado_por']}</div>", unsafe_allow_html=True)
+            with col_s2:
+                st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>ENTREGADO BODEGA:</b><br>{firmantes_actuales['entregado_por']}</div>", unsafe_allow_html=True)
+            with col_s3:
+                st.markdown(f"<div style='font-size:0.75rem; border-top:1px solid #333; padding-top:6px; text-align:center;'><b>VALIDÓ / AUTORIZÓ:</b><br>{firmantes_actuales['validado_por']}</div>", unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(f"<span style='font-size:0.8rem; color:#666;'>{len(df_acta_item)} ítems en este pedido</span>", unsafe_allow_html=True)
+
     else:
-        st.info("ℹ️ Cargue los archivos y ejecute el cruce en la pestaña **'Cruce de Lote'** para ver el inventario dinámico.")
+        col_t_left, col_t_right = st.columns([7, 3])
+        with col_t_left:
+            st.markdown("### Actas Oficiales de Dispensación y Cruce de Stock")
+            st.markdown("<span style='color:#555; font-size:0.9rem;'>Cada pedido procesado cuenta con su acta institucional con firmas de responsabilidad listas para imprimir o archivar.</span>", unsafe_allow_html=True)
+        with col_t_right:
+            if 'pdf_res' in st.session_state:
+                st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+                
+                if 'metadata_actas_store' in st.session_state and 'df_resultado' in st.session_state:
+                    pdf_bytes_masivo = generar_pdf_consolidado_actualizado(
+                        st.session_state['metadata_actas_store'], 
+                        st.session_state['df_resultado']
+                    )
+                else:
+                    pdf_bytes_masivo = st.session_state['pdf_res']
 
-# 4. ACTAS
-elif st.session_state['active_tab'] == "📄 Actas":
+                st.download_button(
+                    label="⬇️ Descargar Todas las Actas (.pdf)",
+                    data=pdf_bytes_masivo,
+                    file_name="Actas_Oficiales_Consolidas.pdf",
+                    mime="application/pdf",
+                    key="btn_dl_all_actas_top",
+                    use_container_width=True
+                )
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.button("⬇️ Descargar Todas las Actas (.pdf)", disabled=True, use_container_width=True, key="btn_dl_all_dis")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        if 'df_resultado' in st.session_state and st.session_state['df_resultado'] is not None and 'metadata_actas_store' in st.session_state:
+            df_res_actas = st.session_state['df_resultado']
+            metadata_list = st.session_state['metadata_actas_store']
+
+            for i in range(0, len(metadata_list), 3):
+                cols = st.columns(3)
+                for j in range(3):
+                    if i + j < len(metadata_list):
+                        meta = metadata_list[i + j]
+                        pdf_orig = meta['nombre_pdf']
+                        serv_name = meta['servicio']
+                        df_acta_item = df_res_actas[df_res_actas['PDF Origen'] == pdf_orig]
+                        
+                        num_items_acta = len(df_acta_item)
+                        has_quiebres = df_acta_item['Lotes y Cantidades a Despachar'].str.contains('FALTAN|SIN LOTE', case=False, na=False).any()
+                        firmantes_card = obtener_firmantes_acta(meta)
+
+                        with cols[j]:
+                            with st.container(border=True):
+                                col_badge, col_status = st.columns([7, 3])
+                                with col_badge:
+                                    st.markdown(f"<span style='background-color:#f1f3f5; color:#495057; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:600; border:1px solid #dee2e6;'>{num_items_acta} ítems</span>", unsafe_allow_html=True)
+                                with col_status:
+                                    if has_quiebres:
+                                        st.markdown("<div style='text-align: right;'><span style='background-color:#f8d7da; color:#842029; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:600;'>Con Quiebres</span></div>", unsafe_allow_html=True)
+                                    else:
+                                        st.markdown("<div style='text-align: right;'><span style='background-color:#d1e7dd; color:#0f5132; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:600;'>Conforme</span></div>", unsafe_allow_html=True)
+
+                                st.markdown(f"<h5 style='color:#163a5f; margin: 8px 0 2px 0; font-size:0.95rem;'>{serv_name}</h5>", unsafe_allow_html=True)
+                                st.markdown(f"<span style='color:#6c757d; font-size:0.75rem; font-family:monospace; word-break:break-all;'>{pdf_orig}</span>", unsafe_allow_html=True)
+
+                                st.markdown("<hr style='margin: 8px 0; border-color: #eaeaea;'>", unsafe_allow_html=True)
+
+                                st.markdown(f"""
+                                <div style='font-size:0.78rem; color:#333; line-height: 1.5;'>
+                                    <b>Elaboró:</b> {firmantes_card['elaborado_por']}<br>
+                                    <b>Entregó:</b> {firmantes_card['entregado_por']}<br>
+                                    <b>Autorizó:</b> {firmantes_card['validado_por']}
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                                st.markdown("<br>", unsafe_allow_html=True)
+
+                                col_btn_view, col_btn_dl = st.columns([7, 3])
+                                with col_btn_view:
+                                    if st.button("👁️ Ver Acta", key=f"btn_view_panel_{pdf_orig}_{i+j}", use_container_width=True):
+                                        st.session_state['vista_acta_activa'] = meta
+                                        st.session_state[f"editing_firmantes_{pdf_orig}"] = False
+                                        st.rerun()
+                                with col_btn_dl:
+                                    pdf_bytes_individual = generar_pdf_individual_acta(meta, df_acta_item)
+                                    st.download_button(
+                                        label="📥",
+                                        data=pdf_bytes_individual,
+                                        file_name=f"Acta_{pdf_orig.replace('.pdf', '')}.pdf",
+                                        mime="application/pdf",
+                                        key=f"btn_dl_{pdf_orig}_{i+j}",
+                                        use_container_width=True
+                                    )
+        else:
+            st.info("📂 Cargue sus archivos y ejecute el cruce hospitalario en la pestaña **'Cruce de Lote'** para generar y visualizar las tarjetas de las Actas Oficiales.")
+
+# 5. NORMATIVA FEFO
+elif selected_tab == "🛡️ Normativa FEFO":
     st.markdown("""
     <div class="hospital-header">
-        <h1>📄 Actas Oficiales de Dispensación</h1>
-        <p>Generación de reportes institucionales firmados listos para archivo</p>
+        <h1>🛡️ Repositorio Normativo y Legal - Gestión FEFO & Bodega MSP</h1>
+        <p>Acceso Directo a los Documentos Oficiales en PDF Publicados para Contratación, BPADT, Canjes y Red Pública RPIS</p>
     </div>
     """, unsafe_allow_html=True)
-    if 'pdf_res' in st.session_state:
-        st.download_button("⬇️ Descargar Todas las Actas Oficiales (.pdf)", data=st.session_state['pdf_res'], file_name="Actas_Oficiales.pdf", mime="application/pdf", use_container_width=True)
-    else:
-        st.info("ℹ️ Ejecute un cruce de lotes para generar las actas oficiales.")
 
-# 5. NORMATIVA
-elif st.session_state['active_tab'] == "🛡️ Normativa":
-    st.markdown("""
-    <div class="hospital-header">
-        <h1>🛡️ Repositorio Normativo y Legal</h1>
-        <p>Marcos legales vigentes para gestión de bodegas y farmacias hospitalarias (MSP, ARCSA, SERCOP)</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.link_button("📄 Ver Reglamento General de la LOSNCP", "https://portal.compraspublicas.gob.ec/sercop/wp-content/uploads/2026/03/RGLOSNCP.pdf", use_container_width=True)
+    # BLOQUE 1: CONTRATACIÓN PÚBLICA
+    with st.container(border=True):
+        st.markdown("### ⚖️ 1. Ley Orgánica del Sistema Nacional de Contratación Pública (LOSNCP)")
+        st.markdown("""
+        * **Reglamento General de la LOSNCP:** Documento oficial publicado por el SERCOP con las reglas de contratación pública, ejecución contractual y recepción de bienes.
+        """, unsafe_allow_html=True)
+        
+        st.link_button(
+            "📄 Abrir PDF Oficial: Reglamento General de la LOSNCP (SERCOP)", 
+            "https://portal.compraspublicas.gob.ec/sercop/wp-content/uploads/2026/03/RGLOSNCP.pdf",
+            use_container_width=True
+        )
 
-# 6. CONFIGURACIÓN
-elif st.session_state['active_tab'] == "⚙️ Configuración":
-    st.markdown("""
-    <div class="hospital-header">
-        <h1>⚙️ Configuración del Sistema</h1>
-        <p>Parámetros generales de usuario y firmantes predeterminados</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.text_input("Responsable de Servicio por Defecto", "RESPONSABLE DE SERVICIO")
-    st.text_input("Guardalmacén / Despachador por Defecto", "GUARDALMACÉN / DESPACHADOR")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # BLOQUE 2: ALMACENAMIENTO, DISTRIBUCIÓN Y TRANSPORTE (BPADT)
+    with st.container(border=True):
+        st.markdown("### 📦 2. Buenas Prácticas de Almacenamiento, Distribución y Transporte (BPADT)")
+        st.markdown("""
+        * **Reglamento de BPADT (Acuerdo 4872 - ARCSA):** Normativa oficial completa dictada por la ARCSA para la conservación, almacenamiento y rotación FEFO en establecimientos farmacéuticos.
+        """, unsafe_allow_html=True)
+        
+        st.link_button(
+            "📄 Abrir PDF Oficial: Reglamento de BPADT para Establecimientos Farmacéuticos (ARCSA)", 
+            "https://www.controlsanitario.gob.ec/wp-content/uploads/downloads/2014/09/A-4872-Reglamento-de-BPADT-para-Establecimientos-Farmac%C3%A9uticos.pdf",
+            use_container_width=True
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # BLOQUE 3: REGLAMENTO DE CANJES DE MEDICAMENTOS
+    with st.container(border=True):
+        st.markdown("### 🔄 3. Reglamento de Canjes de Medicamentos (Acuerdo Ministerial No. 00015-2019)")
+        st.markdown("""
+        * **Acuerdo Ministerial No. 00015-2019:** Documento oficial emitido por el Ministerio de Salud Pública regulando los plazos y procedimientos formales para el canje de medicamentos próximos a caducar.
+        """, unsafe_allow_html=True)
+        
+        st.link_button(
+            "📄 Abrir PDF Oficial: Reglamento de Canjes (Acuerdo Ministerial 00015-2019 MSP)", 
+            "https://www.salud.gob.ec/wp-content/uploads/2026/03/AC-00015-2019-AGOSTO-16_Reglamento-de-canje_compressed.pdf",
+            use_container_width=True
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # BLOQUE 4: DISTRIBUCIÓN Y RECEPCIÓN EN LA RED PÚBLICA (RPIS)
+    with st.container(border=True):
+        st.markdown("### 🏥 4. Manual de Recepción, Almacenamiento, Distribución y Transporte (Acuerdo 00050-2022)")
+        st.markdown("""
+        * **Manual Técnico Unificado (3er Suplemento R.O. 29):** Manual sustitutivo oficial del MSP para la recepción, almacenamiento, distribución y transporte en las entidades del Sistema Nacional de Salud.
+        """, unsafe_allow_html=True)
+        
+        st.link_button(
+            "📄 Abrir PDF Oficial: Manual de Recepción, Almacenamiento, Distribución y Transporte (MSP)", 
+            "https://www.salud.gob.ec/wp-content/uploads/2022/03/Manual-recep-almacenam-distribuc-y-transp.3er.-supl.-R.O.-29-25-03-2022.-publicacion-web.pdf",
+            use_container_width=True
+        )
