@@ -47,7 +47,7 @@ st.markdown("""
         visibility: hidden;
     }
 
-    /* Animación de Revelación Progresiva sin cursor parpadeante */
+    /* Animación de Revelación Progresiva */
     @keyframes revealText {
         from { 
             opacity: 0;
@@ -69,11 +69,12 @@ st.markdown("""
     }
 
     .typewriter-hospital {
-        color: #163a5f;
+        color: #1f4e78;
         font-weight: 800;
-        font-size: 3.8rem;
+        font-size: 5rem;
         margin-top: 10px;
-        line-height: 1.15;
+        line-height: 1.05;
+        max-width: 650px;
         opacity: 0;
         animation: revealText 1.5s ease-out 0.4s forwards;
     }
@@ -815,8 +816,8 @@ if selected_tab == "🏠 Inicio":
     with col_izq:
         st.markdown("""
         <div style="text-align: left; padding: 10px 0;">
-            <h1 class="typewriter-title">¡Bienvenido!</h1>
-            <h1 class="typewriter-hospital">Hospital Provincial General Docente Vicente Corral Moscoso</h1>
+            <h1 class="typewriter-title">Bienvenido</h1>
+            <h1 class="typewriter-hospital">HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO</h1>
         </div>
         """, unsafe_allow_html=True)
 
