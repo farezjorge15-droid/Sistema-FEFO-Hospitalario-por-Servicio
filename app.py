@@ -134,21 +134,34 @@ st.markdown("""
 
 
 # ==========================================
+# GESTIÓN DE ESTADO DE NAVEGACIÓN
+# ==========================================
+if 'active_tab' not in st.session_state:
+    st.session_state['active_tab'] = "🏠 Inicio"
+
+# ==========================================
 # BARRA SUPERIOR FIJA & NAVEGACIÓN EN LA MISMA LÍNEA
 # ==========================================
 col_nav, col_header_right = st.columns([6.8, 3.2])
 
+opciones_menu = ["🏠 Inicio", "📚 Cruce de Lote", "📊 Lotes & Bodega", "📄 Actas Oficiales", "🛡️ Normativa FEFO"]
+
 with col_nav:
+    current_index = opciones_menu.index(st.session_state['active_tab']) if st.session_state['active_tab'] in opciones_menu else 0
     selected_tab = st.radio(
         "Navegación",
-        ["🏠 Inicio", "📚 Cruce de Lote", "📊 Lotes & Bodega", "📄 Actas Oficiales", "🛡️ Normativa FEFO"],
+        opciones_menu,
+        index=current_index,
         horizontal=True,
         label_visibility="collapsed",
         key="main_navigation_menu"
     )
+    if selected_tab != st.session_state['active_tab']:
+        st.session_state['active_tab'] = selected_tab
+        st.rerun()
 
 with col_header_right:
-    if selected_tab == "📚 Cruce de Lote":
+    if st.session_state['active_tab'] == "📚 Cruce de Lote":
         c_btn, c_txt = st.columns([1.2, 1.8])
         with c_btn:
             if st.button("🔄 Reiniciar", key="btn_reset_page", use_container_width=True):
@@ -797,7 +810,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 # ==========================================
 
 # 1. INICIO
-if selected_tab == "🏠 Inicio":
+if st.session_state['active_tab'] == "🏠 Inicio":
     st.write("")
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -811,11 +824,11 @@ if selected_tab == "🏠 Inicio":
         col_btn, _ = st.columns([2.5, 2.5])
         with col_btn:
             if st.button("INICIAR PROCEDIMIENTO ➔", use_container_width=True):
-                st.session_state['main_navigation_menu'] = "📚 Cruce de Lote"
+                st.session_state['active_tab'] = "📚 Cruce de Lote"
                 st.rerun()
 
 # 2. CRUCE DE LOTE
-elif selected_tab == "📚 Cruce de Lote":
+elif st.session_state['active_tab'] == "📚 Cruce de Lote":
     st.markdown("""
     <div class="hospital-header">
         <h1>🏥 Sistema de Gestión FEFO & Cruce de Pedidos</h1>
@@ -912,7 +925,7 @@ elif selected_tab == "📚 Cruce de Lote":
             st.download_button("📄 Descargar Actas Oficiales PDF", data=st.session_state['pdf_res'], file_name="Actas_Oficiales.pdf", mime="application/pdf", use_container_width=True)
 
 # 3. LOTES & BODEGA
-elif selected_tab == "📊 Lotes & Bodega":
+elif st.session_state['active_tab'] == "📊 Lotes & Bodega":
     st.markdown("""
     <div class="hospital-header">
         <h1>📊 Control General de Lotes & Bodega</h1>
@@ -926,7 +939,7 @@ elif selected_tab == "📊 Lotes & Bodega":
         st.info("ℹ️ Cargue los archivos y ejecute el cruce en la pestaña **'Cruce de Lote'** para ver el inventario dinámico.")
 
 # 4. ACTAS OFICIALES
-elif selected_tab == "📄 Actas Oficiales":
+elif st.session_state['active_tab'] == "📄 Actas Oficiales":
     st.markdown("""
     <div class="hospital-header">
         <h1>📄 Actas Oficiales de Dispensación</h1>
@@ -939,7 +952,7 @@ elif selected_tab == "📄 Actas Oficiales":
         st.info("ℹ️ Ejecute un cruce de lotes para generar las actas oficiales.")
 
 # 5. NORMATIVA FEFO
-elif selected_tab == "🛡️ Normativa FEFO":
+elif st.session_state['active_tab'] == "🛡️ Normativa FEFO":
     st.markdown("""
     <div class="hospital-header">
         <h1>🛡️ Repositorio Normativo y Legal</h1>
