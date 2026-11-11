@@ -813,16 +813,18 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 if st.session_state['active_tab'] == "🏠 Inicio":
     st.write("")
     st.markdown("<br>", unsafe_allow_html=True)
-    
+
     col_izq, col_der = st.columns([6, 4])
+
     with col_izq:
         st.markdown('<h1 class="typewriter-title">Bienvenido</h1>', unsafe_allow_html=True)
         st.markdown('<h1 class="typewriter-hospital">HOSPITAL PROVINCIAL GENERAL DOCENTE VICENTE CORRAL MOSCOSO</h1>', unsafe_allow_html=True)
+        
         st.markdown("<br>", unsafe_allow_html=True)
         
         # Botón debajo del nombre del hospital conectado con Cruce de Lote
-        col_btn, _ = st.columns([2.5, 2.5])
-        with col_btn:
+        col_btn_action, _ = st.columns([2.5, 2.5])
+        with col_btn_action:
             if st.button("INICIAR PROCEDIMIENTO ➔", use_container_width=True):
                 st.session_state['active_tab'] = "📚 Cruce de Lote"
                 st.rerun()
@@ -843,19 +845,19 @@ elif st.session_state['active_tab'] == "📚 Cruce de Lote":
     with col_card1:
         with st.container(border=True):
             st.markdown("📄 **1. Pedidos en PDF (Hasta 30+)**")
-            st.markdown("<span style='font-size:0.82rem; color:#444;'>Solicitudes de despacho con servicios y firmas electrónicas.</span>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.82rem; color:#555;'>Solicitudes de despacho con servicios y firmas electrónicas.</span>", unsafe_allow_html=True)
             uploaded_pdfs = st.file_uploader("Cargar PDFs de Pedidos", type=["pdf"], accept_multiple_files=True, key="unique_pdfs_key")
 
     with col_card2:
         with st.container(border=True):
             st.markdown("📊 **2. Excel de Lotes (FEFO)**")
-            st.markdown("<span style='font-size:0.82rem; color:#444;'>Columnas: Producto, Lote, F. Cad, Existen.</span>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.82rem; color:#555;'>Columnas: Producto, Lote, F. Cad, Existen.</span>", unsafe_allow_html=True)
             uploaded_lotes = st.file_uploader("Cargar Excel de Lotes", type=["xlsx", "xls"], key="unique_lotes_key")
 
     with col_card3:
         with st.container(border=True):
             st.markdown("📈 **3. Excel Unificado / Stock**")
-            st.markdown("<span style='font-size:0.82rem; color:#444;'>Columnas: Producto, Código, SKU, Stock Bodega.</span>", unsafe_allow_html=True)
+            st.markdown("<span style='font-size:0.82rem; color:#555;'>Columnas: Producto, Código, SKU, Stock Bodega.</span>", unsafe_allow_html=True)
             uploaded_unificado = st.file_uploader("Cargar Excel Unificado", type=["xlsx", "xls"], key="unique_unificado_key")
 
     st.markdown("<br>", unsafe_allow_html=True)
