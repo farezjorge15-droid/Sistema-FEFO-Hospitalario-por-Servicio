@@ -45,6 +45,13 @@ st.markdown("""
         visibility: hidden;
     }
 
+    /* Forzar alta visibilidad en las etiquetas de los radio buttons de navegación */
+    div[row-widget="stHorizontal"] label p, div.stRadio label p {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+    }
+
     /* Animación de Revelación Progresiva */
     @keyframes revealText {
         from { 
@@ -121,18 +128,31 @@ st.markdown("""
 
 
 # ==========================================
+# GESTIÓN DE ESTADO DE NAVEGACIÓN
+# ==========================================
+if 'active_tab' not in st.session_state:
+    st.session_state['active_tab'] = "📊 Dashboard"
+
+# ==========================================
 # BARRA SUPERIOR FIJA & NAVEGACIÓN MODERNA
 # ==========================================
 col_nav, col_logo = st.columns([7.5, 2.5])
 
 with col_nav:
+    opciones_menu = ["📊 Dashboard", "📚 Cruce de Lote", "📦 Inventario / Bodega", "📄 Actas", "🛡️ Normativa", "⚙️ Configuración"]
+    
+    # Sincronizar radio button con session_state
     selected_tab = st.radio(
         "Navegación",
-        ["📊 Dashboard", "📚 Cruce de Lote", "📦 Inventario / Bodega", "📄 Actas", "🛡️ Normativa", "⚙️ Configuración"],
+        opciones_menu,
+        index=opciones_menu.index(st.session_state['active_tab']) if st.session_state['active_tab'] in opciones_menu else 0,
         horizontal=True,
         label_visibility="collapsed",
         key="main_navigation_menu"
     )
+    if selected_tab != st.session_state['active_tab']:
+        st.session_state['active_tab'] = selected_tab
+        st.rerun()
 
 with col_logo:
     st.markdown("""
@@ -770,7 +790,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 # ==========================================
 
 # 1. DASHBOARD / INICIO
-if selected_tab == "📊 Dashboard":
+if st.session_state['active_tab'] == "📊 Dashboard":
     st.write("")
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -786,14 +806,15 @@ if selected_tab == "📊 Dashboard":
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Botón de acción principal interactivo
+        # Botón conectado directamente a Cruce de Lote
         col_btn_action, _ = st.columns([2.5, 2.5])
         with col_btn_action:
             if st.button("⚡ Iniciar Procedimiento FEFO ➔", use_container_width=True):
-                st.info("💡 Cambie a la pestaña **'Cruce de Lote'** en la barra superior para cargar sus archivos y comenzar.")
+                st.session_state['active_tab'] = "📚 Cruce de Lote"
+                st.rerun()
 
 # 2. CRUCE DE LOTE
-elif selected_tab == "📚 Cruce de Lote":
+elif st.session_state['active_tab'] == "📚 Cruce de Lote":
     st.markdown("""
     <div class="hospital-header">
         <h1>🏥 Sistema de Gestión FEFO & Cruce de Pedidos</h1>
@@ -890,7 +911,7 @@ elif selected_tab == "📚 Cruce de Lote":
             st.download_button("📄 Descargar Actas Oficiales PDF", data=st.session_state['pdf_res'], file_name="Actas_Oficiales.pdf", mime="application/pdf", use_container_width=True)
 
 # 3. INVENTARIO / BODEGA
-elif selected_tab == "📦 Inventario / Bodega":
+elif st.session_state['active_tab'] == "📦 Inventario / Bodega":
     st.markdown("""
     <div class="hospital-header">
         <h1>📊 Control General de Lotes & Bodega</h1>
@@ -904,7 +925,7 @@ elif selected_tab == "📦 Inventario / Bodega":
         st.info("ℹ️ Cargue los archivos y ejecute el cruce en la pestaña **'Cruce de Lote'** para ver el inventario dinámico.")
 
 # 4. ACTAS
-elif selected_tab == "📄 Actas":
+elif st.session_state['active_tab'] == "📄 Actas":
     st.markdown("""
     <div class="hospital-header">
         <h1>📄 Actas Oficiales de Dispensación</h1>
@@ -917,7 +938,7 @@ elif selected_tab == "📄 Actas":
         st.info("ℹ️ Ejecute un cruce de lotes para generar las actas oficiales.")
 
 # 5. NORMATIVA
-elif selected_tab == "🛡️ Normativa":
+elif st.session_state['active_tab'] == "🛡️ Normativa":
     st.markdown("""
     <div class="hospital-header">
         <h1>🛡️ Repositorio Normativo y Legal</h1>
@@ -927,7 +948,7 @@ elif selected_tab == "🛡️ Normativa":
     st.link_button("📄 Ver Reglamento General de la LOSNCP", "https://portal.compraspublicas.gob.ec/sercop/wp-content/uploads/2026/03/RGLOSNCP.pdf", use_container_width=True)
 
 # 6. CONFIGURACIÓN
-elif selected_tab == "⚙️ Configuración":
+elif st.session_state['active_tab'] == "⚙️ Configuración":
     st.markdown("""
     <div class="hospital-header">
         <h1>⚙️ Configuración del Sistema</h1>
