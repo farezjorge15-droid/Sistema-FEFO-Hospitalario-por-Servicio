@@ -171,16 +171,63 @@ st.markdown("<hr style='margin-top: 2px; margin-bottom: 15px; border-color: #e1e
 
 
 # ==========================================
-# FUNCIONES LÓGICAS (MOTOR FEFO ORIGINAL INTACTO)
+# FUNCIONES LÓGICAS (LECTURA, LIMPIEZA EXACTA Y MOTOR FEFO)
 # ==========================================
-def cargar_excel_seguro(file_bytes):
-    try:
-        return pd.read_excel(io.BytesIO(file_bytes), engine='openpyxl')
-    except Exception:
+def cargar_excel_seguro(file_bytes, columna_clave="Producto"):
+    df_raw = None
+    for engine in ['openpyxl', 'xlrd', None]:
         try:
-            return pd.read_excel(io.BytesIO(file_bytes), engine='xlrd')
+            if engine:
+                df_raw = pd.read_excel(io.BytesIO(file_bytes), header=None, engine=engine)
+            else:
+                df_raw = pd.read_excel(io.BytesIO(file_bytes), header=None)
+            break
         except Exception:
-            return pd.read_excel(io.BytesIO(file_bytes))
+            continue
+
+    if df_raw is None or df_raw.empty:
+        return pd.DataFrame()
+
+    header_idx = 0
+    claves_busqueda = [columna_clave.upper(), 'PRODUCTO', 'DETALLE', 'DISPOSITIVO']
+    for idx, row in df_raw.iterrows():
+        valores = [str(v).strip().upper() for v in row.values if pd.notna(v)]
+        if any(c in valores for c in claves_busqueda):
+            header_idx = idx
+            break
+
+    df = df_raw.iloc[header_idx + 1:].copy()
+    df.columns = [str(c).strip() if pd.notna(c) else f"Unnamed_{i}" for i, c in enumerate(df_raw.iloc[header_idx])]
+    df = df.reset_index(drop=True)
+    return df
+
+def extraer_nombre_y_presentacion_pedido(texto):
+    if pd.isna(texto):
+        return "", ""
+    s = str(texto).strip()
+    presentacion_detectada = ""
+
+    # Eliminar bloques (AUTORIZADA ...) o (AUTORIZADO ...)
+    s = re.sub(r'\(\s*AUTORIZAD[AO]\s*[^\)]*\)?', '', s, flags=re.IGNORECASE).strip()
+
+    # Quitar etiquetas de unidad/presentación al final preservando paréntesis propios del producto
+    patron_etiqueta_final = re.compile(
+        r'(?:[\[\(]\s*(?:UNIDAD(?:ES)?|ROLLOS?|CAJAS?(?:\s*X\s*[\d\w\s\.\-]+)?|FRASCOS?|SOBRES?|GALON(?:ES)?|AMPOLLAS?|TABLETAS?|TUBOS?|PAQUETES?)\s*[\]\)]?'
+        r'|\b(?:UNIDAD(?:ES)?|ROLLOS?|CAJAS?)\s*[\]\)]?)\s*$',
+        flags=re.IGNORECASE
+    )
+
+    while True:
+        m = patron_etiqueta_final.search(s)
+        if not m:
+            break
+        etiq = re.sub(r'[\[\]\(\)]', '', m.group(0)).strip().upper()
+        if etiq and not presentacion_detectada:
+            presentacion_detectada = etiq
+        s = s[:m.start()].strip()
+
+    s = re.sub(r'[\[\(]\s*$', '', s).strip()
+    return s, presentacion_detectada
 
 def clean_exact(s):
     if pd.isna(s):
@@ -192,28 +239,135 @@ def clean_exact(s):
             s = s.decode('utf-8', errors='ignore')
     except Exception:
         pass
-    
+
+    s, _ = extraer_nombre_y_presentacion_pedido(s)
+
     s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8", errors='ignore')
     s = s.upper().strip()
-    s = s.replace('P.V.', 'PV').replace('P.V', 'PV').replace('N°', 'N').replace('°', '')
+    s = re.sub(r'P\s*\.\s*V\s*\.?', 'PV', s)
+    s = s.replace('N°', 'N').replace('°', '')
+    s = re.sub(r'JERING\s*\.\s*DESC\s*\.?', 'JERING DESC ', s)
     s = re.sub(r'[^A-Z0-9\s]', ' ', s)
+    s = re.sub(r'(\d)([A-Z])', r'\1 \2', s)
+    s = re.sub(r'([A-Z]{2,})(\d)', r'\1 \2', s)
     s = re.sub(r'\s+', ' ', s).strip()
     return s
 
 def buscar_producto_inteligente(p_name_limpio, df_unificado, df_lotes_grouped):
+    if not p_name_limpio:
+        return pd.DataFrame(), p_name_limpio
+
     match = df_unificado[df_unificado['clean_name'] == p_name_limpio]
     if not match.empty:
         return match, p_name_limpio
 
-    palabras = [w for w in p_name_limpio.split() if len(w) > 1 and w not in ['CON', 'DEL', 'LAS', 'LOS', 'POR']]
-    if palabras:
-        for _, row in df_unificado.iterrows():
-            c_name = row['clean_name']
-            if all(pal in c_name for pal in palabras):
-                matched_df = df_unificado[df_unificado['clean_name'] == c_name]
-                return matched_df, c_name
-
     return pd.DataFrame(), p_name_limpio
+
+def extraer_items_pedido_pdf(pdf_text):
+    idx_tabla = pdf_text.find("Nro.")
+    if idx_tabla == -1:
+        idx_tabla = pdf_text.find("N°")
+    texto_items = pdf_text[idx_tabla:] if idx_tabla != -1 else pdf_text
+
+    m_hdr = re.search(r'Cantidades\s+Aprobadas\s*\(Unidades\)', texto_items, re.IGNORECASE)
+    if m_hdr:
+        texto_items = texto_items[m_hdr.end():]
+
+    for stop in ["OBSERVACIONES:", "NOTA:", "Elaborado por:"]:
+        if stop in texto_items:
+            texto_items = texto_items[:texto_items.find(stop)]
+
+    clean_blob = re.sub(r'\s+', ' ', texto_items).strip()
+    items_extraidos = []
+    pos = 0
+    i = 1
+
+    while pos < len(clean_blob):
+        m_start = re.match(rf'\s*{i}\s+', clean_blob[pos:])
+        if not m_start:
+            break
+        content_start = pos + m_start.end()
+
+        m_aut = re.search(r'\(\s*AUTORIZAD[AO]\s*(\d+)\s*\)', clean_blob[content_start:], re.IGNORECASE)
+        if not m_aut:
+            break
+
+        desc_cruda = clean_blob[content_start : content_start + m_aut.start()].strip()
+        aut_qty = int(m_aut.group(1))
+        after_aut = content_start + m_aut.end()
+
+        next_i = i + 1
+        m_next = re.search(rf'({next_i})\s+(?=[A-ZÁÉÍÓÚÑ])', clean_blob[after_aut:])
+        if m_next:
+            qty_chunk = clean_blob[after_aut : after_aut + m_next.start()].strip()
+            pos = after_aut + m_next.start()
+        else:
+            qty_chunk = clean_blob[after_aut:].strip()
+            pos = len(clean_blob)
+
+        nums = re.findall(r'\d+', qty_chunk)
+        if len(nums) >= 2:
+            sol, aprob = int(nums[0]), int(nums[1])
+        elif len(nums) == 1:
+            sol = aprob = int(nums[0])
+        else:
+            sol = aprob = aut_qty
+
+        desc_limpia, pres_pedido = extraer_nombre_y_presentacion_pedido(desc_cruda)
+        items_extraidos.append({
+            'Nro.': i,
+            'Dispositivo Médico': desc_limpia,
+            'Presentación Pedido': pres_pedido,
+            'Cantidades Solicitadas': sol,
+            'Cantidades Aprobadas': aprob
+        })
+        i += 1
+
+    return items_extraidos
+
+def extraer_items_pedido_excel(excel_bytes, nombre_archivo):
+    df_ped = cargar_excel_seguro(excel_bytes, columna_clave="DETALLE")
+    if df_ped.empty:
+        return [], nombre_archivo
+
+    servicio_detectado = nombre_archivo
+    try:
+        df_top = pd.read_excel(io.BytesIO(excel_bytes), header=None).head(8)
+        for _, r in df_top.iterrows():
+            vals = [str(v).strip() for v in r.values if pd.notna(v) and str(v).strip()]
+            if len(vals) == 1 and "PEDIDO" not in vals[0].upper():
+                servicio_detectado = vals[0].upper()
+    except Exception:
+        pass
+
+    col_det = next((c for c in df_ped.columns if any(k in c.upper() for k in ['DETALLE', 'PRODUCTO', 'DISPOSITIVO'])), None)
+    col_pres = next((c for c in df_ped.columns if 'PRESENT' in c.upper()), None)
+    col_sol = next((c for c in df_ped.columns if 'SOLICIT' in c.upper()), None)
+    col_aprob = next((c for c in df_ped.columns if 'APROB' in c.upper()), None)
+
+    items_extraidos = []
+    if col_det:
+        for _, row in df_ped.iterrows():
+            raw_prod = row.get(col_det)
+            if pd.isna(raw_prod) or not str(raw_prod).strip():
+                continue
+            desc_limpia, pres_inline = extraer_nombre_y_presentacion_pedido(str(raw_prod))
+            pres_col = str(row.get(col_pres)).strip() if col_pres and pd.notna(row.get(col_pres)) else pres_inline
+
+            sol_val = pd.to_numeric(row.get(col_sol), errors='coerce') if col_sol else 0
+            aprob_val = pd.to_numeric(row.get(col_aprob), errors='coerce') if col_aprob else sol_val
+            sol = int(sol_val) if pd.notna(sol_val) else 0
+            aprob = int(aprob_val) if pd.notna(aprob_val) else sol
+
+            items_extraidos.append({
+                'Nro.': len(items_extraidos) + 1,
+                'Dispositivo Médico': desc_limpia,
+                'Presentación Pedido': pres_col,
+                'Cantidades Solicitadas': sol,
+                'Cantidades Aprobadas': aprob
+            })
+
+    return items_extraidos, servicio_detectado
 
 def consolidar_lotes_texto(texto_lotes_crudo):
     if not isinstance(texto_lotes_crudo, str) or not texto_lotes_crudo or 'SIN LOTE' in texto_lotes_crudo or 'FALTAN' in texto_lotes_crudo:
@@ -415,14 +569,20 @@ def generar_pdf_consolidado_actualizado(metadata_list, df_res):
 
 def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unificado_bytes, firmantes_custom=None):
     try:
-        df_lotes = cargar_excel_seguro(excel_lotes_bytes)
-        df_unificado = cargar_excel_seguro(excel_unificado_bytes)
+        df_lotes = cargar_excel_seguro(excel_lotes_bytes, columna_clave="Producto")
+        df_unificado = cargar_excel_seguro(excel_unificado_bytes, columna_clave="Producto")
+
+        df_lotes = df_lotes[df_lotes['Producto'].notna() & (df_lotes['Producto'].astype(str).str.strip() != '')].copy()
+        df_lotes = df_lotes[df_lotes['Lote'].notna() & (df_lotes['Lote'].astype(str).str.strip() != '')].copy()
+        df_unificado = df_unificado[df_unificado['Producto'].notna() & (df_unificado['Producto'].astype(str).str.strip() != '')].copy()
 
         st.session_state['df_lotes_raw'] = df_lotes
         st.session_state['df_unif_raw'] = df_unificado
 
-        df_lotes['Producto'] = df_lotes['Producto'].astype(str)
-        df_unificado['Producto'] = df_unificado['Producto'].astype(str)
+        df_lotes['Producto'] = df_lotes['Producto'].astype(str).str.strip()
+        df_lotes['Lote'] = df_lotes['Lote'].astype(str).str.strip()
+        df_lotes['Existen'] = pd.to_numeric(df_lotes['Existen'], errors='coerce').fillna(0.0)
+        df_unificado['Producto'] = df_unificado['Producto'].astype(str).str.strip()
 
         df_lotes['clean_name'] = df_lotes['Producto'].apply(clean_exact)
         df_unificado['clean_name'] = df_unificado['Producto'].apply(clean_exact)
@@ -441,25 +601,33 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
 
         nombres_servicios_raw = []
         for idx_pdf, (nombre_pdf, pdf_bytes) in enumerate(lista_pdfs):
+            es_excel = nombre_pdf.lower().endswith(('.xlsx', '.xls'))
             pdf_text = ""
-            try:
-                reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
-                for page in reader.pages:
-                    text_page = page.extract_text()
-                    if text_page:
-                        pdf_text += text_page + "\n"
-            except Exception:
-                pdf_text = ""
-
             base_servicio = f"SERVICIO {idx_pdf + 1}"
-            match_serv = re.search(r'Servicio\s*[:]\s*([^\r\n]+)', pdf_text, re.IGNORECASE)
-            if match_serv:
-                raw_serv = match_serv.group(1).strip()
-                for stop_word in ['FECHA', 'NRO', 'VERSIÓN', 'VERSION', 'CÓDIGO', 'CODIGO']:
-                    if stop_word in raw_serv.upper():
-                        raw_serv = raw_serv.upper().split(stop_word)[0].strip()
-                if len(raw_serv) > 1:
-                    base_servicio = raw_serv.upper().strip()
+
+            if es_excel:
+                _, serv_xl = extraer_items_pedido_excel(pdf_bytes, nombre_pdf)
+                if serv_xl:
+                    base_servicio = serv_xl
+            else:
+                try:
+                    reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+                    for page in reader.pages:
+                        text_page = page.extract_text()
+                        if text_page:
+                            pdf_text += text_page + "\n"
+                except Exception:
+                    pdf_text = ""
+
+                match_serv = re.search(r'Servicio\s*[:]\s*([^\r\n]+)', pdf_text, re.IGNORECASE)
+                if match_serv:
+                    raw_serv = match_serv.group(1).strip()
+                    for stop_word in ['FECHA', 'NRO', 'VERSIÓN', 'VERSION', 'CÓDIGO', 'CODIGO']:
+                        if stop_word in raw_serv.upper():
+                            raw_serv = raw_serv.upper().split(stop_word)[0].strip()
+                    if len(raw_serv) > 1:
+                        base_servicio = raw_serv.upper().strip()
+
             nombres_servicios_raw.append((idx_pdf, nombre_pdf, pdf_bytes, base_servicio, pdf_text))
 
         conteo_servicios = {}
@@ -512,56 +680,16 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                         validado_por = firmantes_custom.get('validado_por', validado_por)
                         entregado_por = firmantes_custom.get('entregado_por', entregado_por)
 
-            idx_tabla = pdf_text.find("Nro.")
-            if idx_tabla == -1:
-                idx_tabla = pdf_text.find("N°")
-            if idx_tabla == -1:
-                idx_tabla = 0
-
-            texto_items = pdf_text[idx_tabla:] if idx_tabla != -1 else pdf_text
-            clean_blob = re.sub(r'[\r\n]+', ' ', texto_items)
-            items_extraidos = []
-            
-            for i in range(1, 100):
-                pattern_item = rf'(?:^|\s){i}\s+(.+?)\s*\(\s*AUTORIZAD[AO][^\)]*\)\s*(\d+)\s+(\d+)'
-                m = re.search(pattern_item, clean_blob, re.IGNORECASE)
-                if m:
-                    desc = m.group(1).strip()
-                    sol = int(m.group(2))
-                    aprob = int(m.group(3))
-                    items_extraidos.append({
-                        'Nro.': i,
-                        'Dispositivo Médico': desc,
-                        'Cantidades Solicitadas': sol,
-                        'Cantidades Aprobadas': aprob
-                    })
-                    clean_blob = clean_blob.replace(m.group(0), "", 1)
-                else:
-                    pattern_alt = rf'(?:^|\s){i}\s+(.+?)\s+(\d+)\s+(\d+)'
-                    m_alt = re.search(pattern_alt, clean_blob)
-                    if m_alt and i > 2:
-                        desc = m_alt.group(1).strip()
-                        sol = int(m_alt.group(2))
-                        aprob = int(m_alt.group(3))
-                        if not any(w in desc.upper() for w in ['FIRMADO', 'ELECTRONICAMENTE', 'VALIDAR', 'STAMPING']):
-                            items_extraidos.append({
-                                'Nro.': i,
-                                'Dispositivo Médico': desc,
-                                'Cantidades Solicitadas': sol,
-                                'Cantidades Aprobadas': aprob
-                            })
-                            clean_blob = clean_blob.replace(m_alt.group(0), "", 1)
-                            continue
-
-                    if i > 5 and not items_extraidos:
-                        break
-                    elif i > 40 and len(items_extraidos) > 0:
-                        break
+            if nombre_pdf.lower().endswith(('.xlsx', '.xls')):
+                items_extraidos, _ = extraer_items_pedido_excel(pdf_bytes, nombre_pdf)
+            else:
+                items_extraidos = extraer_items_pedido_pdf(pdf_text)
 
             if not items_extraidos:
                 items_extraidos.append({
                     'Nro.': 1,
                     'Dispositivo Médico': f'ADVERTENCIA: REVISAR ARCHIVO {nombre_pdf}',
+                    'Presentación Pedido': '',
                     'Cantidades Solicitadas': 0,
                     'Cantidades Aprobadas': 0
                 })
@@ -576,32 +704,38 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                 cant_pendiente = pdf_row['Cantidades Aprobadas']
                 
                 match_unif, _ = buscar_producto_inteligente(p_name_raw, df_unificado, df_lotes_grouped)
+                match_lotes_directo = df_lotes[df_lotes['clean_name'] == p_name_raw]
 
-                if not match_unif.empty:
-                    codigo = match_unif.iloc[0].get('Código', match_unif.iloc[0].get('Codigo', 'SIN-CODIGO'))
-                    sku = match_unif.iloc[0].get('SKU', match_unif.iloc[0].get('Sku', match_unif.iloc[0].get('SKU.', 'SIN-SKU')))
+                if not match_unif.empty or not match_lotes_directo.empty:
+                    ref_df = match_unif if not match_unif.empty else match_lotes_directo
+                    codigo = ref_df.iloc[0].get('Código', ref_df.iloc[0].get('Codigo', 'SIN-CODIGO'))
+                    sku = ref_df.iloc[0].get('SKU', ref_df.iloc[0].get('Sku', ref_df.iloc[0].get('SKU.', 'SIN-SKU')))
                     
                     presentacion = "N/A"
                     for col_p in ['Presentacion', 'PRESENTACION', 'Presentación', 'PRESENTACIÓN']:
-                        if col_p in match_unif.columns:
-                            val_p = match_unif.iloc[0][col_p]
-                            if pd.notna(val_p):
-                                presentacion = str(val_p)
+                        if col_p in ref_df.columns:
+                            val_p = ref_df.iloc[0][col_p]
+                            if pd.notna(val_p) and str(val_p).strip():
+                                presentacion = str(val_p).strip()
                                 break
-                    if presentacion == "N/A":
-                        match_lote_temp = df_lotes[df_lotes['clean_name'] == p_name_raw]
+                    if presentacion == "N/A" and not match_lotes_directo.empty:
                         for col_p in ['Presentacion', 'PRESENTACION', 'Presentación', 'PRESENTACIÓN']:
-                            if not match_lote_temp.empty and col_p in match_lote_temp.columns:
-                                val_p = match_lote_temp.iloc[0][col_p]
-                                if pd.notna(val_p):
-                                    presentacion = str(val_p)
+                            if col_p in match_lotes_directo.columns:
+                                val_p = match_lotes_directo.iloc[0][col_p]
+                                if pd.notna(val_p) and str(val_p).strip():
+                                    presentacion = str(val_p).strip()
                                     break
 
-                    cols_posibles = [c for c in match_unif.columns if any(w in str(c).upper() for w in ['BOD', 'FARM', 'STOCK', 'EXIST', 'TOTAL'])]
-                    col_bodega = cols_posibles[0] if cols_posibles else match_unif.columns[-1]
-                    stock_bodega = match_unif.iloc[0][col_bodega]
-                    if pd.isna(stock_bodega):
-                        stock_bodega = 0.0
+                    if not match_unif.empty:
+                        cols_bod = [c for c in match_unif.columns if 'BOD' in str(c).upper() and 'FARM' in str(c).upper()]
+                        cols_tot = [c for c in match_unif.columns if 'TOTAL' in str(c).upper()]
+                        cols_posibles = cols_bod + cols_tot + [c for c in match_unif.columns if any(w in str(c).upper() for w in ['BOD', 'FARM', 'STOCK', 'EXIST', 'TOTAL'])]
+                        col_bodega = cols_posibles[0] if cols_posibles else match_unif.columns[-1]
+                        stock_bodega = pd.to_numeric(match_unif.iloc[0][col_bodega], errors='coerce')
+                        if pd.isna(stock_bodega):
+                            stock_bodega = 0.0
+                    else:
+                        stock_bodega = float(match_lotes_directo['Existen'].sum())
                 else:
                     codigo = 'SIN-CODIGO'
                     sku = 'SIN-SKU'
@@ -793,7 +927,6 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         wb.save(output_excel)
         output_excel.seek(0)
 
-        # PDF ACTAS COMPLETO (CONSULTANDO FIRMANTES ACTUALIZADOS)
         output_pdf_bytes = generar_pdf_consolidado_actualizado(metadata_actas, df_final)
 
         return output_excel.getvalue(), output_pdf_bytes, df_final
@@ -836,11 +969,11 @@ elif selected_tab == "📚 Cruce de Lote":
 
     with col_card1:
         with st.container(border=True):
-            st.markdown("📄 **1. Pedidos en PDF (Hasta 30+)**")
+            st.markdown("📄 **1. Pedidos PDF o Excel (Hasta 30+)**")
             st.markdown("<span style='font-size:0.82rem; color:#555;'>Solicitudes de despacho con servicios y firmas electrónicas.</span>", unsafe_allow_html=True)
             uploaded_pdfs = st.file_uploader(
-                "Cargar PDFs de Pedidos", 
-                type=["pdf"], 
+                "Cargar Pedidos (PDF / Excel)", 
+                type=["pdf", "xlsx", "xls"], 
                 accept_multiple_files=True, 
                 key="unique_pdfs_key"
             )
