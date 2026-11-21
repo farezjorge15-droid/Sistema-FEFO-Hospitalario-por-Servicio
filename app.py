@@ -666,8 +666,8 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         df_lotes = cargar_excel_seguro(excel_lotes_bytes, columna_clave="Producto")
         df_unificado = cargar_excel_seguro(excel_unificado_bytes, columna_clave="Producto")
 
-        if df_lotes.empty or 'Producto' not in df_lotes.columns:
-            st.error(f"No se encontró la columna 'Producto' en el Excel de Lotes. Columnas detectadas: {list(df_lotes.columns)}")
+        if df_lotes.empty:
+            st.error("No se pudo leer el Excel de Lotes (si es un archivo .xls antiguo, verifique que 'xlrd' esté en requirements.txt).")
             return None, None, None
         if df_unificado.empty or 'Producto' not in df_unificado.columns:
             st.error(f"No se encontró la columna 'Producto' en el Excel Unificado. Columnas detectadas: {list(df_unificado.columns)}")
