@@ -174,20 +174,22 @@ st.markdown("<hr style='margin-top: 2px; margin-bottom: 15px; border-color: #e1e
 # FUNCIONES LÓGICAS (LECTURA, LIMPIEZA EXACTA Y MOTOR FEFO)
 # ==========================================
 def leer_excel_todas_las_hojas(file_bytes):
-    """Lee un archivo Excel (.xlsx o .xls) probando motores disponibles y devolviendo sus hojas."""
-    for engine in ['openpyxl', 'xlrd', None]:
+    """Lee un archivo Excel (.xlsx o .xls) devolviendo sus hojas de forma segura."""
+    for engine in ['xlrd', 'openpyxl', None]:
         try:
-            if engine:
-                xls = pd.ExcelFile(io.BytesIO(file_bytes), engine=engine)
-            else:
-                xls = pd.ExcelFile(io.BytesIO(file_bytes))
-            hojas = []
-            for sheet in xls.sheet_names:
-                df_sheet = xls.parse(sheet_name=sheet, header=None)
-                if df_sheet is not None and not df_sheet.empty:
-                    hojas.append((sheet, df_sheet))
-            if hojas:
-                return hojas
+            df_single = pd.read_excel(io.BytesIO(file_bytes), sheet_name=0, header=None, engine=engine) if engine else pd.read_excel(io.BytesIO(file_bytes), sheet_name=0, header=None)
+            if df_single is not None and not df_single.empty:
+                try:
+                    xls = pd.ExcelFile(io.BytesIO(file_bytes), engine=engine) if engine else pd.ExcelFile(io.BytesIO(file_bytes))
+                    hojas = []
+                    for sheet in xls.sheet_names:
+                        df_s = pd.read_excel(io.BytesIO(file_bytes), sheet_name=sheet, header=None, engine=engine) if engine else pd.read_excel(io.BytesIO(file_bytes), sheet_name=sheet, header=None)
+                        if df_s is not None and not df_s.empty:
+                            hojas.append((sheet, df_s))
+                    if hojas:
+                        return hojas
+                except Exception:
+                    return [("Sheet1", df_single)]
         except Exception:
             continue
     return []
