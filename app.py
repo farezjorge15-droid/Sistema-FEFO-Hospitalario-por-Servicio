@@ -173,32 +173,88 @@ st.markdown("<hr style='margin-top: 2px; margin-bottom: 15px; border-color: #e1e
 # ==========================================
 # FUNCIONES LÓGICAS (LECTURA, LIMPIEZA EXACTA Y MOTOR FEFO)
 # ==========================================
-def cargar_excel_seguro(file_bytes, columna_clave="Producto"):
-    df_raw = None
+def leer_excel_todas_las_hojas(file_bytes):
+    """Lee un archivo Excel (.xlsx o .xls) probando motores disponibles y devolviendo sus hojas."""
     for engine in ['openpyxl', 'xlrd', None]:
         try:
             if engine:
-                df_raw = pd.read_excel(io.BytesIO(file_bytes), header=None, engine=engine)
+                xls = pd.ExcelFile(io.BytesIO(file_bytes), engine=engine)
             else:
-                df_raw = pd.read_excel(io.BytesIO(file_bytes), header=None)
-            break
+                xls = pd.ExcelFile(io.BytesIO(file_bytes))
+            hojas = []
+            for sheet in xls.sheet_names:
+                df_sheet = xls.parse(sheet_name=sheet, header=None)
+                if df_sheet is not None and not df_sheet.empty:
+                    hojas.append((sheet, df_sheet))
+            if hojas:
+                return hojas
         except Exception:
             continue
+    return []
 
-    if df_raw is None or df_raw.empty:
+def cargar_excel_seguro(file_bytes, columna_clave="Producto"):
+    hojas = leer_excel_todas_las_hojas(file_bytes)
+    if not hojas:
         return pd.DataFrame()
 
-    header_idx = 0
     claves_busqueda = [columna_clave.upper(), 'PRODUCTO', 'DETALLE', 'DISPOSITIVO']
-    for idx, row in df_raw.iterrows():
-        valores = [str(v).strip().upper() for v in row.values if pd.notna(v)]
-        if any(c in valores for c in claves_busqueda):
-            header_idx = idx
+    df_raw = None
+    header_idx = 0
+    encontrado = False
+
+    for _, df_sheet in hojas:
+        for idx, row in df_sheet.iterrows():
+            valores = [str(v).strip().upper() for v in row.values if pd.notna(v)]
+            if any(any(c in val for c in claves_busqueda) for val in valores):
+                df_raw = df_sheet
+                header_idx = idx
+                encontrado = True
+                break
+        if encontrado:
             break
 
+    if df_raw is None:
+        df_raw = hojas[0][1]
+        header_idx = 0
+
     df = df_raw.iloc[header_idx + 1:].copy()
-    df.columns = [str(c).strip() if pd.notna(c) else f"Unnamed_{i}" for i, c in enumerate(df_raw.iloc[header_idx])]
+    cols_raw = [str(c).strip() if pd.notna(c) and str(c).strip() != '' else f"Unnamed_{i}" for i, c in enumerate(df_raw.iloc[header_idx])]
+    
+    # Evitar columnas duplicadas
+    cols_unicas = []
+    vistos = {}
+    for c in cols_raw:
+        if c in vistos:
+            vistos[c] += 1
+            cols_unicas.append(f"{c}_{vistos[c]}")
+        else:
+            vistos[c] = 0
+            cols_unicas.append(c)
+    df.columns = cols_unicas
     df = df.reset_index(drop=True)
+
+    # Normalizar nombres estándar si vienen con tildes o variaciones
+    renombrar = {}
+    for col in df.columns:
+        cu = col.upper().strip()
+        if ('PRODUCTO' in cu or 'DETALLE' in cu or 'DISPOSITIVO' in cu) and 'Producto' not in df.columns and 'Producto' not in renombrar.values():
+            renombrar[col] = 'Producto'
+        elif cu == 'LOTE' and 'Lote' not in df.columns and 'Lote' not in renombrar.values():
+            renombrar[col] = 'Lote'
+        elif 'CAD' in cu and 'F. Cad' not in df.columns and 'F. Cad' not in renombrar.values():
+            renombrar[col] = 'F. Cad'
+        elif ('EXIST' in cu) and 'Existen' not in df.columns and 'Existen' not in renombrar.values():
+            renombrar[col] = 'Existen'
+        elif cu in ['CÓDIGO', 'CODIGO', 'CÓDIGO MEDYSIS', 'CODIGO MEDYSIS'] and 'Código' not in df.columns and 'Código' not in renombrar.values():
+            renombrar[col] = 'Código'
+        elif 'SKU' in cu and 'SKU' not in df.columns and 'SKU' not in renombrar.values():
+            renombrar[col] = 'SKU'
+        elif 'PRESENT' in cu and 'Presentación' not in df.columns and 'Presentación' not in renombrar.values():
+            renombrar[col] = 'Presentación'
+
+    if renombrar:
+        df = df.rename(columns=renombrar)
+
     return df
 
 def extraer_nombre_y_presentacion_pedido(texto):
@@ -326,19 +382,49 @@ def extraer_items_pedido_pdf(pdf_text):
     return items_extraidos
 
 def extraer_items_pedido_excel(excel_bytes, nombre_archivo):
-    df_ped = cargar_excel_seguro(excel_bytes, columna_clave="DETALLE")
-    if df_ped.empty:
-        return [], nombre_archivo
+    """Lee pedidos en formato Excel (ej. PEDIDO A BODEGA DE MEDICAMENTOS Y DISPOSITIVOS MEDICOS)."""
+    hojas = leer_excel_todas_las_hojas(excel_bytes)
+    if not hojas:
+        return [], nombre_archivo, None, None
 
+    df_raw = hojas[0][1]
     servicio_detectado = nombre_archivo
-    try:
-        df_top = pd.read_excel(io.BytesIO(excel_bytes), header=None).head(8)
-        for _, r in df_top.iterrows():
-            vals = [str(v).strip() for v in r.values if pd.notna(v) and str(v).strip()]
-            if len(vals) == 1 and "PEDIDO" not in vals[0].upper():
-                servicio_detectado = vals[0].upper()
-    except Exception:
-        pass
+    elab_excel = None
+    recep_excel = None
+    header_idx = None
+
+    # Analizar las filas superiores para detectar Servicio, Firmantes y Fila de Encabezados
+    for idx, row in df_raw.iterrows():
+        vals = [str(v).strip() for v in row.values if pd.notna(v) and str(v).strip() != '']
+        if not vals:
+            continue
+        vals_up = [v.upper() for v in vals]
+
+        # Detectar fila de encabezados de tabla
+        if any('DETALLE' in v or 'PRODUCTO' in v or 'DISPOSITIVO' in v for v in vals_up) and any('CANTIDAD' in v or 'SOLICIT' in v or 'CÓDIGO' in v or 'CODIGO' in v for v in vals_up):
+            header_idx = idx
+            break
+
+        # Detectar servicio (ej. FARMACIA CONSULTA EXTERNA en fila 2)
+        if len(vals) == 1 and "PEDIDO A BODEGA" not in vals_up[0]:
+            servicio_detectado = vals_up[0]
+
+        # Detectar firmantes en el encabezado del Excel
+        for c_i, val in enumerate(vals):
+            v_up = val.upper()
+            if 'PEDIDO REALIZADO POR' in v_up and c_i + 1 < len(vals):
+                if 'CÉDULA' not in vals[c_i + 1].upper() and 'CEDULA' not in vals[c_i + 1].upper():
+                    elab_excel = vals[c_i + 1].upper()
+            elif 'ENCARGADO EN LA RECEPCI' in v_up and c_i + 1 < len(vals):
+                if 'CÉDULA' not in vals[c_i + 1].upper() and 'CEDULA' not in vals[c_i + 1].upper():
+                    recep_excel = vals[c_i + 1].upper()
+
+    if header_idx is None:
+        return [], servicio_detectado, elab_excel, recep_excel
+
+    df_ped = df_raw.iloc[header_idx + 1:].copy()
+    df_ped.columns = [str(c).strip() if pd.notna(c) else f"Unnamed_{i}" for i, c in enumerate(df_raw.iloc[header_idx])]
+    df_ped = df_ped.reset_index(drop=True)
 
     col_det = next((c for c in df_ped.columns if any(k in c.upper() for k in ['DETALLE', 'PRODUCTO', 'DISPOSITIVO'])), None)
     col_pres = next((c for c in df_ped.columns if 'PRESENT' in c.upper()), None)
@@ -351,12 +437,18 @@ def extraer_items_pedido_excel(excel_bytes, nombre_archivo):
             raw_prod = row.get(col_det)
             if pd.isna(raw_prod) or not str(raw_prod).strip():
                 continue
-            desc_limpia, pres_inline = extraer_nombre_y_presentacion_pedido(str(raw_prod))
+            prod_str = str(raw_prod).strip()
+            if prod_str.upper() in ['TOTAL', 'SUBTOTAL', 'OBSERVACIONES']:
+                continue
+
+            desc_limpia, pres_inline = extraer_nombre_y_presentacion_pedido(prod_str)
             pres_col = str(row.get(col_pres)).strip() if col_pres and pd.notna(row.get(col_pres)) else pres_inline
 
-            sol_val = pd.to_numeric(row.get(col_sol), errors='coerce') if col_sol else 0
-            aprob_val = pd.to_numeric(row.get(col_aprob), errors='coerce') if col_aprob else sol_val
+            sol_val = pd.to_numeric(row.get(col_sol), errors='coerce') if col_sol else float('nan')
+            aprob_val = pd.to_numeric(row.get(col_aprob), errors='coerce') if col_aprob else float('nan')
+
             sol = int(sol_val) if pd.notna(sol_val) else 0
+            # Si CANTIDAD APROBADA viene vacía en el Excel, respaldar con CANTIDAD SOLICITADA
             aprob = int(aprob_val) if pd.notna(aprob_val) else sol
 
             items_extraidos.append({
@@ -367,7 +459,7 @@ def extraer_items_pedido_excel(excel_bytes, nombre_archivo):
                 'Cantidades Aprobadas': aprob
             })
 
-    return items_extraidos, servicio_detectado
+    return items_extraidos, servicio_detectado, elab_excel, recep_excel
 
 def consolidar_lotes_texto(texto_lotes_crudo):
     if not isinstance(texto_lotes_crudo, str) or not texto_lotes_crudo or 'SIN LOTE' in texto_lotes_crudo or 'FALTAN' in texto_lotes_crudo:
@@ -572,8 +664,16 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         df_lotes = cargar_excel_seguro(excel_lotes_bytes, columna_clave="Producto")
         df_unificado = cargar_excel_seguro(excel_unificado_bytes, columna_clave="Producto")
 
+        if df_lotes.empty or 'Producto' not in df_lotes.columns:
+            st.error(f"No se encontró la columna 'Producto' en el Excel de Lotes. Columnas detectadas: {list(df_lotes.columns)}")
+            return None, None, None
+        if df_unificado.empty or 'Producto' not in df_unificado.columns:
+            st.error(f"No se encontró la columna 'Producto' en el Excel Unificado. Columnas detectadas: {list(df_unificado.columns)}")
+            return None, None, None
+
         df_lotes = df_lotes[df_lotes['Producto'].notna() & (df_lotes['Producto'].astype(str).str.strip() != '')].copy()
-        df_lotes = df_lotes[df_lotes['Lote'].notna() & (df_lotes['Lote'].astype(str).str.strip() != '')].copy()
+        if 'Lote' in df_lotes.columns:
+            df_lotes = df_lotes[df_lotes['Lote'].notna() & (df_lotes['Lote'].astype(str).str.strip() != '')].copy()
         df_unificado = df_unificado[df_unificado['Producto'].notna() & (df_unificado['Producto'].astype(str).str.strip() != '')].copy()
 
         st.session_state['df_lotes_raw'] = df_lotes
@@ -600,13 +700,16 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
             stock_disponible_dict[key] = float(row['Existen']) if pd.notna(row['Existen']) else 0.0
 
         nombres_servicios_raw = []
+        excel_pedidos_cache = {}
+
         for idx_pdf, (nombre_pdf, pdf_bytes) in enumerate(lista_pdfs):
             es_excel = nombre_pdf.lower().endswith(('.xlsx', '.xls'))
             pdf_text = ""
             base_servicio = f"SERVICIO {idx_pdf + 1}"
 
             if es_excel:
-                _, serv_xl = extraer_items_pedido_excel(pdf_bytes, nombre_pdf)
+                items_xl, serv_xl, elab_xl, recep_xl = extraer_items_pedido_excel(pdf_bytes, nombre_pdf)
+                excel_pedidos_cache[idx_pdf] = (items_xl, elab_xl, recep_xl)
                 if serv_xl:
                     base_servicio = serv_xl
             else:
@@ -646,27 +749,36 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
         productos_pedidos_set = set()
 
         for idx_pdf, nombre_pdf, pdf_bytes, servicio_nombre, pdf_text in asignaciones_servicios:
+            es_excel = nombre_pdf.lower().endswith(('.xlsx', '.xls'))
             firmantes_encontrados = []
-            texto_plano_continuo = re.sub(r'[\r\n]+', ' ', pdf_text)
-            matches_firma = re.finditer(r'(?:Firmado\s+electr[oó]nicamente\s+por|por\s*[:])\s*([A-ZÁÉÍÓÚÑ\s]{5,50})', texto_plano_continuo, re.IGNORECASE)
-            for m in matches_firma:
-                candidato = m.group(1).strip()
-                palabras = [w for w in candidato.split() if w.isalpha() and len(w) > 1 and w.upper() not in ['VALIDAR', 'UNICAMENTE', 'FIRMAEC', 'TIME', 'STAMPING', 'SECURITY', 'DATA', 'QR', 'POR', 'DE', 'DEL', 'LA', 'LAS', 'LOS', 'EL', 'Y']]
-                if len(palabras) >= 2:
-                    nombre_valido = " ".join(palabras[:4]).upper()
-                    if nombre_valido not in firmantes_encontrados:
-                        firmantes_encontrados.append(nombre_valido)
 
-            if len(firmantes_encontrados) < 2:
-                for linea in pdf_text.split('\n'):
-                    l_up = linea.strip().upper()
-                    if any(n in l_up for n in ['CANTOS ESPINOZA', 'DELEG SARI', 'YUQUILIMA PUMA', 'CABRERA ZENTENO', 'ROJAS BURI']):
-                        if l_up not in firmantes_encontrados:
-                            firmantes_encontrados.append(l_up)
+            if es_excel:
+                items_extraidos, elab_xl, recep_xl = excel_pedidos_cache.get(idx_pdf, ([], None, None))
+                elaborado_por = elab_xl if elab_xl else "RESPONSABLE DE SERVICIO"
+                validado_por = recep_xl if recep_xl else "XIMENA KARINA CABRERA ZENTENO"
+                entregado_por = "GUARDALMACÉN / DESPACHADOR"
+            else:
+                texto_plano_continuo = re.sub(r'[\r\n]+', ' ', pdf_text)
+                matches_firma = re.finditer(r'(?:Firmado\s+electr[oó]nicamente\s+por|por\s*[:])\s*([A-ZÁÉÍÓÚÑ\s]{5,50})', texto_plano_continuo, re.IGNORECASE)
+                for m in matches_firma:
+                    candidato = m.group(1).strip()
+                    palabras = [w for w in candidato.split() if w.isalpha() and len(w) > 1 and w.upper() not in ['VALIDAR', 'UNICAMENTE', 'FIRMAEC', 'TIME', 'STAMPING', 'SECURITY', 'DATA', 'QR', 'POR', 'DE', 'DEL', 'LA', 'LAS', 'LOS', 'EL', 'Y']]
+                    if len(palabras) >= 2:
+                        nombre_valido = " ".join(palabras[:4]).upper()
+                        if nombre_valido not in firmantes_encontrados:
+                            firmantes_encontrados.append(nombre_valido)
 
-            elaborado_por = firmantes_encontrados[0] if len(firmantes_encontrados) > 0 else "RESPONSABLE DE SERVICIO"
-            validado_por = firmantes_encontrados[1] if len(firmantes_encontrados) > 1 else ("DANIEL GUILLERMO DELEG SARI" if "EMERGENCIA" in servicio_nombre.upper() else "XIMENA KARINA CABRERA ZENTENO")
-            entregado_por = "GUARDALMACÉN / DESPACHADOR"
+                if len(firmantes_encontrados) < 2:
+                    for linea in pdf_text.split('\n'):
+                        l_up = linea.strip().upper()
+                        if any(n in l_up for n in ['CANTOS ESPINOZA', 'DELEG SARI', 'YUQUILIMA PUMA', 'CABRERA ZENTENO', 'ROJAS BURI']):
+                            if l_up not in firmantes_encontrados:
+                                firmantes_encontrados.append(l_up)
+
+                elaborado_por = firmantes_encontrados[0] if len(firmantes_encontrados) > 0 else "RESPONSABLE DE SERVICIO"
+                validado_por = firmantes_encontrados[1] if len(firmantes_encontrados) > 1 else ("DANIEL GUILLERMO DELEG SARI" if "EMERGENCIA" in servicio_nombre.upper() else "XIMENA KARINA CABRERA ZENTENO")
+                entregado_por = "GUARDALMACÉN / DESPACHADOR"
+                items_extraidos = extraer_items_pedido_pdf(pdf_text)
 
             if firmantes_custom:
                 if isinstance(firmantes_custom, dict):
@@ -676,14 +788,12 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                         validado_por = cfg.get('validado_por', validado_por)
                         entregado_por = cfg.get('entregado_por', entregado_por)
                     elif any(k in firmantes_custom for k in ['elaborado_por', 'validado_por', 'entregado_por']):
-                        elaborado_por = firmantes_custom.get('elaborado_por', elaborado_por)
-                        validado_por = firmantes_custom.get('validado_por', validado_por)
+                        # Si el Excel ya trae firmantes propios, los conserva salvo que se personalicen
+                        if not es_excel or elaborado_por == "RESPONSABLE DE SERVICIO":
+                            elaborado_por = firmantes_custom.get('elaborado_por', elaborado_por)
+                        if not es_excel or validado_por == "XIMENA KARINA CABRERA ZENTENO":
+                            validado_por = firmantes_custom.get('validado_por', validado_por)
                         entregado_por = firmantes_custom.get('entregado_por', entregado_por)
-
-            if nombre_pdf.lower().endswith(('.xlsx', '.xls')):
-                items_extraidos, _ = extraer_items_pedido_excel(pdf_bytes, nombre_pdf)
-            else:
-                items_extraidos = extraer_items_pedido_pdf(pdf_text)
 
             if not items_extraidos:
                 items_extraidos.append({
@@ -725,6 +835,8 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                                 if pd.notna(val_p) and str(val_p).strip():
                                     presentacion = str(val_p).strip()
                                     break
+                    if presentacion == "N/A" and pdf_row.get('Presentación Pedido'):
+                        presentacion = str(pdf_row['Presentación Pedido']).strip()
 
                     if not match_unif.empty:
                         cols_bod = [c for c in match_unif.columns if 'BOD' in str(c).upper() and 'FARM' in str(c).upper()]
@@ -739,7 +851,7 @@ def procesar_cruce_hospitalario_lote(lista_pdfs, excel_lotes_bytes, excel_unific
                 else:
                     codigo = 'SIN-CODIGO'
                     sku = 'SIN-SKU'
-                    presentacion = 'N/A'
+                    presentacion = str(pdf_row['Presentación Pedido']).strip() if pdf_row.get('Presentación Pedido') else 'N/A'
                     stock_bodega = 0.0
 
                 _, matched_key_lotes = buscar_producto_inteligente(p_name_raw, df_lotes_grouped.drop_duplicates(subset=['clean_name']), df_lotes_grouped)
@@ -1327,7 +1439,7 @@ elif selected_tab == "📄 Actas Oficiales":
                 st.download_button(
                     label="📥 Descargar PDF",
                     data=pdf_bytes_acta,
-                    file_name=f"Acta_{pdf_key.replace('.pdf', '')}.pdf",
+                    file_name=f"Acta_{pdf_key.replace('.pdf', '').replace('.xlsx', '').replace('.xls', '')}.pdf",
                     mime="application/pdf",
                     key=f"panel_dl_{pdf_key}",
                     use_container_width=True
@@ -1491,7 +1603,7 @@ elif selected_tab == "📄 Actas Oficiales":
                                     st.download_button(
                                         label="📥",
                                         data=pdf_bytes_individual,
-                                        file_name=f"Acta_{pdf_orig.replace('.pdf', '')}.pdf",
+                                        file_name=f"Acta_{pdf_orig.replace('.pdf', '').replace('.xlsx', '').replace('.xls', '')}.pdf",
                                         mime="application/pdf",
                                         key=f"btn_dl_{pdf_orig}_{i+j}",
                                         use_container_width=True
